@@ -90,6 +90,16 @@
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid #eee; flex-wrap: wrap; gap: 5px; }
         .nav-header h3 { color: #2c5f2d; font-size: 16px; }
         .nav-close { background: none; border: none; font-size: 22px; color: #b22222; cursor: pointer; padding: 5px 10px; }
+        .nav-minimize-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+        .nav-minimize-btn:hover { color: #333; }
+        
         .nav-step { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
         .nav-step-icon { font-size: 18px; min-width: 28px; text-align: center; }
         .nav-step-content { flex: 1; }
@@ -256,6 +266,57 @@
             font-size: 11px;
         }
         
+        /* Mini Navigation Bar */
+        #miniNavBar {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1500;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            cursor: pointer;
+            touch-action: manipulation;
+            max-width: 90%;
+        }
+        #miniNavBar.active {
+            display: flex;
+        }
+        #miniNavBar .mini-progress {
+            width: 80px;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        #miniNavBar .mini-progress .mini-fill {
+            height: 100%;
+            background: #2ecc71;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+        #miniNavBar .mini-distance {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        #miniNavBar .mini-expand {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+        
         @media (max-width: 600px) {
             .controls button, .controls select, .controls input { padding: 4px 6px; font-size: 10px; min-height: 28px; }
             .controls { gap: 3px; padding: 4px 6px; }
@@ -264,6 +325,13 @@
             .location-marker { font-size: 24px; }
             .user-marker { font-size: 28px; }
             #statusText { font-size: 10px; }
+            #miniNavBar {
+                bottom: 65px;
+                padding: 6px 12px;
+                font-size: 12px;
+                gap: 8px;
+            }
+            #miniNavBar .mini-progress { width: 60px; }
         }
         @media (min-width: 768px) {
             .controls { max-width: 95%; left: 50%; transform: translateX(-50%); }
@@ -271,6 +339,7 @@
             #navigationPanel { max-width: 450px; left: 50%; transform: translateX(-50%); border-radius: 16px; bottom: 20px; }
             #navigationPanel.active { transform: translateX(-50%) translateY(0); }
             .nav-photo-btn { bottom: 85px; right: 25px; }
+            #miniNavBar { bottom: 85px; }
         }
     </style>
 </head>
@@ -306,7 +375,8 @@
     <div id="navigationPanel">
         <div class="nav-header">
             <h3>🧭 Οδηγίες</h3>
-            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
+                <button class="nav-minimize-btn" id="minimizeNavBtn" title="Ελαχιστοποίηση">⬇</button>
                 <button id="navPhotoBtn" style="background:#8e44ad;color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">📸</button>
                 <button class="nav-close" id="closeNavBtn">✕</button>
             </div>
@@ -317,6 +387,16 @@
             <h4>📸 Φωτογραφίες</h4>
             <div id="photoItems"></div>
         </div>
+    </div>
+
+    <!-- Mini Navigation Bar -->
+    <div id="miniNavBar">
+        <span>🧭</span>
+        <span class="mini-distance" id="miniDistance">0 χλμ</span>
+        <div class="mini-progress">
+            <div class="mini-fill" id="miniProgressFill" style="width:0%"></div>
+        </div>
+        <button class="mini-expand" id="miniExpandBtn">☰</button>
     </div>
 
     <button class="nav-photo-btn" id="floatingPhotoBtn">📸</button>
@@ -358,6 +438,7 @@
         var lastMainDistance = null;
         var lastMainGeometry = null;
         var isNavigating = false;
+        var isMinimized = false;
         var navigationSteps = [];
         var currentLocationMarker = null;
         var routePhotos = [];
@@ -436,6 +517,7 @@
                 navigator.geolocation.clearWatch(navigationWatchId);
                 navigationWatchId = null;
             }
+            document.getElementById('miniNavBar').classList.remove('active');
         }
 
         function computeDistanceFromCoords(coords) {
@@ -1126,7 +1208,7 @@
         }
 
         // ============================================================
-        //  ΠΛΟΗΓΗΣΗ - ΜΕ ΣΥΝΕΧΗ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ΘΕΣΗΣ
+        //  ΠΛΟΗΓΗΣΗ - ΜΕ ΕΛΑΧΙΣΤΟΠΟΙΗΣΗ
         // ============================================================
         function toggleNavigation() {
             if (isNavigating) { 
@@ -1142,14 +1224,16 @@
 
         function startNavigation() {
             isNavigating = true;
+            isMinimized = false;
+            
             document.getElementById('navigationPanel').classList.add('active');
             document.getElementById('floatingPhotoBtn').classList.add('active');
+            document.getElementById('miniNavBar').classList.remove('active');
             document.getElementById('navBtn').innerHTML = '🛑';
             document.getElementById('bottomNavBtn').innerHTML = '🛑';
             
             generateSteps();
             
-            // Δημιουργία marker για τη θέση του χρήστη
             if (!userPositionMarker) {
                 var userIcon = L.divIcon({
                     html: '🧑‍🦯',
@@ -1160,7 +1244,6 @@
                 userPositionMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
             }
             
-            // ΕΝΕΡΓΟΠΟΙΗΣΗ ΠΑΡΑΚΟΛΟΥΘΗΣΗΣ ΘΕΣΗΣ
             if (navigator.geolocation) {
                 if (navigationWatchId) {
                     navigator.geolocation.clearWatch(navigationWatchId);
@@ -1171,9 +1254,7 @@
                     function(pos) {
                         var lat = pos.coords.latitude;
                         var lng = pos.coords.longitude;
-                        var acc = pos.coords.accuracy;
                         
-                        // 1. ΕΝΗΜΕΡΩΣΗ ΤΟΥ MARKER
                         if (userPositionMarker) {
                             userPositionMarker.setLatLng([lat, lng]);
                             var mapCenter = map.getCenter();
@@ -1183,30 +1264,12 @@
                             }
                         }
                         
-                        // 2. ΕΝΗΜΕΡΩΣΗ ΠΛΟΗΓΗΣΗΣ
                         updateNavigationPosition({
-                            latlng: L.latLng(lat, lng),
-                            accuracy: acc
+                            latlng: L.latLng(lat, lng)
                         });
-                        
-                        // 3. ΕΝΗΜΕΡΩΣΗ STATUS
-                        var statusEl = document.getElementById('statusText');
-                        if (statusEl) {
-                            statusEl.innerHTML = '📍 GPS: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
-                        }
                     },
                     function(err) {
-                        console.warn('Navigation watch error:', err.code, err.message);
-                        var statusEl = document.getElementById('statusText');
-                        if (statusEl) {
-                            if (err.code === 1) {
-                                statusEl.innerHTML = '❌ Άδεια GPS απορρίφθηκε';
-                            } else if (err.code === 3) {
-                                statusEl.innerHTML = '⏳ Αναζήτηση GPS...';
-                            } else {
-                                statusEl.innerHTML = '⚠️ Απώλεια GPS';
-                            }
-                        }
+                        console.warn('Navigation watch error:', err.message);
                     },
                     { 
                         enableHighAccuracy: true, 
@@ -1214,8 +1277,6 @@
                         maximumAge: 5000
                     }
                 );
-            } else {
-                alert('Ο browser σας δεν υποστηρίζει παρακολούθηση θέσης.');
             }
         }
 
@@ -1223,6 +1284,7 @@
             isNavigating = false;
             document.getElementById('navigationPanel').classList.remove('active');
             document.getElementById('floatingPhotoBtn').classList.remove('active');
+            document.getElementById('miniNavBar').classList.remove('active');
             document.getElementById('navBtn').innerHTML = '🧭';
             document.getElementById('bottomNavBtn').innerHTML = '🧭';
             
@@ -1236,15 +1298,52 @@
                 userPositionMarker = null;
             }
             
-            map.stopLocate();
-            map.off('locationfound', updateNavigationPosition);
-            
             var statusEl = document.getElementById('statusText');
             if (statusEl) {
                 statusEl.innerHTML = 'Πλοήγηση τερματίστηκε';
-                setTimeout(function() {
-                    statusEl.innerHTML = 'Πατήστε "Θέση μου"';
-                }, 2000);
+                setTimeout(function() { statusEl.innerHTML = 'Πατήστε "Θέση μου"'; }, 2000);
+            }
+        }
+
+        function minimizeNavigation() {
+            if (!isNavigating) return;
+            isMinimized = true;
+            document.getElementById('navigationPanel').classList.remove('active');
+            document.getElementById('miniNavBar').classList.add('active');
+            updateMiniBar();
+        }
+
+        function expandNavigation() {
+            if (!isNavigating) return;
+            isMinimized = false;
+            document.getElementById('navigationPanel').classList.add('active');
+            document.getElementById('miniNavBar').classList.remove('active');
+        }
+
+        function updateMiniBar() {
+            var miniDist = document.getElementById('miniDistance');
+            var miniFill = document.getElementById('miniProgressFill');
+            
+            if (navigationSteps.length > 0) {
+                var closest = 0;
+                var minDist = Infinity;
+                
+                if (userPositionMarker) {
+                    var userPos = userPositionMarker.getLatLng();
+                    for (var i = 0; i < navigationSteps.length; i++) {
+                        var dist = userPos.distanceTo(navigationSteps[i].latlng);
+                        if (dist < minDist) { minDist = dist; closest = i; }
+                    }
+                }
+                
+                var remaining = navigationSteps[navigationSteps.length - 1].distance - navigationSteps[closest].distance;
+                var remainingText = remaining < 1 ? 
+                    Math.round(remaining * 1000) + 'μ' : 
+                    remaining.toFixed(1) + ' χλμ';
+                miniDist.textContent = '🚶 ' + remainingText;
+                
+                var progress = (closest / (navigationSteps.length - 1)) * 100;
+                miniFill.style.width = Math.min(100, progress) + '%';
             }
         }
 
@@ -1318,11 +1417,15 @@
             var progress = (closest / (navigationSteps.length - 1)) * 100;
             document.getElementById('navProgressBar').style.width = Math.min(100, progress) + '%';
             
+            if (isMinimized) {
+                updateMiniBar();
+            }
+            
             var statusEl = document.getElementById('statusText');
             if (statusEl && navigationSteps.length > 0) {
                 var remaining = navigationSteps[navigationSteps.length - 1].distance - navigationSteps[closest].distance;
                 if (remaining < 0.1) {
-                    statusEl.innerHTML = '🏁 Φτάσατε στον προορισμό!';
+                    statusEl.innerHTML = '🏁 Φτάσατε!';
                 } else {
                     var remainingText = remaining < 1 ? 
                         Math.round(remaining * 1000) + ' μέτρα' : 
@@ -1340,6 +1443,8 @@
         document.getElementById('navBtn')?.addEventListener('click', toggleNavigation);
         document.getElementById('bottomNavBtn')?.addEventListener('click', toggleNavigation);
         document.getElementById('closeNavBtn')?.addEventListener('click', closeNavigation);
+        document.getElementById('minimizeNavBtn')?.addEventListener('click', minimizeNavigation);
+        document.getElementById('miniExpandBtn')?.addEventListener('click', expandNavigation);
         document.getElementById('clearBtn')?.addEventListener('click', clearAll);
         document.getElementById('bottomClearBtn')?.addEventListener('click', clearAll);
         document.getElementById('speedSelect')?.addEventListener('change', updateInfo);
@@ -1349,6 +1454,20 @@
         document.getElementById('floatingPhotoBtn')?.addEventListener('click', takePhoto);
         document.getElementById('navPhotoBtn')?.addEventListener('click', takePhoto);
         
+        // Αυτόματη ελαχιστοποίηση με swipe σε κινητά
+        var touchStartY = 0;
+        var navPanel = document.getElementById('navigationPanel');
+        navPanel.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].clientY;
+        });
+        navPanel.addEventListener('touchmove', function(e) {
+            if (!isNavigating || isMinimized) return;
+            var deltaY = e.touches[0].clientY - touchStartY;
+            if (deltaY > 80) {
+                minimizeNavigation();
+            }
+        });
+        
         document.addEventListener('click', function(e) {
             var list = document.getElementById('savedRoutesList');
             if (list.classList.contains('active') && !e.target.closest('#savedRoutesList') && !e.target.closest('#saveRouteBtn')) {
@@ -1357,7 +1476,7 @@
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n\n📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -1368,6 +1487,7 @@
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για εντοπισμό');
         console.log('🧭 Η πλοήγηση παρακολουθεί την κίνησή σας!');
+        console.log('⬇ Πατήστε το βέλος για ελαχιστοποίηση');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
