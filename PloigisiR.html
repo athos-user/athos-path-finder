@@ -254,10 +254,32 @@
             text-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
         
+        /* ΜΠΛΕ ΚΟΥΚΚΙΔΑ ΓΙΑ ΤΗ ΘΕΣΗ ΤΟΥ ΧΡΗΣΤΗ */
         .user-marker {
-            background: transparent;
-            font-size: 32px;
-            text-shadow: 0 0 15px rgba(0,0,0,0.6);
+            background: #2196F3;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            border: 3px solid white;
+            box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3), 0 2px 10px rgba(0,0,0,0.3);
+            display: block;
+        }
+        .user-marker::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 10px solid #2196F3;
+        }
+        .user-marker-wrapper {
+            position: relative;
+            width: 20px;
+            height: 20px;
         }
         
         #statusText {
@@ -323,7 +345,6 @@
             .info-panel { font-size: 11px; padding: 6px 10px; bottom: 60px; }
             .nav-photo-btn { width: 44px; height: 44px; font-size: 20px; bottom: 70px; right: 10px; }
             .location-marker { font-size: 24px; }
-            .user-marker { font-size: 28px; }
             #statusText { font-size: 10px; }
             #miniNavBar {
                 bottom: 65px;
@@ -1208,7 +1229,7 @@
         }
 
         // ============================================================
-        //  ΠΛΟΗΓΗΣΗ - ΜΕ ΕΛΑΧΙΣΤΟΠΟΙΗΣΗ
+        //  ΠΛΟΗΓΗΣΗ - ΜΕ ΕΛΑΧΙΣΤΟΠΟΙΗΣΗ ΚΑΙ ΑΥΤΟΜΑΤΟ ΚΕΝΤΡΑΡΙΣΜΑ
         // ============================================================
         function toggleNavigation() {
             if (isNavigating) { 
@@ -1234,12 +1255,12 @@
             
             generateSteps();
             
+            // ΜΠΛΕ ΚΟΥΚΚΙΔΑ ΑΝΤΙ ΓΙΑ ΑΝΘΡΩΠΑΚΙ
             if (!userPositionMarker) {
                 var userIcon = L.divIcon({
-                    html: '🧑‍🦯',
                     className: 'user-marker',
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 16]
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
                 });
                 userPositionMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
             }
@@ -1255,15 +1276,15 @@
                         var lat = pos.coords.latitude;
                         var lng = pos.coords.longitude;
                         
+                        // 1. Ενημέρωση του marker
                         if (userPositionMarker) {
                             userPositionMarker.setLatLng([lat, lng]);
-                            var mapCenter = map.getCenter();
-                            var distance = L.latLng(lat, lng).distanceTo(mapCenter);
-                            if (distance > 200) {
-                                map.panTo([lat, lng]);
-                            }
                         }
                         
+                        // 2. ΑΥΤΟΜΑΤΟ ΚΕΝΤΡΑΡΙΣΜΑ ΧΑΡΤΗ στη θέση του χρήστη
+                        map.panTo([lat, lng]);
+                        
+                        // 3. Ενημέρωση πλοήγησης
                         updateNavigationPosition({
                             latlng: L.latLng(lat, lng)
                         });
@@ -1488,6 +1509,7 @@
         console.log('📍 Πατήστε "Θέση μου" για εντοπισμό');
         console.log('🧭 Η πλοήγηση παρακολουθεί την κίνησή σας!');
         console.log('⬇ Πατήστε το βέλος για ελαχιστοποίηση');
+        console.log('🔵 Μπλε κουκκίδα για τη θέση σας');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
