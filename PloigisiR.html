@@ -337,7 +337,7 @@
             padding: 0 4px;
         }
         
-        /* Dropdown διαδρομών */
+        /* Λίστα διαδρομών */
         #routeDropdownContainer {
             position: absolute;
             top: 70px;
@@ -351,19 +351,63 @@
             border: 1px solid #ddd;
             display: none;
             backdrop-filter: blur(5px);
+            max-height: 60vh;
+            overflow-y: auto;
         }
         #routeDropdownContainer.active {
             display: block;
         }
-        #routeDropdownContainer select {
+        #routesList {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #routesList .route-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+        #routesList .route-item:hover {
+            background: #f5f5f5;
+        }
+        #routesList .route-item .info {
             flex: 1;
-            min-width: 150px;
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
             font-size: 12px;
-            background: white;
-            min-height: 34px;
+        }
+        #routesList .route-item .info .name {
+            font-weight: 600;
+            color: #2c5f2d;
+        }
+        #routesList .route-item .info .details {
+            font-size: 10px;
+            color: #888;
+        }
+        #routesList .route-item .actions {
+            display: flex;
+            gap: 4px;
+        }
+        #routesList .route-item .actions button {
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        #routesList .route-item .actions .load-btn {
+            background: #2c5f2d;
+            color: white;
+        }
+        #routesList .route-item .actions .load-btn:hover {
+            background: #1f4520;
+        }
+        #routesList .route-item .actions .delete-btn {
+            background: #b22222;
+            color: white;
+        }
+        #routesList .route-item .actions .delete-btn:hover {
+            background: #8b1a1a;
         }
         #routeStatus {
             font-size: 11px;
@@ -431,6 +475,10 @@
             #routeDropdownContainer {
                 top: 65px;
                 padding: 6px 10px;
+                max-height: 50vh;
+            }
+            #routesList {
+                max-height: 150px;
             }
             #tileProgress { bottom: 100px; padding: 10px 16px; font-size: 12px; min-width: 150px; }
         }
@@ -445,6 +493,7 @@
                 max-width: 500px;
                 left: 50%;
                 transform: translateX(-50%);
+                max-height: 50vh;
             }
         }
     </style>
@@ -477,15 +526,14 @@
         </select>
     </div>
 
-    <!-- Dropdown μενού διαδρομών -->
+    <!-- Λίστα διαδρομών -->
     <div id="routeDropdownContainer">
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <span style="font-weight:600;color:#2c5f2d;font-size:12px;">🗺️ Διαδρομή:</span>
-            <select id="routeSelect" style="flex:1;min-width:150px;padding:6px 10px;border-radius:8px;border:1px solid #ccc;font-size:12px;background:white;min-height:34px;">
-                <option value="">-- Επιλέξτε διαδρομή --</option>
-            </select>
-            <button id="hideRoutesBtn" style="background:#888;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;">✕</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+            <span style="font-weight:600;color:#2c5f2d;font-size:12px;">🗺️ Διαδρομές:</span>
+            <button id="saveRouteFromListBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 12px;border-radius:8px;cursor:pointer;font-size:11px;">💾 Αποθήκευση τρέχουσας</button>
+            <button id="hideRoutesBtn" style="background:#888;color:white;border:none;padding:4px 12px;border-radius:8px;cursor:pointer;font-size:11px;">✕ Κλείσιμο</button>
         </div>
+        <div id="routesList"></div>
         <div id="routeStatus"></div>
     </div>
 
@@ -551,7 +599,6 @@
         var isDownloading = false;
         var tileCache = {};
 
-        // Φόρτωση αποθηκευμένων tiles από το localStorage
         function loadTileCache() {
             try {
                 var data = localStorage.getItem('athos_tile_cache');
@@ -564,10 +611,8 @@
             }
         }
 
-        // Αποθήκευση tiles στο localStorage
         function saveTileCache() {
             try {
-                // Περιορισμός μεγέθους cache (μέγιστο 500 tiles)
                 var keys = Object.keys(tileCache);
                 if (keys.length > 500) {
                     var sorted = keys.sort(function(a, b) {
@@ -584,7 +629,6 @@
             }
         }
 
-        // Λήψη ενός tile
         function fetchTile(url, key) {
             return fetch(url)
                 .then(function(response) {
@@ -606,7 +650,6 @@
                 });
         }
 
-        // Κατέβασμα tiles της περιοχής
         async function downloadTiles() {
             if (isDownloading) {
                 alert('Η λήψη είναι ήδη σε εξέλιξη.');
@@ -617,7 +660,6 @@
             var zoom = map.getZoom();
             var downloadZoom = Math.min(zoom + 1, 16);
             
-            // Υπολογισμός των tiles που χρειάζονται
             var tiles = [];
             
             function latLngToTile(lat, lng, zoom) {
@@ -672,7 +714,6 @@
             var failed = 0;
             
             try {
-                // Φόρτωση υπάρχουσας cache
                 loadTileCache();
                 
                 for (var i = 0; i < tiles.length; i++) {
@@ -682,7 +723,6 @@
                     var subdomains = ['a', 'b', 'c'];
                     var urlWithSub = url.replace('{s}', subdomains[i % 3]);
                     
-                    // Έλεγχος αν υπάρχει ήδη στην cache
                     if (tileCache[key]) {
                         downloaded++;
                         var pct = Math.round(((downloaded + failed) / totalTiles) * 100);
@@ -703,13 +743,11 @@
                     fill.style.width = Math.min(100, pct) + '%';
                     percent.innerText = Math.min(100, pct) + '% (' + downloaded + '/' + totalTiles + ')';
                     
-                    // Μικρή καθυστέρηση για αποφυγή υπερφόρτωσης
                     if (i % 5 === 0) {
                         await new Promise(function(resolve) { setTimeout(resolve, 50); });
                     }
                 }
                 
-                // Αποθήκευση cache
                 saveTileCache();
                 
                 document.getElementById('downloadTilesBtn').innerHTML = '📥 Κατέβασμα';
@@ -730,10 +768,8 @@
             }
         }
 
-        // Event για το κουμπί
         document.getElementById('downloadTilesBtn')?.addEventListener('click', downloadTiles);
 
-        // Έλεγχος αν υπάρχει cache κατά την εκκίνηση
         loadTileCache();
         var totalCached = Object.keys(tileCache).length;
         if (totalCached > 0) {
@@ -742,7 +778,7 @@
         }
 
         // ============================================================
-        //  ΔΙΑΔΡΟΜΕΣ - ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΦΟΡΤΩΣΗ
+        //  ΔΙΑΔΡΟΜΕΣ - ΛΙΣΤΑ ΜΕ ΔΙΑΓΡΑΦΗ
         // ============================================================
         function getSavedRoutes() {
             try {
@@ -791,7 +827,7 @@
             routes.push(routeData);
             saveRoutesToStorage(routes);
             
-            populateRouteDropdown();
+            showRoutesList();
             showToast('✅ Αποθηκεύτηκε: ' + name, '#2ecc71');
             alert('✅ Η διαδρομή "' + name + '" αποθηκεύτηκε στη λίστα σας!');
         }
@@ -826,61 +862,68 @@
             var routes = getSavedRoutes();
             if (index < 0 || index >= routes.length) return;
             
-            if (confirm('Θέλετε να διαγράψετε τη διαδρομή "' + routes[index].name + '";')) {
+            var routeName = routes[index].name;
+            if (confirm('Θέλετε να διαγράψετε τη διαδρομή "' + routeName + '";')) {
                 routes.splice(index, 1);
                 saveRoutesToStorage(routes);
-                populateRouteDropdown();
-                showToast('🗑️ Διαγράφηκε', '#e74c3c');
+                showRoutesList();
+                showToast('🗑️ Διαγράφηκε: ' + routeName, '#e74c3c');
             }
         }
 
-        function populateRouteDropdown() {
+        function showRoutesList() {
             var routes = getSavedRoutes();
-            routeSelect.innerHTML = '<option value="">-- Επιλέξτε διαδρομή --</option>';
+            var container = document.getElementById('routesList');
             
+            if (routes.length === 0) {
+                container.innerHTML = '<div style="color:#999;padding:8px;text-align:center;font-size:12px;">Δεν υπάρχουν αποθηκευμένες διαδρομές</div>';
+                return;
+            }
+            
+            var html = '';
             for (var i = 0; i < routes.length; i++) {
                 var route = routes[i];
-                var option = document.createElement('option');
-                option.value = 'load_' + i;
                 var date = new Date(route.date).toLocaleDateString('el');
                 var dist = route.distance ? route.distance.toFixed(1) + ' km' : '';
-                option.textContent = route.name + ' (' + route.startName + ' → ' + route.endName + ') ' + dist;
-                routeSelect.appendChild(option);
+                html += '<div class="route-item" data-index="' + i + '">';
+                html += '<div class="info">';
+                html += '<div class="name">📍 ' + route.name + '</div>';
+                html += '<div class="details">' + route.startName + ' → ' + route.endName + ' ' + dist + ' (' + date + ')</div>';
+                html += '</div>';
+                html += '<div class="actions">';
+                html += '<button class="load-btn" data-index="' + i + '">📂 Φόρτωση</button>';
+                html += '<button class="delete-btn" data-index="' + i + '">✖</button>';
+                html += '</div>';
+                html += '</div>';
             }
+            container.innerHTML = html;
             
-            if (routes.length > 0) {
-                var separator = document.createElement('option');
-                separator.disabled = true;
-                separator.textContent = '─────────────────';
-                routeSelect.appendChild(separator);
-            }
+            container.querySelectorAll('.load-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var index = parseInt(this.dataset.index);
+                    loadRouteFromList(index);
+                });
+            });
             
-            var saveOption = document.createElement('option');
-            saveOption.value = 'save_current';
-            saveOption.textContent = '💾 Αποθήκευση τρέχουσας διαδρομής';
-            routeSelect.appendChild(saveOption);
-        }
-
-        function handleRouteSelect() {
-            var value = routeSelect.value;
-            if (!value) return;
+            container.querySelectorAll('.delete-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var index = parseInt(this.dataset.index);
+                    deleteRouteFromList(index);
+                });
+            });
             
-            if (value === 'save_current') {
-                saveCurrentRouteToList();
-                routeSelect.value = '';
-                return;
-            }
-            
-            if (value.startsWith('load_')) {
-                var index = parseInt(value.replace('load_', ''));
-                loadRouteFromList(index);
-                routeSelect.value = '';
-                return;
-            }
+            container.querySelectorAll('.route-item').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var index = parseInt(this.dataset.index);
+                    loadRouteFromList(index);
+                });
+            });
         }
 
         function showRouteDropdown() {
-            populateRouteDropdown();
+            showRoutesList();
             routeDropdownContainer.classList.add('active');
         }
 
@@ -890,18 +933,13 @@
             routeStatus.className = '';
         }
 
-        routeSelect.addEventListener('change', handleRouteSelect);
-        hideRoutesBtn.addEventListener('click', hideRouteDropdown);
-        
-        routeSelect.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                handleRouteSelect();
-            }
-        });
+        document.getElementById('saveRouteFromListBtn')?.addEventListener('click', saveCurrentRouteToList);
+        document.getElementById('hideRoutesBtn')?.addEventListener('click', hideRouteDropdown);
+        document.getElementById('showRoutesBtn')?.addEventListener('click', showRouteDropdown);
 
-        populateRouteDropdown();
-
-        // ΧΑΡΤΗΣ
+        // ============================================================
+        //  ΧΑΡΤΗΣ
+        // ============================================================
         var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
             attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 19
@@ -1955,7 +1993,6 @@
         document.getElementById('bottomPhotoBtn')?.addEventListener('click', takePhoto);
         document.getElementById('floatingPhotoBtn')?.addEventListener('click', takePhoto);
         document.getElementById('navPhotoBtn')?.addEventListener('click', takePhoto);
-        document.getElementById('showRoutesBtn')?.addEventListener('click', showRouteDropdown);
         
         var touchStartY = 0;
         var navPanel = document.getElementById('navigationPanel');
@@ -1978,7 +2015,7 @@
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση και φόρτωση διαδρομών\n📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών\n📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n\n📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -1988,7 +2025,7 @@
         updatePhotoList();
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για εντοπισμό');
-        console.log('🗺️ Πατήστε το κουμπί για να δείτε/αποθηκεύσετε διαδρομές');
+        console.log('🗺️ Πατήστε το κουμπί για να δείτε/αποθηκεύσετε/διαγράψετε διαδρομές');
         console.log('📥 Πατήστε "Κατέβασμα" για να κατεβάσετε την περιοχή');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
