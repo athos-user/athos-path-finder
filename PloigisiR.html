@@ -53,6 +53,7 @@
         #photoBtn { background: #8e44ad; }
         #saveRouteBtn { background: #2980b9; }
         #exportGpxBtn { background: #1a7a3a; }
+        #showRoutesBtn { background: #8e44ad; }
         
         .photo-marker {
             background: white;
@@ -332,6 +333,35 @@
             padding: 0 4px;
         }
         
+        /* Dropdown διαδρομών */
+        #routeDropdownContainer {
+            position: absolute;
+            top: 70px;
+            left: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.95);
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid #ddd;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+        #routeDropdownContainer.active {
+            display: block;
+        }
+        #routeDropdownContainer select {
+            flex: 1;
+            min-width: 150px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 12px;
+            background: white;
+            min-height: 34px;
+        }
+        
         @media (max-width: 600px) {
             .controls button, .controls select, .controls input { padding: 4px 6px; font-size: 10px; min-height: 28px; }
             .controls { gap: 3px; padding: 4px 6px; }
@@ -346,6 +376,10 @@
                 gap: 8px;
             }
             #miniNavBar .mini-progress { width: 60px; }
+            #routeDropdownContainer {
+                top: 65px;
+                padding: 6px 10px;
+            }
         }
         @media (min-width: 768px) {
             .controls { max-width: 95%; left: 50%; transform: translateX(-50%); }
@@ -354,6 +388,11 @@
             #navigationPanel.active { transform: translateX(-50%) translateY(0); }
             .nav-photo-btn { bottom: 85px; right: 25px; }
             #miniNavBar { bottom: 85px; }
+            #routeDropdownContainer {
+                max-width: 500px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
         }
     </style>
 </head>
@@ -366,6 +405,7 @@
         <button id="photoBtn">📸</button>
         <button id="helpBtn">❓</button>
         <button id="clearBtn">🗑️</button>
+        <button id="showRoutesBtn">🗺️</button>
         <input type="file" id="fileInput" accept=".gpx,.kml,.xml" title="GPX/KML">
         <button id="saveRouteBtn">💾</button>
         <button id="exportGpxBtn">📤</button>
@@ -374,6 +414,19 @@
             <option value="4" selected>Μέτριο</option>
             <option value="5">Γρήγορο</option>
         </select>
+    </div>
+
+    <!-- Dropdown μενού διαδρομών -->
+    <div id="routeDropdownContainer">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span style="font-weight:600;color:#2c5f2d;font-size:12px;">🗺️ Διαδρομή:</span>
+            <select id="routeSelect" style="flex:1;min-width:150px;padding:6px 10px;border-radius:8px;border:1px solid #ccc;font-size:12px;background:white;min-height:34px;">
+                <option value="">-- Επιλέξτε διαδρομή --</option>
+            </select>
+            <button id="loadRouteBtn" style="background:#2c5f2d;color:white;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;">📂 Φόρτωση</button>
+            <button id="hideRoutesBtn" style="background:#888;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;">✕</button>
+        </div>
+        <div id="routeStatus" style="font-size:11px;color:#888;margin-top:4px;text-align:center;"></div>
     </div>
 
     <div id="savedRoutesList"></div>
@@ -431,6 +484,111 @@
         // API KEYS
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
         var GRAPHHOPPER_API_KEY = '5fece833-cd75-4373-a6ba-a4137d3f5132';
+
+        // ============================================================
+        //  ΔΙΑΔΡΟΜΕΣ ΑΠΟ ΤΟ ΑΡΧΕΙΟ
+        // ============================================================
+        // ★★★ ΠΡΟΣΘΕΣΕ ΝΕΕΣ ΔΙΑΔΡΟΜΕΣ ΕΔΩ ★★★
+        var routesData = [
+            { start: 'Καρυές', end: 'Ιβήρων', url: 'https://drive.google.com/uc?export=download&id=1lgwF_E-OD_IpNKToQkx96ZWWy7-RpyLV' },
+            { start: 'Καρυές', end: 'Σταυρονικήτα', url: 'https://drive.google.com/uc?export=download&id=13UMofDGZlDbl8OEN3dk5oOaYqYG_5f8e' },
+            { start: 'Καρυές', end: 'Παντοκράτορος', url: 'https://drive.google.com/uc?export=download&id=1It2bcXSN1XFEf1akd4yfrpEwuaSxhAWH' }
+            // ★★★ ΠΡΟΣΘΕΣΕ ΝΕΕΣ ΓΡΑΜΜΕΣ ΕΔΩ ★★★
+            // { start: 'Νέα Αφετηρία', end: 'Νέος Προορισμός', url: 'https://drive.google.com/uc?export=download&id=ΝΕΟ_ID' },
+        ];
+
+        var routeDropdownContainer = document.getElementById('routeDropdownContainer');
+        var routeSelect = document.getElementById('routeSelect');
+        var loadRouteBtn = document.getElementById('loadRouteBtn');
+        var hideRoutesBtn = document.getElementById('hideRoutesBtn');
+        var routeStatus = document.getElementById('routeStatus');
+
+        // Γέμισμα του dropdown
+        function populateRouteDropdown() {
+            routeSelect.innerHTML = '<option value="">-- Επιλέξτε διαδρομή --</option>';
+            for (var i = 0; i < routesData.length; i++) {
+                var route = routesData[i];
+                var option = document.createElement('option');
+                option.value = i;
+                option.textContent = route.start + ' → ' + route.end;
+                routeSelect.appendChild(option);
+            }
+        }
+
+        // Εμφάνιση του dropdown
+        function showRouteDropdown() {
+            routeDropdownContainer.classList.add('active');
+        }
+
+        // Απόκρυψη του dropdown
+        function hideRouteDropdown() {
+            routeDropdownContainer.classList.remove('active');
+        }
+
+        // Φόρτωση της επιλεγμένης διαδρομής
+        function loadSelectedRoute() {
+            var index = parseInt(routeSelect.value);
+            if (isNaN(index) || index < 0 || index >= routesData.length) {
+                alert('Παρακαλώ επιλέξτε μια διαδρομή.');
+                return;
+            }
+
+            var route = routesData[index];
+            routeStatus.textContent = '⏳ Φόρτωση: ' + route.start + ' → ' + route.end + '...';
+            
+            var url = route.url;
+            var cacheBuster = '&_=' + Date.now();
+            var finalUrl = url + (url.indexOf('?') === -1 ? '?' : '') + cacheBuster;
+            
+            fetch(finalUrl)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('HTTP error ' + response.status);
+                    return response.text();
+                })
+                .then(function(gpxData) {
+                    routeStatus.textContent = '✅ Φορτώθηκε: ' + route.start + ' → ' + route.end;
+                    
+                    var blob = new Blob([gpxData], { type: 'application/gpx+xml' });
+                    var file = new File([blob], route.start + '_' + route.end + '.gpx', { type: 'application/gpx+xml' });
+                    
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var fileInput = document.getElementById('fileInput');
+                        var dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        fileInput.files = dataTransfer.files;
+                        
+                        var event = new Event('change', { bubbles: true });
+                        fileInput.dispatchEvent(event);
+                        
+                        hideRouteDropdown();
+                        showToast('✅ Φορτώθηκε: ' + route.start + ' → ' + route.end, '#2ecc71');
+                    };
+                    reader.readAsText(file);
+                })
+                .catch(function(err) {
+                    console.error('Error loading GPX:', err);
+                    routeStatus.textContent = '❌ Σφάλμα φόρτωσης: ' + err.message;
+                    alert('❌ Δεν ήταν δυνατή η φόρτωση της διαδρομής.\n\n' +
+                          'Δοκιμάστε:\n' +
+                          '• Να ελέγξετε τη σύνδεσή σας\n' +
+                          '• Το link του αρχείου να είναι σωστό\n' +
+                          '• Το αρχείο να είναι προσβάσιμο');
+                });
+        }
+
+        // Events για το dropdown
+        loadRouteBtn.addEventListener('click', loadSelectedRoute);
+        hideRoutesBtn.addEventListener('click', hideRouteDropdown);
+        
+        routeSelect.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                loadSelectedRoute();
+            }
+        });
+
+        // Αρχικοποίηση dropdown
+        populateRouteDropdown();
 
         // ΧΑΡΤΗΣ
         var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
@@ -708,7 +866,7 @@
         }
 
         // ============================================================
-        //  ΦΩΤΟΓΡΑΦΙΕΣ - ΜΕ ΣΩΣΤΗ ΘΕΣΗ
+        //  ΦΩΤΟΓΡΑΦΙΕΣ
         // ============================================================
         function takePhoto() {
             var input = document.getElementById('galleryInput');
@@ -718,10 +876,6 @@
                 if (file) {
                     var reader = new FileReader();
                     reader.onload = function(ev) {
-                        // ΠΡΟΣΠΑΘΗΣΕ ΝΑ ΠΑΡΕΙΣ ΤΗ ΘΕΣΗ ΑΠΟ:
-                        // 1. userPositionMarker (κατά την πλοήγηση)
-                        // 2. currentLocationMarker (από "Θέση μου")
-                        // 3. GPS (αν δεν υπάρχει marker)
                         var position = null;
                         
                         if (userPositionMarker && isNavigating) {
@@ -730,7 +884,6 @@
                             position = currentLocationMarker.getLatLng();
                         }
                         
-                        // Αν δεν έχουμε θέση, προσπάθησε με GPS
                         if (!position && navigator.geolocation) {
                             navigator.geolocation.getCurrentPosition(
                                 function(pos) {
@@ -738,7 +891,6 @@
                                     addPhotoToRoute(ev.target.result, position, file.name);
                                 },
                                 function() {
-                                    // Fallback στο κέντρο του χάρτη
                                     position = map.getCenter();
                                     addPhotoToRoute(ev.target.result, position, file.name);
                                 },
@@ -747,7 +899,6 @@
                             return;
                         }
                         
-                        // Αν και πάλι δεν έχουμε θέση, χρησιμοποίησε το κέντρο
                         if (!position) {
                             position = map.getCenter();
                         }
@@ -1135,7 +1286,6 @@
                         if (file) {
                             var reader = new FileReader();
                             reader.onload = function(ev2) {
-                                // Χρησιμοποίησε τη θέση που έκανες κλικ
                                 addPhotoToRoute(ev2.target.result, e.latlng, file.name);
                             };
                             reader.readAsDataURL(file);
@@ -1495,6 +1645,7 @@
         document.getElementById('bottomPhotoBtn')?.addEventListener('click', takePhoto);
         document.getElementById('floatingPhotoBtn')?.addEventListener('click', takePhoto);
         document.getElementById('navPhotoBtn')?.addEventListener('click', takePhoto);
+        document.getElementById('showRoutesBtn')?.addEventListener('click', showRouteDropdown);
         
         // Swipe to minimize
         var touchStartY = 0;
@@ -1518,7 +1669,7 @@
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Φόρτωση προεπιλεγμένων διαδρομών\n\n📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -1528,8 +1679,7 @@
         updatePhotoList();
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για εντοπισμό');
-        console.log('🧭 Η πλοήγηση παρακολουθεί την κίνησή σας!');
-        console.log('📸 Οι φωτογραφίες αποθηκεύονται στη θέση σας');
+        console.log('🗺️ Πατήστε το κουμπί για να δείτε τις διαδρομές');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
