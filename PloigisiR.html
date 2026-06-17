@@ -355,6 +355,7 @@
         var currentLocationMarker = null;
         var routePhotos = [];
         var photoMarkers = [];
+        var navigationWatchId = null; // Για παρακολούθηση θέσης
 
         // ΒΟΗΘΗΤΙΚΑ
         function getColorIcon(color) {
@@ -419,6 +420,11 @@
                 map.removeLayer(currentLocationMarker);
                 currentLocationMarker = null;
             }
+            // Σταμάτα την παρακολούθηση GPS
+            if (navigationWatchId) {
+                navigator.geolocation.clearWatch(navigationWatchId);
+                navigationWatchId = null;
+            }
         }
 
         function computeDistanceFromCoords(coords) {
@@ -433,7 +439,7 @@
         }
 
         // ============================================================
-        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ - ΑΝΑΓΚΑΣΤΙΚΗ ΧΡΗΣΗ GPS
+        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ
         // ============================================================
         var gpsAttempts = 0;
         var maxGpsAttempts = 3;
@@ -1131,10 +1137,13 @@
         }
 
         // ============================================================
-        //  ΠΛΟΗΓΗΣΗ
+        //  ΠΛΟΗΓΗΣΗ - ΜΕ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ΘΕΣΗΣ
         // ============================================================
         function toggleNavigation() {
-            if (isNavigating) { closeNavigation(); return; }
+            if (isNavigating) { 
+                closeNavigation(); 
+                return; 
+            }
             if (!lastMainGeometry || lastMainGeometry.length < 2) {
                 alert('Υπολογίστε πρώτα διαδρομή.');
                 return;
@@ -1150,8 +1159,41 @@
             document.getElementById('bottomNavBtn').innerHTML = '🛑';
             
             generateSteps();
-            map.locate({ setView: false, watch: true });
-            map.on('locationfound', updatePosition);
+            
+            // ΕΝΕΡΓΟΠΟΙΗΣΗ ΠΑΡΑΚΟΛΟΥΘΗΣΗΣ ΘΕΣΗΣ ΜΕ ΥΨΗΛΗ ΑΚΡΙΒΕΙΑ
+            if (navigator.geolocation) {
+                navigationWatchId = navigator.geolocation.watchPosition(
+                    // ΕΠΙΤΥΧΙΑ - ΕΝΗΜΕΡΩΣΗ ΘΕΣΗΣ
+                    function(pos) {
+                        var lat = pos.coords.latitude;
+                        var lng = pos.coords.longitude;
+                        var acc = pos.coords.accuracy;
+                        
+                        // Ενημέρωση του δείκτη θέσης
+                        updateNavigationPosition({
+                            latlng: L.latLng(lat, lng),
+                            accuracy: acc
+                        });
+                        
+                        // Ενημέρωση του marker στον χάρτη (αν υπάρχει)
+                        if (currentLocationMarker) {
+                            currentLocationMarker.setLatLng([lat, lng]);
+                        }
+                    },
+                    // ΑΠΟΤΥΧΙΑ
+                    function(err) {
+                        console.warn('Navigation watch error:', err.message);
+                        document.getElementById('statusText').innerHTML = '⚠️ Απώλεια GPS';
+                    },
+                    { 
+                        enableHighAccuracy: true, 
+                        timeout: 10000,
+                        maximumAge: 5000
+                    }
+                );
+            } else {
+                alert('Ο browser σας δεν υποστηρίζει παρακολούθηση θέσης.');
+            }
         }
 
         function closeNavigation() {
@@ -1160,8 +1202,16 @@
             document.getElementById('floatingPhotoBtn').classList.remove('active');
             document.getElementById('navBtn').innerHTML = '🧭';
             document.getElementById('bottomNavBtn').innerHTML = '🧭';
+            
+            // ΣΤΑΜΑΤΑ ΤΗΝ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ΘΕΣΗΣ
+            if (navigationWatchId) {
+                navigator.geolocation.clearWatch(navigationWatchId);
+                navigationWatchId = null;
+            }
+            
+            // Σταμάτα και την παρακολούθηση του Leaflet
             map.stopLocate();
-            map.off('locationfound', updatePosition);
+            map.off('locationfound', updateNavigationPosition);
         }
 
         function generateSteps() {
@@ -1211,23 +1261,41 @@
             container.innerHTML = html;
         }
 
-        function updatePosition(e) {
+        // ΝΕΑ ΣΥΝΑΡΤΗΣΗ ΕΝΗΜΕΡΩΣΗΣ ΘΕΣΗΣ
+        function updateNavigationPosition(e) {
             if (!isNavigating) return;
+            
             var userPos = e.latlng;
             var minDist = Infinity;
             var closest = 0;
             
+            // Βρες το κοντινότερο σημείο της διαδρομής
             for (var i = 0; i < navigationSteps.length; i++) {
                 var dist = userPos.distanceTo(navigationSteps[i].latlng);
-                if (dist < minDist) { minDist = dist; closest = i; }
+                if (dist < minDist) { 
+                    minDist = dist; 
+                    closest = i; 
+                }
             }
             
+            // Ενημέρωση του ενεργού βήματος
             document.querySelectorAll('.nav-step').forEach(function(el, idx) {
                 el.classList.toggle('active', idx === closest);
             });
             
+            // Ενημέρωση της προόδου
             var progress = (closest / (navigationSteps.length - 1)) * 100;
             document.getElementById('navProgressBar').style.width = Math.min(100, progress) + '%';
+            
+            // Ενημέρωση του status text
+            var statusEl = document.getElementById('statusText');
+            if (statusEl) {
+                var remaining = navigationSteps[navigationSteps.length - 1].distance - navigationSteps[closest].distance;
+                var remainingText = remaining < 1 ? 
+                    Math.round(remaining * 1000) + ' μέτρα' : 
+                    remaining.toFixed(1) + ' χλμ';
+                statusEl.innerHTML = '🚶 Απομένουν: ' + remainingText;
+            }
         }
 
         // ============================================================
@@ -1265,6 +1333,7 @@
         updatePhotoList();
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για εντοπισμό');
+        console.log('🧭 Η πλοήγηση παρακολουθεί την κίνησή σας!');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
