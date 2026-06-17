@@ -54,6 +54,8 @@
         #saveRouteBtn { background: #2980b9; }
         #exportGpxBtn { background: #1a7a3a; }
         #showRoutesBtn { background: #8e44ad; }
+        #downloadMapBtn { background: #d35400 !important; }
+        #downloadMapBtn:active { transform: scale(0.95); }
         
         .photo-marker {
             background: white;
@@ -378,6 +380,54 @@
             color: #e74c3c;
         }
         
+        /* Offline download progress */
+        #downloadProgress {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1500;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 16px;
+            text-align: center;
+            display: none;
+            min-width: 200px;
+            pointer-events: none;
+        }
+        #downloadProgress .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #444;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        #downloadProgress .progress-bar .fill {
+            height: 100%;
+            background: #2ecc71;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        #offlineStatus {
+            position: absolute;
+            top: 75px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            display: none;
+        }
+        #offlineStatus.online { background: rgba(46, 204, 113, 0.9); }
+        #offlineStatus.offline { background: rgba(231, 76, 60, 0.9); }
+        #offlineStatus.downloading { background: rgba(52, 152, 219, 0.9); }
+        
         @media (max-width: 600px) {
             .controls button, .controls select, .controls input { padding: 4px 6px; font-size: 10px; min-height: 28px; }
             .controls { gap: 3px; padding: 4px 6px; }
@@ -396,6 +446,8 @@
                 top: 65px;
                 padding: 6px 10px;
             }
+            #offlineStatus { top: 70px; right: 5px; font-size: 9px; padding: 3px 8px; }
+            #downloadProgress { bottom: 100px; padding: 10px 16px; font-size: 12px; min-width: 150px; }
         }
         @media (min-width: 768px) {
             .controls { max-width: 95%; left: 50%; transform: translateX(-50%); }
@@ -409,11 +461,22 @@
                 left: 50%;
                 transform: translateX(-50%);
             }
+            #offlineStatus { top: 80px; right: 15px; }
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
+
+    <!-- Offline Status -->
+    <div id="offlineStatus">📡 Online</div>
+
+    <!-- Download Progress -->
+    <div id="downloadProgress">
+        <div>📥 Λήψη χάρτη...</div>
+        <div class="progress-bar"><div class="fill" id="downloadFill"></div></div>
+        <div id="downloadPercent" style="font-size:12px; margin-top:4px;">0%</div>
+    </div>
 
     <div class="controls">
         <button id="locateBtn">📍</button>
@@ -422,6 +485,7 @@
         <button id="helpBtn">❓</button>
         <button id="clearBtn">🗑️</button>
         <button id="showRoutesBtn">🗺️</button>
+        <button id="downloadMapBtn">📥 Offline</button>
         <input type="file" id="fileInput" accept=".gpx,.kml,.xml" title="GPX/KML">
         <button id="saveRouteBtn">💾</button>
         <button id="exportGpxBtn">📤</button>
@@ -499,6 +563,232 @@
         // API KEYS
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
         var GRAPHHOPPER_API_KEY = '5fece833-cd75-4373-a6ba-a4137d3f5132';
+
+        // ============================================================
+        //  OFFLINE MAP DOWNLOAD
+        // ============================================================
+        var isDownloading = false;
+        var downloadAbortController = null;
+
+        // Φόρτωση της βιβλιοθήκης leaflet-offline (αν δεν έχει φορτωθεί)
+        function loadLeafletOffline() {
+            return new Promise(function(resolve, reject) {
+                if (typeof L.tileLayer.offline !== 'undefined') {
+                    resolve();
+                    return;
+                }
+                var script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet-offline@1.1.0/dist/leaflet-offline.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function downloadMap() {
+            if (isDownloading) {
+                // Ακύρωση λήψης
+                if (downloadAbortController) {
+                    downloadAbortController.abort();
+                    downloadAbortController = null;
+                    isDownloading = false;
+                    document.getElementById('downloadProgress').style.display = 'none';
+                    document.getElementById('offlineStatus').className = 'online';
+                    document.getElementById('offlineStatus').innerHTML = '📡 Online';
+                    document.getElementById('offlineStatus').style.display = 'block';
+                    document.getElementById('downloadMapBtn').innerHTML = '📥 Offline';
+                    setTimeout(function() {
+                        document.getElementById('offlineStatus').style.display = 'none';
+                    }, 3000);
+                    return;
+                }
+                return;
+            }
+            
+            // Φόρτωση της βιβλιοθήκης
+            try {
+                await loadLeafletOffline();
+            } catch(e) {
+                alert('❌ Δεν ήταν δυνατή η φόρτωση της βιβλιοθήκης offline.\n' +
+                      'Ελέγξτε τη σύνδεσή σας στο διαδίκτυο.');
+                return;
+            }
+            
+            var bounds = map.getBounds();
+            var zoom = map.getZoom();
+            var downloadZoom = Math.min(zoom + 1, 16);
+            
+            // Υπολογισμός εκτίμησης tiles
+            var boundsWidth = Math.abs(bounds.getEast() - bounds.getWest());
+            var boundsHeight = Math.abs(bounds.getNorth() - bounds.getSouth());
+            var tilesEstimate = Math.round((boundsWidth / 0.1) * (boundsHeight / 0.1) * 1.5);
+            
+            var confirmMsg = '📥 Λήψη χάρτη για offline χρήση:\n\n' +
+                            '📍 Κέντρο: ' + map.getCenter().lat.toFixed(4) + ', ' + map.getCenter().lng.toFixed(4) + '\n' +
+                            '🔍 Επίπεδο Zoom: ' + downloadZoom + '\n' +
+                            '📊 Εκτίμηση tiles: ~' + tilesEstimate + '\n' +
+                            '💾 Εκτιμώμενο μέγεθος: ~' + Math.round(tilesEstimate * 5 / 1024) + ' MB\n\n' +
+                            '⚠️ Η λήψη μπορεί να διαρκέσει αρκετά λεπτά.\n' +
+                            'Συνέχεια;';
+            
+            if (!confirm(confirmMsg)) return;
+            
+            isDownloading = true;
+            downloadAbortController = new AbortController();
+            
+            var progressDiv = document.getElementById('downloadProgress');
+            var fill = document.getElementById('downloadFill');
+            var percent = document.getElementById('downloadPercent');
+            
+            progressDiv.style.display = 'block';
+            fill.style.width = '0%';
+            percent.innerText = '0%';
+            
+            document.getElementById('offlineStatus').className = 'downloading';
+            document.getElementById('offlineStatus').innerHTML = '⏳ Λήψη...';
+            document.getElementById('offlineStatus').style.display = 'block';
+            document.getElementById('downloadMapBtn').innerHTML = '⏹️ Ακύρωση';
+            
+            try {
+                // Δημιουργία του offline tile layer
+                var offlineLayer = L.tileLayer.offline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    subdomains: 'abc',
+                    minZoom: 8,
+                    maxZoom: 18,
+                    crossOrigin: true
+                });
+                
+                var storage = offlineLayer.createStorage();
+                var tileLayer = offlineLayer;
+                
+                // Λήψη όλων των tiles στην περιοχή
+                var tiles = tileLayer.getTilesInBounds(bounds, downloadZoom);
+                var totalTiles = tiles.length;
+                var downloaded = 0;
+                var failed = 0;
+                
+                for (var i = 0; i < tiles.length; i++) {
+                    var tile = tiles[i];
+                    
+                    // Έλεγχος ακύρωσης
+                    if (downloadAbortController && downloadAbortController.signal.aborted) {
+                        throw new Error('Ακυρώθηκε από τον χρήστη');
+                    }
+                    
+                    var key = tile.z + '/' + tile.x + '/' + tile.y;
+                    try {
+                        var url = tileLayer.getTileUrl(tile);
+                        var response = await fetch(url, {
+                            signal: downloadAbortController ? downloadAbortController.signal : null
+                        });
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        var blob = await response.blob();
+                        await storage.setItem(key, blob);
+                        downloaded++;
+                    } catch(err) {
+                        if (err.name === 'AbortError') throw new Error('Ακυρώθηκε από τον χρήστη');
+                        failed++;
+                        console.warn('Tile failed:', key, err);
+                    }
+                    
+                    // Ενημέρωση προόδου
+                    var pct = Math.round(((downloaded + failed) / totalTiles) * 100);
+                    fill.style.width = Math.min(100, pct) + '%';
+                    percent.innerText = Math.min(100, pct) + '% (' + downloaded + '/' + totalTiles + ')';
+                    
+                    // Μικρή καθυστέρηση για αποφυγή υπερφόρτωσης
+                    if (i % 10 === 0) {
+                        await new Promise(function(resolve) { setTimeout(resolve, 10); });
+                    }
+                }
+                
+                // Ενημέρωση επιτυχίας
+                document.getElementById('offlineStatus').className = 'online';
+                document.getElementById('offlineStatus').innerHTML = '✅ Offline: ' + downloaded + ' tiles';
+                document.getElementById('offlineStatus').style.display = 'block';
+                
+                // Αποθήκευση πληροφορίας ότι έχουμε offline χάρτη
+                localStorage.setItem('athos_offline_map', JSON.stringify({
+                    downloaded: downloaded,
+                    date: new Date().toISOString(),
+                    zoom: downloadZoom,
+                    center: { lat: map.getCenter().lat, lng: map.getCenter().lng }
+                }));
+                
+                setTimeout(function() {
+                    document.getElementById('offlineStatus').style.display = 'none';
+                }, 5000);
+                
+                alert('✅ Λήψη ολοκληρώθηκε!\n\n' +
+                      '📥 Αποθηκεύτηκαν: ' + downloaded + ' tiles\n' +
+                      '❌ Απέτυχαν: ' + failed + ' tiles\n' +
+                      '📍 Η περιοχή είναι πλέον διαθέσιμη offline.');
+                
+            } catch(err) {
+                if (err.message === 'Ακυρώθηκε από τον χρήστη') {
+                    document.getElementById('offlineStatus').className = 'online';
+                    document.getElementById('offlineStatus').innerHTML = '⏹️ Ακυρώθηκε';
+                    document.getElementById('offlineStatus').style.display = 'block';
+                    setTimeout(function() {
+                        document.getElementById('offlineStatus').style.display = 'none';
+                    }, 3000);
+                } else {
+                    console.error('Download error:', err);
+                    document.getElementById('offlineStatus').className = 'offline';
+                    document.getElementById('offlineStatus').innerHTML = '❌ Σφάλμα λήψης';
+                    document.getElementById('offlineStatus').style.display = 'block';
+                    alert('❌ Σφάλμα κατά τη λήψη: ' + err.message);
+                }
+            } finally {
+                isDownloading = false;
+                downloadAbortController = null;
+                progressDiv.style.display = 'none';
+                document.getElementById('downloadMapBtn').innerHTML = '📥 Offline';
+                setTimeout(function() {
+                    if (document.getElementById('offlineStatus').innerHTML !== '✅ Offline:') {
+                        document.getElementById('offlineStatus').style.display = 'none';
+                    }
+                }, 5000);
+            }
+        }
+
+        // Έλεγχος online/offline κατάστασης
+        function updateOnlineStatus() {
+            var status = document.getElementById('offlineStatus');
+            if (navigator.onLine) {
+                status.className = 'online';
+                status.innerHTML = '📡 Online';
+                status.style.display = 'block';
+                setTimeout(function() {
+                    status.style.display = 'none';
+                }, 3000);
+            } else {
+                status.className = 'offline';
+                status.innerHTML = '📶 Offline Mode';
+                status.style.display = 'block';
+            }
+        }
+        
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        // Έλεγχος αν υπάρχει αποθηκευμένος offline χάρτης κατά την εκκίνηση
+        function checkOfflineMap() {
+            var savedMap = localStorage.getItem('athos_offline_map');
+            if (savedMap) {
+                try {
+                    var data = JSON.parse(savedMap);
+                    var status = document.getElementById('offlineStatus');
+                    status.className = 'online';
+                    status.innerHTML = '🗺️ Offline: ' + data.downloaded + ' tiles';
+                    status.style.display = 'block';
+                    setTimeout(function() {
+                        status.style.display = 'none';
+                    }, 4000);
+                } catch(e) {}
+            }
+        }
 
         // ============================================================
         //  ΔΙΑΔΡΟΜΕΣ - ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΦΟΡΤΩΣΗ
@@ -1736,6 +2026,7 @@
         document.getElementById('floatingPhotoBtn')?.addEventListener('click', takePhoto);
         document.getElementById('navPhotoBtn')?.addEventListener('click', takePhoto);
         document.getElementById('showRoutesBtn')?.addEventListener('click', showRouteDropdown);
+        document.getElementById('downloadMapBtn')?.addEventListener('click', downloadMap);
         
         // Swipe to minimize
         var touchStartY = 0;
@@ -1759,7 +2050,7 @@
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση και φόρτωση διαδρομών\n\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση και φόρτωση διαδρομών\n📥 Offline → Λήψη χάρτη για offline χρήση\n\n📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -1767,9 +2058,12 @@
         // ============================================================
         resetInfo();
         updatePhotoList();
+        checkOfflineMap();
+        updateOnlineStatus();
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για εντοπισμό');
         console.log('🗺️ Πατήστε το κουμπί για να δείτε/αποθηκεύσετε διαδρομές');
+        console.log('📥 Πατήστε "Offline" για λήψη της περιοχής');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
