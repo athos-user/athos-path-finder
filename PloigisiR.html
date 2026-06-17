@@ -254,7 +254,6 @@
             text-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
         
-        /* ΜΠΛΕ ΚΟΥΚΚΙΔΑ ΓΙΑ ΤΗ ΘΕΣΗ ΤΟΥ ΧΡΗΣΤΗ */
         .user-marker {
             background: #2196F3;
             border-radius: 50%;
@@ -276,11 +275,6 @@
             border-right: 6px solid transparent;
             border-top: 10px solid #2196F3;
         }
-        .user-marker-wrapper {
-            position: relative;
-            width: 20px;
-            height: 20px;
-        }
         
         #statusText {
             font-weight: 600;
@@ -288,7 +282,6 @@
             font-size: 11px;
         }
         
-        /* Mini Navigation Bar */
         #miniNavBar {
             position: absolute;
             bottom: 70px;
@@ -410,7 +403,6 @@
         </div>
     </div>
 
-    <!-- Mini Navigation Bar -->
     <div id="miniNavBar">
         <span>🧭</span>
         <span class="mini-distance" id="miniDistance">0 χλμ</span>
@@ -716,7 +708,7 @@
         }
 
         // ============================================================
-        //  ΦΩΤΟΓΡΑΦΙΕΣ
+        //  ΦΩΤΟΓΡΑΦΙΕΣ - ΜΕ ΣΩΣΤΗ ΘΕΣΗ
         // ============================================================
         function takePhoto() {
             var input = document.getElementById('galleryInput');
@@ -726,10 +718,40 @@
                 if (file) {
                     var reader = new FileReader();
                     reader.onload = function(ev) {
-                        var position = map.getCenter();
-                        if (currentLocationMarker) {
+                        // ΠΡΟΣΠΑΘΗΣΕ ΝΑ ΠΑΡΕΙΣ ΤΗ ΘΕΣΗ ΑΠΟ:
+                        // 1. userPositionMarker (κατά την πλοήγηση)
+                        // 2. currentLocationMarker (από "Θέση μου")
+                        // 3. GPS (αν δεν υπάρχει marker)
+                        var position = null;
+                        
+                        if (userPositionMarker && isNavigating) {
+                            position = userPositionMarker.getLatLng();
+                        } else if (currentLocationMarker) {
                             position = currentLocationMarker.getLatLng();
                         }
+                        
+                        // Αν δεν έχουμε θέση, προσπάθησε με GPS
+                        if (!position && navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                                function(pos) {
+                                    position = L.latLng(pos.coords.latitude, pos.coords.longitude);
+                                    addPhotoToRoute(ev.target.result, position, file.name);
+                                },
+                                function() {
+                                    // Fallback στο κέντρο του χάρτη
+                                    position = map.getCenter();
+                                    addPhotoToRoute(ev.target.result, position, file.name);
+                                },
+                                { enableHighAccuracy: true, timeout: 5000 }
+                            );
+                            return;
+                        }
+                        
+                        // Αν και πάλι δεν έχουμε θέση, χρησιμοποίησε το κέντρο
+                        if (!position) {
+                            position = map.getCenter();
+                        }
+                        
                         addPhotoToRoute(ev.target.result, position, file.name);
                     };
                     reader.readAsDataURL(file);
@@ -772,6 +794,8 @@
             photoMarkers.push(marker);
             updatePhotoList();
             updateInfo();
+            
+            showToast('✅ Φωτογραφία!', '#8e44ad');
         }
 
         function updatePhotoList() {
@@ -1111,6 +1135,7 @@
                         if (file) {
                             var reader = new FileReader();
                             reader.onload = function(ev2) {
+                                // Χρησιμοποίησε τη θέση που έκανες κλικ
                                 addPhotoToRoute(ev2.target.result, e.latlng, file.name);
                             };
                             reader.readAsDataURL(file);
@@ -1229,7 +1254,7 @@
         }
 
         // ============================================================
-        //  ΠΛΟΗΓΗΣΗ - ΜΕ ΕΛΑΧΙΣΤΟΠΟΙΗΣΗ ΚΑΙ ΑΥΤΟΜΑΤΟ ΚΕΝΤΡΑΡΙΣΜΑ
+        //  ΠΛΟΗΓΗΣΗ
         // ============================================================
         function toggleNavigation() {
             if (isNavigating) { 
@@ -1255,7 +1280,6 @@
             
             generateSteps();
             
-            // ΜΠΛΕ ΚΟΥΚΚΙΔΑ ΑΝΤΙ ΓΙΑ ΑΝΘΡΩΠΑΚΙ
             if (!userPositionMarker) {
                 var userIcon = L.divIcon({
                     className: 'user-marker',
@@ -1276,15 +1300,12 @@
                         var lat = pos.coords.latitude;
                         var lng = pos.coords.longitude;
                         
-                        // 1. Ενημέρωση του marker
                         if (userPositionMarker) {
                             userPositionMarker.setLatLng([lat, lng]);
                         }
                         
-                        // 2. ΑΥΤΟΜΑΤΟ ΚΕΝΤΡΑΡΙΣΜΑ ΧΑΡΤΗ στη θέση του χρήστη
                         map.panTo([lat, lng]);
                         
-                        // 3. Ενημέρωση πλοήγησης
                         updateNavigationPosition({
                             latlng: L.latLng(lat, lng)
                         });
@@ -1475,7 +1496,7 @@
         document.getElementById('floatingPhotoBtn')?.addEventListener('click', takePhoto);
         document.getElementById('navPhotoBtn')?.addEventListener('click', takePhoto);
         
-        // Αυτόματη ελαχιστοποίηση με swipe σε κινητά
+        // Swipe to minimize
         var touchStartY = 0;
         var navPanel = document.getElementById('navigationPanel');
         navPanel.addEventListener('touchstart', function(e) {
@@ -1508,8 +1529,7 @@
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για εντοπισμό');
         console.log('🧭 Η πλοήγηση παρακολουθεί την κίνησή σας!');
-        console.log('⬇ Πατήστε το βέλος για ελαχιστοποίηση');
-        console.log('🔵 Μπλε κουκκίδα για τη θέση σας');
+        console.log('📸 Οι φωτογραφίες αποθηκεύονται στη θέση σας');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
