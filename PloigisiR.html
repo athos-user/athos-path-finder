@@ -439,7 +439,6 @@
             <select id="routeSelect" style="flex:1;min-width:150px;padding:6px 10px;border-radius:8px;border:1px solid #ccc;font-size:12px;background:white;min-height:34px;">
                 <option value="">-- Επιλέξτε διαδρομή --</option>
             </select>
-            <button id="loadRouteBtn" style="background:#2c5f2d;color:white;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;">📂 Φόρτωση</button>
             <button id="hideRoutesBtn" style="background:#888;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;">✕</button>
         </div>
         <div id="routeStatus"></div>
@@ -502,40 +501,162 @@
         var GRAPHHOPPER_API_KEY = '5fece833-cd75-4373-a6ba-a4137d3f5132';
 
         // ============================================================
-        //  ΔΙΑΔΡΟΜΕΣ ΑΠΟ ΤΟ ΑΡΧΕΙΟ
+        //  ΔΙΑΔΡΟΜΕΣ - ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΦΟΡΤΩΣΗ
         // ============================================================
-        // ★★★ ΠΡΟΣΘΕΣΕ ΝΕΕΣ ΔΙΑΔΡΟΜΕΣ ΕΔΩ ★★★
-        // Για κάθε διαδρομή, χρειάζεσαι το FILE_ID από το Google Drive
-        // Το link είναι: https://drive.google.com/file/d/XXXXXX/view
-        // Το FILE_ID είναι το XXXXXX
-        var routesData = [
-            { start: 'Καρυές', end: 'Ιβήρων', fileId: '1lgwF_E-OD_IpNKToQkx96ZWWy7-RpyLV' },
-            { start: 'Καρυές', end: 'Σταυρονικήτα', fileId: '13UMofDGZlDbl8OEN3dk5oOaYqYG_5f8e' },
-            { start: 'Καρυές', end: 'Παντοκράτορος', fileId: '1It2bcXSN1XFEf1akd4yfrpEwuaSxhAWH' }
-            // ★★★ ΠΡΟΣΘΕΣΕ ΝΕΕΣ ΓΡΑΜΜΕΣ ΕΔΩ ★★★
-            // { start: 'Νέα Αφετηρία', end: 'Νέος Προορισμός', fileId: 'ΝΕΟ_ID' },
-        ];
+        // Οι διαδρομές αποθηκεύονται στο localStorage
+        // Μπορείς να προσθέσεις νέες, να τις φορτώσεις και να τις διαγράψεις
 
-        var routeDropdownContainer = document.getElementById('routeDropdownContainer');
-        var routeSelect = document.getElementById('routeSelect');
-        var loadRouteBtn = document.getElementById('loadRouteBtn');
-        var hideRoutesBtn = document.getElementById('hideRoutesBtn');
-        var routeStatus = document.getElementById('routeStatus');
+        function getSavedRoutes() {
+            try {
+                return JSON.parse(localStorage.getItem('athos_saved_routes') || '[]');
+            } catch(e) {
+                return [];
+            }
+        }
 
-        // Γέμισμα του dropdown
+        function saveRoutesToStorage(routes) {
+            localStorage.setItem('athos_saved_routes', JSON.stringify(routes));
+        }
+
+        // Αποθήκευση της τρέχουσας διαδρομής στη λίστα
+        function saveCurrentRouteToList() {
+            if (!lastMainGeometry || lastMainGeometry.length < 2) {
+                alert('Δεν υπάρχει διαδρομή για αποθήκευση.');
+                return;
+            }
+            
+            var name = prompt('Όνομα για τη διαδρομή:', 'Διαδρομή ' + new Date().toLocaleDateString('el'));
+            if (!name) return;
+            
+            var routes = getSavedRoutes();
+            
+            // Έλεγχος για διπλότυπο όνομα
+            var exists = routes.some(function(r) { return r.name === name; });
+            if (exists) {
+                if (!confirm('Υπάρχει ήδη διαδρομή με αυτό το όνομα. Θέλετε να την αντικαταστήσετε;')) {
+                    return;
+                }
+                // Διαγραφή της παλιάς
+                routes = routes.filter(function(r) { return r.name !== name; });
+            }
+            
+            var routeData = {
+                name: name,
+                geometry: lastMainGeometry,
+                distance: lastMainDistance,
+                date: new Date().toISOString(),
+                startName: startName || 'Αφετηρία',
+                endName: endName || 'Προορισμός',
+                waypoints: waypoints.map(function(p, i) { 
+                    return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο' }; 
+                }),
+                photos: routePhotos
+            };
+            
+            routes.push(routeData);
+            saveRoutesToStorage(routes);
+            
+            populateRouteDropdown();
+            showToast('✅ Αποθηκεύτηκε: ' + name, '#2ecc71');
+            alert('✅ Η διαδρομή "' + name + '" αποθηκεύτηκε στη λίστα σας!');
+        }
+
+        // Φόρτωση διαδρομής από τη λίστα
+        function loadRouteFromList(index) {
+            var routes = getSavedRoutes();
+            if (index < 0 || index >= routes.length) {
+                alert('Η διαδρομή δεν βρέθηκε.');
+                return;
+            }
+            
+            var route = routes[index];
+            
+            // Αποθήκευση στο localStorage για την κλασική φόρτωση
+            var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
+            // Έλεγχος αν υπάρχει ήδη
+            var existingIndex = saved.findIndex(function(r) { return r.name === route.name; });
+            if (existingIndex >= 0) {
+                saved[existingIndex] = route;
+            } else {
+                saved.push(route);
+            }
+            localStorage.setItem('athos_routes', JSON.stringify(saved));
+            
+            // Φόρτωση με την υπάρχουσα συνάρτηση
+            // Βρίσκουμε το index στο saved
+            var newIndex = saved.findIndex(function(r) { return r.name === route.name; });
+            if (newIndex >= 0) {
+                loadRoute(newIndex);
+            }
+            
+            hideRouteDropdown();
+        }
+
+        // Διαγραφή διαδρομής από τη λίστα
+        function deleteRouteFromList(index) {
+            var routes = getSavedRoutes();
+            if (index < 0 || index >= routes.length) return;
+            
+            if (confirm('Θέλετε να διαγράψετε τη διαδρομή "' + routes[index].name + '";')) {
+                routes.splice(index, 1);
+                saveRoutesToStorage(routes);
+                populateRouteDropdown();
+                showToast('🗑️ Διαγράφηκε', '#e74c3c');
+            }
+        }
+
+        // Γέμισμα του dropdown με όλες τις διαδρομές
         function populateRouteDropdown() {
+            var routes = getSavedRoutes();
             routeSelect.innerHTML = '<option value="">-- Επιλέξτε διαδρομή --</option>';
-            for (var i = 0; i < routesData.length; i++) {
-                var route = routesData[i];
+            
+            for (var i = 0; i < routes.length; i++) {
+                var route = routes[i];
                 var option = document.createElement('option');
-                option.value = i;
-                option.textContent = route.start + ' → ' + route.end;
+                option.value = 'load_' + i;
+                var date = new Date(route.date).toLocaleDateString('el');
+                var dist = route.distance ? route.distance.toFixed(1) + ' km' : '';
+                option.textContent = route.name + ' (' + route.startName + ' → ' + route.endName + ') ' + dist;
                 routeSelect.appendChild(option);
+            }
+            
+            // Διαχωριστικό
+            if (routes.length > 0) {
+                var separator = document.createElement('option');
+                separator.disabled = true;
+                separator.textContent = '─────────────────';
+                routeSelect.appendChild(separator);
+            }
+            
+            // Επιλογή για αποθήκευση τρέχουσας διαδρομής
+            var saveOption = document.createElement('option');
+            saveOption.value = 'save_current';
+            saveOption.textContent = '💾 Αποθήκευση τρέχουσας διαδρομής';
+            routeSelect.appendChild(saveOption);
+        }
+
+        // Χειρισμός επιλογής από το dropdown
+        function handleRouteSelect() {
+            var value = routeSelect.value;
+            if (!value) return;
+            
+            if (value === 'save_current') {
+                saveCurrentRouteToList();
+                routeSelect.value = '';
+                return;
+            }
+            
+            if (value.startsWith('load_')) {
+                var index = parseInt(value.replace('load_', ''));
+                loadRouteFromList(index);
+                routeSelect.value = '';
+                return;
             }
         }
 
         // Εμφάνιση του dropdown
         function showRouteDropdown() {
+            populateRouteDropdown();
             routeDropdownContainer.classList.add('active');
         }
 
@@ -546,103 +667,13 @@
             routeStatus.className = '';
         }
 
-        // Φόρτωση της επιλεγμένης διαδρομής
-        function loadSelectedRoute() {
-            var index = parseInt(routeSelect.value);
-            if (isNaN(index) || index < 0 || index >= routesData.length) {
-                alert('Παρακαλώ επιλέξτε μια διαδρομή.');
-                return;
-            }
-
-            var route = routesData[index];
-            routeStatus.textContent = '⏳ Φόρτωση: ' + route.start + ' → ' + route.end + '...';
-            routeStatus.className = 'loading';
-            
-            // Σωστό link για λήψη από Google Drive
-            var downloadUrl = 'https://drive.google.com/uc?export=download&id=' + route.fileId;
-            
-            // Προσθήκη cache buster
-            var finalUrl = downloadUrl + '&_=' + Date.now();
-            
-            fetch(finalUrl)
-                .then(function(response) {
-                    if (!response.ok) {
-                        throw new Error('HTTP error ' + response.status);
-                    }
-                    return response.text();
-                })
-                .then(function(gpxData) {
-                    // Έλεγχος αν το περιεχόμενο είναι HTML (συμβαίνει όταν το Google Drive ζητά επιβεβαίωση)
-                    if (gpxData.trim().startsWith('<!DOCTYPE') || gpxData.trim().startsWith('<html')) {
-                        // Προσπάθεια να πάρουμε το πραγματικό αρχείο
-                        return fetchWithGoogleDriveConfirmation(downloadUrl);
-                    }
-                    return gpxData;
-                })
-                .then(function(gpxData) {
-                    routeStatus.textContent = '✅ Φορτώθηκε: ' + route.start + ' → ' + route.end;
-                    routeStatus.className = 'success';
-                    
-                    var blob = new Blob([gpxData], { type: 'application/gpx+xml' });
-                    var file = new File([blob], route.start + '_' + route.end + '.gpx', { type: 'application/gpx+xml' });
-                    
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        var fileInput = document.getElementById('fileInput');
-                        var dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(file);
-                        fileInput.files = dataTransfer.files;
-                        
-                        var event = new Event('change', { bubbles: true });
-                        fileInput.dispatchEvent(event);
-                        
-                        hideRouteDropdown();
-                        showToast('✅ Φορτώθηκε: ' + route.start + ' → ' + route.end, '#2ecc71');
-                    };
-                    reader.readAsText(file);
-                })
-                .catch(function(err) {
-                    console.error('Error loading GPX:', err);
-                    routeStatus.textContent = '❌ Σφάλμα φόρτωσης';
-                    routeStatus.className = 'error';
-                    
-                    // Εναλλακτική λύση: Άνοιγμα σε νέο παράθυρο
-                    var useFallback = confirm(
-                        '❌ Δεν ήταν δυνατή η φόρτωση της διαδρομής.\n\n' +
-                        'Μπορείτε να κάνετε λήψη του αρχείου και να το φορτώσετε μόνοι σας.\n\n' +
-                        'Θα ανοίξει το link του αρχείου. Πατήστε "Λήψη" και μετά φορτώστε το στην εφαρμογή.'
-                    );
-                    
-                    if (useFallback) {
-                        window.open('https://drive.google.com/file/d/' + route.fileId + '/view', '_blank');
-                    }
-                });
-        }
-
-        // Βοηθητική συνάρτηση για επιβεβαίωση Google Drive
-        function fetchWithGoogleDriveConfirmation(url) {
-            return fetch(url)
-                .then(function(response) {
-                    return response.text();
-                })
-                .then(function(html) {
-                    // Αναζήτηση για το πραγματικό link λήψης
-                    var match = html.match(/href="(https:\/\/drive\.google\.com\/uc\?export=download[^"]*)"/);
-                    if (match && match[1]) {
-                        return fetch(match[1])
-                            .then(function(res) { return res.text(); });
-                    }
-                    throw new Error('Δεν βρέθηκε link λήψης');
-                });
-        }
-
         // Events για το dropdown
-        loadRouteBtn.addEventListener('click', loadSelectedRoute);
+        routeSelect.addEventListener('change', handleRouteSelect);
         hideRoutesBtn.addEventListener('click', hideRouteDropdown);
         
         routeSelect.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
-                loadSelectedRoute();
+                handleRouteSelect();
             }
         });
 
@@ -1087,7 +1118,7 @@
         });
 
         // ============================================================
-        //  ΑΠΟΘΗΚΕΥΣΗ / ΦΟΡΤΩΣΗ
+        //  ΑΠΟΘΗΚΕΥΣΗ / ΦΟΡΤΩΣΗ (κλασική μέθοδος)
         // ============================================================
         function saveRoute() {
             if (!lastMainGeometry || lastMainGeometry.length < 2) {
@@ -1728,7 +1759,7 @@
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Φόρτωση προεπιλεγμένων διαδρομών από το Google Drive\n\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση και φόρτωση διαδρομών\n\n📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -1738,8 +1769,7 @@
         updatePhotoList();
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για εντοπισμό');
-        console.log('🗺️ Πατήστε το κουμπί για να δείτε τις διαδρομές');
-        console.log('📂 Οι διαδρομές φορτώνονται από το Google Drive');
+        console.log('🗺️ Πατήστε το κουμπί για να δείτε/αποθηκεύσετε διαδρομές');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
