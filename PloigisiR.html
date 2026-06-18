@@ -60,6 +60,7 @@
         #downloadTilesBtn.active::after { content: ' ✅'; }
         #recordBtn { background: #e74c3c; }
         #recordBtn.recording { background: #c0392b; animation: pulse 1.5s infinite; }
+        #toggleWaypointsBtn { background: #2980b9; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
         .photo-marker {
@@ -422,6 +423,108 @@
             color: #e74c3c;
         }
         
+        /* ΠΑΝΕΛ ΣΗΜΕΙΩΝ */
+        #waypointsPanel {
+            position: absolute;
+            bottom: 130px;
+            left: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.97);
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+            font-size: 12px;
+            border: 1px solid #ddd;
+        }
+        #waypointsPanel.active {
+            display: block;
+        }
+        #waypointsPanel .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
+        }
+        #waypointsPanel .panel-header span {
+            font-weight: 600;
+            color: #2c5f2d;
+        }
+        #waypointsPanel .panel-header button {
+            background: #888;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 2px 10px;
+            cursor: pointer;
+        }
+        #waypointsList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #waypointsList li {
+            padding: 6px 4px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        #waypointsList li:last-child {
+            border-bottom: none;
+        }
+        .waypoint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .waypoint-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .waypoint-coords {
+            font-size: 10px;
+            color: #888;
+            margin: 2px 0;
+        }
+        .waypoint-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .waypoint-actions input, .waypoint-actions select {
+            padding: 2px 4px;
+            font-size: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            flex: 1;
+            min-width: 50px;
+        }
+        .waypoint-actions button {
+            padding: 2px 8px;
+            font-size: 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .remove-waypoint-btn {
+            background: #b22222;
+            color: white;
+        }
+        .remove-waypoint-btn:hover {
+            background: #8b1a1a;
+        }
+        .set-waypoint-btn {
+            background: #2c5f2d;
+            color: white;
+        }
+        .set-waypoint-btn:hover {
+            background: #1f4520;
+        }
+        
         /* Tile Download Progress */
         #tileProgress {
             position: absolute;
@@ -477,6 +580,10 @@
                 max-height: 150px;
             }
             #tileProgress { bottom: 100px; padding: 10px 16px; font-size: 12px; min-width: 150px; }
+            #waypointsPanel {
+                bottom: 120px;
+                max-height: 200px;
+            }
         }
         @media (min-width: 768px) {
             .controls { max-width: 95%; left: 50%; transform: translateX(-50%); }
@@ -490,6 +597,12 @@
                 left: 50%;
                 transform: translateX(-50%);
                 max-height: 50vh;
+            }
+            #waypointsPanel {
+                max-width: 400px;
+                left: 50%;
+                transform: translateX(-50%);
+                bottom: 100px;
             }
         }
     </style>
@@ -512,6 +625,7 @@
         <button id="helpBtn">❓</button>
         <button id="clearBtn">🗑️</button>
         <button id="showRoutesBtn">🗺️</button>
+        <button id="toggleWaypointsBtn">📍 Σημεία</button>
         <button id="downloadTilesBtn">📥 Κατέβασμα</button>
         <input type="file" id="fileInput" accept=".gpx,.kml,.xml" title="GPX/KML">
         <button id="saveRouteBtn">💾</button>
@@ -532,6 +646,15 @@
         </div>
         <div id="routesList"></div>
         <div id="routeStatus"></div>
+    </div>
+
+    <!-- ΠΑΝΕΛ ΣΗΜΕΙΩΝ -->
+    <div id="waypointsPanel">
+        <div class="panel-header">
+            <span>📍 Σημεία (<span id="waypointCount">0</span>)</span>
+            <button id="closeWaypointsBtn">✕</button>
+        </div>
+        <ul id="waypointsList"></ul>
     </div>
 
     <div id="savedRoutesList"></div>
@@ -656,7 +779,6 @@
             });
         }
 
-        // ★★★ ΒΕΛΤΙΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ - ΕΠΙΣΤΡΕΦΕΙ NULL ΑΝ ΔΕΝ ΥΠΑΡΧΕΙ ★★★
         function getPhotoFromDB(id) {
             return new Promise(function(resolve, reject) {
                 if (!db) {
@@ -678,7 +800,6 @@
                         if (request.result) {
                             resolve(request.result);
                         } else {
-                            // Η φωτογραφία δεν υπάρχει - επιστρέφουμε null
                             console.log('ℹ️ Φωτογραφία δεν βρέθηκε:', id);
                             resolve(null);
                         }
@@ -748,7 +869,6 @@
             return 'photo_' + Math.abs(hash).toString(36);
         }
 
-        // Άνοιγμα της βάσης κατά την εκκίνηση
         openPhotoDB().catch(function(err) {
             console.warn('⚠️ Σφάλμα ανοίγματος IndexedDB:', err);
         });
@@ -1011,7 +1131,6 @@
             });
         }
 
-        // ★★★ ΒΕΛΤΙΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ ΦΟΡΤΩΣΗΣ ΑΠΟ ΛΙΣΤΑ ★★★
         function loadRouteFromList(index) {
             var routes = getSavedRoutes();
             if (index < 0 || index >= routes.length) {
@@ -1055,7 +1174,6 @@
             });
         }
 
-        // ★★★ ΝΕΑ ΣΥΝΑΡΤΗΣΗ - ΑΜΕΣΗ ΦΟΡΤΩΣΗ ΔΙΑΔΡΟΜΗΣ ★★★
         function loadRouteDirect(route, index, photos) {
             if (!route.geometry || route.geometry.length < 2) {
                 alert('Μη έγκυρη διαδρομή.');
@@ -1472,6 +1590,7 @@
             resetInfo();
             document.getElementById('fileInput').value = '';
             updatePhotoList();
+            updateWaypointsPanel();
             if (currentLocationMarker) {
                 map.removeLayer(currentLocationMarker);
                 currentLocationMarker = null;
@@ -1485,7 +1604,6 @@
                 navigationWatchId = null;
             }
             document.getElementById('miniNavBar').classList.remove('active');
-            updateWaypointsPanel();
         }
 
         function computeDistanceFromCoords(coords) {
@@ -1906,7 +2024,7 @@
         }
 
         // ============================================================
-        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ
+        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ - ΜΕ ΔΙΑΓΡΑΦΗ
         // ============================================================
         map.on('click', function(e) {
             if (isLocationTracking) {
@@ -1963,6 +2081,7 @@
             }
             
             calculateRoute();
+            updateWaypointsPanel();
         }
 
         function setEndPoint(latlng) {
@@ -1982,8 +2101,10 @@
             }
             
             calculateRoute();
+            updateWaypointsPanel();
         }
 
+        // ★★★ ΒΕΛΤΙΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ ΜΕ ΚΟΥΜΠΙ ΔΙΑΓΡΑΦΗΣ ★★★
         function addWaypoint(latlng) {
             if (isLocationTracking) {
                 stopLocationTracking();
@@ -1992,9 +2113,17 @@
             var name = prompt('Όνομα:', 'Σημείο ' + (waypoints.length + 1));
             waypoints.push(latlng);
             waypointNames.push(name || 'Σημείο ' + (waypoints.length));
+            waypointColors.push('blue');
+            waypointDescs.push('');
+            waypointElevs.push(null);
+            waypointImages.push('');
+            waypointStops.push(0);
             var idx = waypoints.length - 1;
+            
             var marker = L.marker(latlng, { icon: getColorIcon('blue'), draggable: true })
-                .addTo(map).bindPopup('📍 ' + waypointNames[idx]);
+                .addTo(map)
+                .bindPopup('📍 ' + waypointNames[idx] + '<br><button onclick="removeWaypoint(' + idx + ')" style="background:#b22222;color:white;border:none;padding:4px 10px;border-radius:6px;margin-top:4px;cursor:pointer;">✖ Διαγραφή</button>');
+            
             marker.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); });
             markers.push(marker);
             
@@ -2003,7 +2132,41 @@
             }
             
             calculateRoute();
+            updateWaypointsPanel();
         }
+
+        // ★★★ ΣΥΝΑΡΤΗΣΗ ΔΙΑΓΡΑΦΗΣ ★★★
+        function removeWaypoint(index) {
+            if (index >= 0 && index < waypoints.length) {
+                if (confirm('Θέλετε να διαγράψετε το σημείο "' + waypointNames[index] + '";')) {
+                    if (markers[index]) {
+                        map.removeLayer(markers[index]);
+                    }
+                    waypoints.splice(index, 1);
+                    waypointNames.splice(index, 1);
+                    waypointDescs.splice(index, 1);
+                    waypointColors.splice(index, 1);
+                    waypointElevs.splice(index, 1);
+                    waypointImages.splice(index, 1);
+                    waypointStops.splice(index, 1);
+                    markers.splice(index, 1);
+                    
+                    // Ενημέρωση των δεικτών στα markers
+                    for (var i = 0; i < markers.length; i++) {
+                        if (markers[i]) {
+                            markers[i].setPopupContent('📍 ' + waypointNames[i] + '<br><button onclick="removeWaypoint(' + i + ')" style="background:#b22222;color:white;border:none;padding:4px 10px;border-radius:6px;margin-top:4px;cursor:pointer;">✖ Διαγραφή</button>');
+                        }
+                    }
+                    
+                    updateWaypointsPanel();
+                    calculateRoute();
+                    showToast('🗑️ Διαγράφηκε το σημείο', '#e74c3c');
+                }
+            }
+        }
+
+        // Δηλώνουμε τη συνάρτηση ως global για να μπορεί να καλείται από το popup
+        window.removeWaypoint = removeWaypoint;
 
         function takePhotoForPoint(position, label) {
             var overlay = document.createElement('div');
@@ -2326,6 +2489,7 @@
                 .addTo(map).bindPopup('🏁 ' + (route.endName || 'Προορισμός'));
             
             updateInfo();
+            updateWaypointsPanel();
             alert('✅ Φορτώθηκε: ' + route.name + ' με ' + routePhotos.length + ' φωτογραφίες');
         }
 
@@ -2379,7 +2543,7 @@
         }
 
         // ============================================================
-        //  ΕΝΗΜΕΡΩΣΗ ΠΑΝΕΛ ΣΗΜΕΙΩΝ
+        //  ΠΑΝΕΛ ΣΗΜΕΙΩΝ ΜΕ ΔΙΑΓΡΑΦΗ
         // ============================================================
         var startElev = null, startDesc = '', startColor = 'green', startImage = '';
         var endElev = null, endDesc = '', endColor = 'red', endImage = '';
@@ -2387,257 +2551,88 @@
         function updateWaypointsPanel() {
             var list = document.getElementById('waypointsList');
             var countSpan = document.getElementById('waypointCount');
+            if (!list) return;
+            
             var html = '';
+            var total = 0;
             
             if (startPoint) {
+                total++;
                 var elevText = startElev !== null ? ' (' + startElev + ' m)' : '';
-                var imagePreview = startImage ? '<div style="text-align:center; max-width:100%;"><img src="' + startImage + '" style="max-width:100%; max-height:120px; width:auto; height:auto; object-fit:contain; border-radius:4px;"></div>' : '';
-                html += '<li><div class="waypoint-header"><span class="waypoint-name">🚩 ' + startName + elevText + '</span></div><div class="waypoint-coords">' + startPoint.lat.toFixed(5) + ', ' + startPoint.lng.toFixed(5) + '</div><div class="waypoint-actions"><input type="text" id="startNameInput" value="' + startName.replace(/"/g, '&quot;') + '" placeholder="Όνομα"><input type="text" id="startDescInput" value="' + startDesc.replace(/"/g, '&quot;') + '" placeholder="Περιγραφή"><select id="startColorSelect"><option value="red" ' + (startColor==='red'?'selected':'') + '>Κόκκινο</option><option value="blue" ' + (startColor==='blue'?'selected':'') + '>Μπλε</option><option value="green" ' + (startColor==='green'?'selected':'') + '>Πράσινο</option><option value="orange" ' + (startColor==='orange'?'selected':'') + '>Πορτοκαλί</option><option value="yellow" ' + (startColor==='yellow'?'selected':'') + '>Κίτρινο</option><option value="violet" ' + (startColor==='violet'?'selected':'') + '>Μωβ</option></select><button class="change-start-image">📷</button><button class="set-start">✔</button></div>' + imagePreview + '</li>';
+                html += '<li><div class="waypoint-header"><span class="waypoint-name">🚩 ' + startName + elevText + '</span></div><div class="waypoint-coords">' + startPoint.lat.toFixed(5) + ', ' + startPoint.lng.toFixed(5) + '</div></li>';
             }
             
             for (var i = 0; i < waypoints.length; i++) {
+                total++;
                 var elevText = waypointElevs[i] !== null ? ' (' + waypointElevs[i] + ' m)' : '';
-                var imagePreview = waypointImages[i] ? '<div style="text-align:center; max-width:100%;"><img src="' + waypointImages[i] + '" style="max-width:100%; max-height:120px; width:auto; height:auto; object-fit:contain; border-radius:4px;"></div>' : '';
                 html += '<li>';
                 html += '<div class="waypoint-header">';
-                html += '<span class="waypoint-name">🔹 ' + waypointNames[i] + elevText + '</span>';
-                html += '<div style="display:flex;gap:4px;">';
-                html += '<button class="remove-waypoint" data-index="' + i + '" style="background:#b22222;color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px;line-height:1;">✖</button>';
-                html += '</div></div>';
+                html += '<span class="waypoint-name">📍 ' + waypointNames[i] + elevText + '</span>';
+                html += '<button class="remove-waypoint-btn" data-index="' + i + '">✖</button>';
+                html += '</div>';
                 html += '<div class="waypoint-coords">' + waypoints[i].lat.toFixed(5) + ', ' + waypoints[i].lng.toFixed(5) + '</div>';
                 html += '<div class="waypoint-actions">';
-                html += '<input type="text" id="name_' + i + '" value="' + waypointNames[i].replace(/"/g, '&quot;') + '" placeholder="Όνομα">';
-                html += '<input type="text" id="desc_' + i + '" value="' + waypointDescs[i].replace(/"/g, '&quot;') + '" placeholder="Περιγραφή">';
-                html += '<select id="color_' + i + '"><option value="red" ' + (waypointColors[i]==='red'?'selected':'') + '>Κόκκινο</option><option value="blue" ' + (waypointColors[i]==='blue'?'selected':'') + '>Μπλε</option><option value="green" ' + (waypointColors[i]==='green'?'selected':'') + '>Πράσινο</option><option value="orange" ' + (waypointColors[i]==='orange'?'selected':'') + '>Πορτοκαλί</option><option value="yellow" ' + (waypointColors[i]==='yellow'?'selected':'') + '>Κίτρινο</option><option value="violet" ' + (waypointColors[i]==='violet'?'selected':'') + '>Μωβ</option></select>';
-                html += '<input type="number" min="0" id="stop_' + i + '" value="' + waypointStops[i] + '" style="width:60px;" placeholder="Λεπτά">';
-                html += '<button class="change-waypoint-image" data-index="' + i + '">📷</button>';
-                html += '<button class="set-waypoint" data-index="' + i + '">✔</button>';
-                html += '</div>' + imagePreview + '</li>';
+                html += '<input type="text" id="wpName_' + i + '" value="' + waypointNames[i].replace(/"/g, '&quot;') + '" placeholder="Όνομα" style="flex:2;">';
+                html += '<button class="set-waypoint-btn" data-index="' + i + '">✔</button>';
+                html += '</div>';
+                html += '</li>';
             }
             
             if (endPoint) {
+                total++;
                 var elevText = endElev !== null ? ' (' + endElev + ' m)' : '';
-                var imagePreview = endImage ? '<div style="text-align:center; max-width:100%;"><img src="' + endImage + '" style="max-width:100%; max-height:120px; width:auto; height:auto; object-fit:contain; border-radius:4px;"></div>' : '';
-                html += '<li><div class="waypoint-header"><span class="waypoint-name">🏁 ' + endName + elevText + '</span></div><div class="waypoint-coords">' + endPoint.lat.toFixed(5) + ', ' + endPoint.lng.toFixed(5) + '</div><div class="waypoint-actions"><input type="text" id="endNameInput" value="' + endName.replace(/"/g, '&quot;') + '" placeholder="Όνομα"><input type="text" id="endDescInput" value="' + endDesc.replace(/"/g, '&quot;') + '" placeholder="Περιγραφή"><select id="endColorSelect"><option value="red" ' + (endColor==='red'?'selected':'') + '>Κόκκινο</option><option value="blue" ' + (endColor==='blue'?'selected':'') + '>Μπλε</option><option value="green" ' + (endColor==='green'?'selected':'') + '>Πράσινο</option><option value="orange" ' + (endColor==='orange'?'selected':'') + '>Πορτοκαλί</option><option value="yellow" ' + (endColor==='yellow'?'selected':'') + '>Κίτρινο</option><option value="violet" ' + (endColor==='violet'?'selected':'') + '>Μωβ</option></select><button class="change-end-image">📷</button><button class="set-end">✔</button></div>' + imagePreview + '</li>';
+                html += '<li><div class="waypoint-header"><span class="waypoint-name">🏁 ' + endName + elevText + '</span></div><div class="waypoint-coords">' + endPoint.lat.toFixed(5) + ', ' + endPoint.lng.toFixed(5) + '</div></li>';
             }
 
             if (currentGpxGeometry && !startPoint && !endPoint) {
-                html += '<li><div class="waypoint-header"><span class="waypoint-name">📍 Αφετηρία GPX</span><span class="waypoint-coords">' + currentGpxGeometry[0][1].toFixed(5) + ', ' + currentGpxGeometry[0][0].toFixed(5) + '</span></div><div class="waypoint-actions"><input type="text" id="gpxStartNameInput" value="' + currentGpxStartName.replace(/"/g, '&quot;') + '" placeholder="Όνομα"><button class="set-gpx-start">✔</button></div></li>';
-                html += '<li><div class="waypoint-header"><span class="waypoint-name">📍 Προορισμός GPX</span><span class="waypoint-coords">' + currentGpxGeometry[currentGpxGeometry.length-1][1].toFixed(5) + ', ' + currentGpxGeometry[currentGpxGeometry.length-1][0].toFixed(5) + '</span></div><div class="waypoint-actions"><input type="text" id="gpxEndNameInput" value="' + currentGpxEndName.replace(/"/g, '&quot;') + '" placeholder="Όνομα"><button class="set-gpx-end">✔</button></div></li>';
+                html += '<li><div class="waypoint-header"><span class="waypoint-name">📍 GPX</span></div><div class="waypoint-coords">' + currentGpxGeometry[0][1].toFixed(5) + ' → ' + currentGpxGeometry[currentGpxGeometry.length-1][1].toFixed(5) + '</div></li>';
             }
             
-            if (list) list.innerHTML = html;
-            var total = (startPoint?1:0) + waypoints.length + (endPoint?1:0);
+            list.innerHTML = html;
             if (countSpan) countSpan.innerText = total;
 
-            document.querySelectorAll('.remove-waypoint').forEach(function(btn) {
+            // Events για διαγραφή
+            document.querySelectorAll('.remove-waypoint-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var i = parseInt(this.dataset.index);
-                    if (confirm('Θέλετε να διαγράψετε το σημείο "' + waypointNames[i] + '";')) {
-                        removeWaypoint(i);
-                    }
+                    removeWaypoint(i);
                 });
             });
 
-            document.querySelectorAll('.set-start').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var name = document.getElementById('startNameInput')?.value || 'Αφετηρία';
-                    var desc = document.getElementById('startDescInput')?.value || '';
-                    var color = document.getElementById('startColorSelect')?.value || 'red';
-                    if (startPoint) {
-                        startName = name;
-                        startDesc = desc;
-                        startColor = color;
-                        if (startMarker) {
-                            startMarker.setIcon(getColorIcon(startColor));
-                            startMarker.setTooltipContent(startName + (startElev !== null ? ' (' + startElev + ' m)' : ''));
-                        }
-                        updateWaypointsPanel();
-                        calculateRoute();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.set-end').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var name = document.getElementById('endNameInput')?.value || 'Προορισμός';
-                    var desc = document.getElementById('endDescInput')?.value || '';
-                    var color = document.getElementById('endColorSelect')?.value || 'red';
-                    if (endPoint) {
-                        endName = name;
-                        endDesc = desc;
-                        endColor = color;
-                        if (endMarker) {
-                            endMarker.setIcon(getColorIcon(endColor));
-                            endMarker.setTooltipContent(endName + (endElev !== null ? ' (' + endElev + ' m)' : ''));
-                        }
-                        updateWaypointsPanel();
-                        calculateRoute();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.set-waypoint').forEach(function(btn) {
+            // Events για ενημέρωση ονόματος
+            document.querySelectorAll('.set-waypoint-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var i = parseInt(this.dataset.index);
-                    var name = document.getElementById('name_' + i)?.value || 'Ενδιάμεσο';
-                    var desc = document.getElementById('desc_' + i)?.value || '';
-                    var color = document.getElementById('color_' + i)?.value || 'red';
-                    var stop = parseInt(document.getElementById('stop_' + i)?.value) || 0;
-                    if (i < waypoints.length) {
-                        waypointNames[i] = name;
-                        waypointDescs[i] = desc;
-                        waypointColors[i] = color;
-                        waypointStops[i] = stop;
+                    var nameInput = document.getElementById('wpName_' + i);
+                    if (nameInput && i < waypoints.length) {
+                        var newName = nameInput.value.trim() || 'Σημείο ' + (i+1);
+                        waypointNames[i] = newName;
                         if (markers[i]) {
-                            markers[i].setIcon(getColorIcon(color));
-                            markers[i].setTooltipContent(name + (waypointElevs[i] !== null ? ' (' + waypointElevs[i] + ' m)' : ''));
+                            markers[i].setPopupContent('📍 ' + newName + '<br><button onclick="removeWaypoint(' + i + ')" style="background:#b22222;color:white;border:none;padding:4px 10px;border-radius:6px;margin-top:4px;cursor:pointer;">✖ Διαγραφή</button>');
                         }
                         updateWaypointsPanel();
-                        calculateRoute();
+                        showToast('✅ Ενημερώθηκε: ' + newName, '#2ecc71');
                     }
-                });
-            });
-
-            document.querySelectorAll('.change-start-image').forEach(function(btn) {
-                btn.addEventListener('click', async function() {
-                    var image = await selectImage();
-                    if (image) {
-                        startImage = image;
-                        updateWaypointsPanel();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.change-end-image').forEach(function(btn) {
-                btn.addEventListener('click', async function() {
-                    var image = await selectImage();
-                    if (image) {
-                        endImage = image;
-                        updateWaypointsPanel();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.change-waypoint-image').forEach(function(btn) {
-                btn.addEventListener('click', async function() {
-                    var i = parseInt(this.dataset.index);
-                    var image = await selectImage();
-                    if (image && i < waypointImages.length) {
-                        waypointImages[i] = image;
-                        updateWaypointsPanel();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.set-gpx-start').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var name = document.getElementById('gpxStartNameInput')?.value || 'Αφετηρία GPX';
-                    currentGpxStartName = name;
-                    updateWaypointsPanel();
-                });
-            });
-
-            document.querySelectorAll('.set-gpx-end').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var name = document.getElementById('gpxEndNameInput')?.value || 'Προορισμός GPX';
-                    currentGpxEndName = name;
-                    updateWaypointsPanel();
-                });
-            });
-
-            // POI list
-            var poiList = document.getElementById('poiList');
-            var poiCountSpan = document.getElementById('poiCount');
-            var poiHtml = '';
-            for (var i = 0; i < pois.length; i++) {
-                var elevText = poiElevs[i] !== null ? ' (' + poiElevs[i] + ' m)' : '';
-                poiHtml += '<li><div class="waypoint-header"><span class="waypoint-name">⭐ ' + poiNames[i] + elevText + '</span><button class="remove-poi" data-index="' + i + '" style="background:#b22222;color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px;line-height:1;">✖</button></div><div class="waypoint-coords">' + pois[i].lat.toFixed(5) + ', ' + pois[i].lng.toFixed(5) + '</div><div class="waypoint-actions"><input type="text" id="poiName_' + i + '" value="' + poiNames[i].replace(/"/g, '&quot;') + '" placeholder="Όνομα"><input type="text" id="poiDesc_' + i + '" value="' + poiDescs[i].replace(/"/g, '&quot;') + '" placeholder="Περιγραφή"><select id="poiColor_' + i + '"><option value="red" ' + (poiColors[i]==='red'?'selected':'') + '>Κόκκινο</option><option value="blue" ' + (poiColors[i]==='blue'?'selected':'') + '>Μπλε</option><option value="green" ' + (poiColors[i]==='green'?'selected':'') + '>Πράσινο</option><option value="orange" ' + (poiColors[i]==='orange'?'selected':'') + '>Πορτοκαλί</option><option value="yellow" ' + (poiColors[i]==='yellow'?'selected':'') + '>Κίτρινο</option><option value="violet" ' + (poiColors[i]==='violet'?'selected':'') + '>Μωβ</option></select><button class="set-poi" data-index="' + i + '">✔</button></div></li>';
-            }
-            if (poiList) poiList.innerHTML = poiHtml;
-            if (poiCountSpan) poiCountSpan.innerText = pois.length;
-
-            document.querySelectorAll('.set-poi').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var i = parseInt(this.dataset.index);
-                    var name = document.getElementById('poiName_' + i)?.value || 'POI';
-                    var desc = document.getElementById('poiDesc_' + i)?.value || '';
-                    var color = document.getElementById('poiColor_' + i)?.value || 'red';
-                    if (i < pois.length) {
-                        poiNames[i] = name;
-                        poiDescs[i] = desc;
-                        poiColors[i] = color;
-                        if (poiMarkers[i]) {
-                            poiMarkers[i].setIcon(getColorIcon(color));
-                            poiMarkers[i].setTooltipContent(name + (poiElevs[i] !== null ? ' (' + poiElevs[i] + ' m)' : ''));
-                        }
-                        updateWaypointsPanel();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.remove-poi').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var i = parseInt(this.dataset.index);
-                    removePoi(i);
                 });
             });
         }
 
         // ============================================================
-        //  REMOVE FUNCTIONS
+        //  ΕΜΦΑΝΙΣΗ / ΑΠΟΚΡΥΨΗ ΠΑΝΕΛ ΣΗΜΕΙΩΝ
         // ============================================================
-        function removeWaypoint(index) {
-            if (index >= 0 && index < waypoints.length) {
-                map.removeLayer(markers[index]);
-                waypoints.splice(index, 1);
-                waypointNames.splice(index, 1);
-                waypointDescs.splice(index, 1);
-                waypointColors.splice(index, 1);
-                waypointElevs.splice(index, 1);
-                waypointImages.splice(index, 1);
-                waypointStops.splice(index, 1);
-                markers.splice(index, 1);
-                updateWaypointsPanel();
-                calculateRoute();
-            }
-        }
-
-        function removePoi(index) {
-            if (index >= 0 && index < pois.length) {
-                map.removeLayer(poiMarkers[index]);
-                pois.splice(index, 1);
-                poiNames.splice(index, 1);
-                poiDescs.splice(index, 1);
-                poiColors.splice(index, 1);
-                poiElevs.splice(index, 1);
-                poiImages.splice(index, 1);
-                poiMarkers.splice(index, 1);
+        document.getElementById('toggleWaypointsBtn')?.addEventListener('click', function() {
+            var panel = document.getElementById('waypointsPanel');
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+            } else {
+                panel.classList.add('active');
                 updateWaypointsPanel();
             }
-        }
+        });
 
-        function selectImage() {
-            return new Promise(function(resolve) {
-                var fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = 'image/*';
-                fileInput.style.display = 'none';
-                document.body.appendChild(fileInput);
-                
-                fileInput.onchange = function(e) {
-                    var file = e.target.files[0];
-                    if (!file) { resolve(null); document.body.removeChild(fileInput); return; }
-                    var reader = new FileReader();
-                    reader.onload = function(ev) {
-                        resolve(ev.target.result);
-                        document.body.removeChild(fileInput);
-                    };
-                    reader.readAsDataURL(file);
-                };
-                fileInput.click();
-            });
-        }
+        document.getElementById('closeWaypointsBtn')?.addEventListener('click', function() {
+            document.getElementById('waypointsPanel').classList.remove('active');
+        });
 
         // ============================================================
         //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ
@@ -3007,6 +3002,12 @@
             if (list && list.classList.contains('active') && !e.target.closest('#savedRoutesList') && !e.target.closest('#saveRouteBtn')) {
                 list.classList.remove('active');
             }
+            
+            // Κλείσιμο panel σημείων αν πατηθεί έξω
+            var panel = document.getElementById('waypointsPanel');
+            if (panel && panel.classList.contains('active') && !e.target.closest('#waypointsPanel') && !e.target.closest('#toggleWaypointsBtn')) {
+                panel.classList.remove('active');
+            }
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
@@ -3023,7 +3024,8 @@
                   '📤 GPX → Εξαγωγή διαδρομής\n' +
                   '📂 GPX/KML → Φόρτωση αρχείου\n' +
                   '🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών\n' +
-                  '✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ\n' +
+                  '📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n' +
+                  '✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ ή από το popup του marker\n' +
                   '📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n\n' +
                   '📸 Αυτόματη φωτογραφία σε Start / End / Ενδιάμεσα!\n' +
                   '📍 Το στίγμα σας παρακολουθείται χωρίς να παρεμβαίνει στη σχεδίαση!\n' +
@@ -3041,7 +3043,9 @@
         console.log('📍 Η παρακολούθηση σταματά όταν κάνετε κλικ για σχεδίαση');
         console.log('📍 Πατήστε ξανά "Θέση μου" για διακοπή');
         console.log('📸 Αυτόματη φωτογραφία σε Start/End/Ενδιάμεσα!');
-        console.log('✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ');
+        console.log('🗑️ Διαγραφή ενδιάμεσων σημείων:');
+        console.log('   • Από το πάνελ 📍 Σημεία');
+        console.log('   • Από το popup του marker στον χάρτη');
         console.log('📸 Οι φωτογραφίες αποθηκεύονται στο IndexedDB');
         console.log('⚠️ Αν μια φωτογραφία λείπει, η εφαρμογή συνεχίζει κανονικά');
         
