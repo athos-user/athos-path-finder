@@ -594,6 +594,139 @@
         var GRAPHHOPPER_API_KEY = '5fece833-cd75-4373-a6ba-a4137d3f5132';
 
         // ============================================================
+        //  INDEXEDDB - ΑΠΟΘΗΚΕΥΣΗ ΦΩΤΟΓΡΑΦΙΩΝ
+        // ============================================================
+        var db = null;
+        var DB_NAME = 'AthosPhotoDB';
+        var STORE_NAME = 'photos';
+
+        function openPhotoDB() {
+            return new Promise(function(resolve, reject) {
+                var request = indexedDB.open(DB_NAME, 1);
+                
+                request.onupgradeneeded = function(event) {
+                    var db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        var store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                };
+                
+                request.onsuccess = function(event) {
+                    db = event.target.result;
+                    console.log('✅ IndexedDB ανοιχτή');
+                    resolve(db);
+                };
+                
+                request.onerror = function(event) {
+                    console.error('❌ Σφάλμα IndexedDB:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        function savePhotoToDB(imageData, note, lat, lng, filename) {
+            return new Promise(function(resolve, reject) {
+                if (!db) {
+                    openPhotoDB().then(function() {
+                        savePhotoToDB(imageData, note, lat, lng, filename).then(resolve).catch(reject);
+                    });
+                    return;
+                }
+                
+                var photo = {
+                    id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                    image: imageData,
+                    note: note || '',
+                    lat: lat,
+                    lng: lng,
+                    filename: filename || 'photo.jpg',
+                    timestamp: new Date().toISOString()
+                };
+                
+                var transaction = db.transaction([STORE_NAME], 'readwrite');
+                var store = transaction.objectStore(STORE_NAME);
+                var request = store.add(photo);
+                
+                request.onsuccess = function() {
+                    resolve(photo.id);
+                };
+                
+                request.onerror = function(event) {
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        function getPhotoFromDB(id) {
+            return new Promise(function(resolve, reject) {
+                if (!db) {
+                    reject(new Error('Database not open'));
+                    return;
+                }
+                
+                var transaction = db.transaction([STORE_NAME], 'readonly');
+                var store = transaction.objectStore(STORE_NAME);
+                var request = store.get(id);
+                
+                request.onsuccess = function() {
+                    resolve(request.result);
+                };
+                
+                request.onerror = function(event) {
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        function getAllPhotosFromDB() {
+            return new Promise(function(resolve, reject) {
+                if (!db) {
+                    reject(new Error('Database not open'));
+                    return;
+                }
+                
+                var transaction = db.transaction([STORE_NAME], 'readonly');
+                var store = transaction.objectStore(STORE_NAME);
+                var request = store.getAll();
+                
+                request.onsuccess = function() {
+                    resolve(request.result);
+                };
+                
+                request.onerror = function(event) {
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        function deletePhotoFromDB(id) {
+            return new Promise(function(resolve, reject) {
+                if (!db) {
+                    reject(new Error('Database not open'));
+                    return;
+                }
+                
+                var transaction = db.transaction([STORE_NAME], 'readwrite');
+                var store = transaction.objectStore(STORE_NAME);
+                var request = store.delete(id);
+                
+                request.onsuccess = function() {
+                    resolve();
+                };
+                
+                request.onerror = function(event) {
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // Άνοιγμα της βάσης κατά την εκκίνηση
+        openPhotoDB().catch(function(err) {
+            console.warn('⚠️ Σφάλμα ανοίγματος IndexedDB:', err);
+        });
+
+        // ============================================================
         //  ΑΠΛΟ CACHING TILES ΜΕ LOCALSTORAGE
         // ============================================================
         var isDownloading = false;
@@ -811,6 +944,9 @@
                 routes = routes.filter(function(r) { return r.name !== name; });
             }
             
+            // Αποθήκευση μόνο των photo IDs (όχι των ίδιων των εικόνων)
+            var photoIds = routePhotos.map(function(p) { return p.id; });
+            
             var routeData = {
                 name: name,
                 geometry: lastMainGeometry,
@@ -821,7 +957,7 @@
                 waypoints: waypoints.map(function(p, i) { 
                     return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο' }; 
                 }),
-                photos: routePhotos
+                photoIds: photoIds // Μόνο τα IDs
             };
             
             routes.push(routeData);
@@ -829,7 +965,7 @@
             
             showRoutesList();
             showToast('✅ Αποθηκεύτηκε: ' + name, '#2ecc71');
-            alert('✅ Η διαδρομή "' + name + '" αποθηκεύτηκε στη λίστα σας!');
+            alert('✅ Η διαδρομή "' + name + '" αποθηκεύτηκε στη λίστα σας με ' + photoIds.length + ' φωτογραφίες!');
         }
 
         function loadRouteFromList(index) {
@@ -841,21 +977,46 @@
             
             var route = routes[index];
             
-            var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
-            var existingIndex = saved.findIndex(function(r) { return r.name === route.name; });
-            if (existingIndex >= 0) {
-                saved[existingIndex] = route;
-            } else {
-                saved.push(route);
-            }
-            localStorage.setItem('athos_routes', JSON.stringify(saved));
+            // Φόρτωση των φωτογραφιών από το IndexedDB
+            var photoPromises = (route.photoIds || []).map(function(id) {
+                return getPhotoFromDB(id).catch(function() { return null; });
+            });
             
-            var newIndex = saved.findIndex(function(r) { return r.name === route.name; });
-            if (newIndex >= 0) {
-                loadRoute(newIndex);
-            }
-            
-            hideRouteDropdown();
+            Promise.all(photoPromises).then(function(photos) {
+                // Φιλτράρισμα των null (που δεν βρέθηκαν)
+                var validPhotos = photos.filter(function(p) { return p !== null; });
+                
+                // Αποθήκευση στο localStorage για την κλασική φόρτωση
+                var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
+                var routeWithPhotos = {
+                    name: route.name,
+                    geometry: route.geometry,
+                    distance: route.distance,
+                    date: route.date,
+                    startName: route.startName,
+                    endName: route.endName,
+                    waypoints: route.waypoints,
+                    photos: validPhotos
+                };
+                
+                var existingIndex = saved.findIndex(function(r) { return r.name === route.name; });
+                if (existingIndex >= 0) {
+                    saved[existingIndex] = routeWithPhotos;
+                } else {
+                    saved.push(routeWithPhotos);
+                }
+                localStorage.setItem('athos_routes', JSON.stringify(saved));
+                
+                var newIndex = saved.findIndex(function(r) { return r.name === route.name; });
+                if (newIndex >= 0) {
+                    loadRoute(newIndex);
+                }
+                
+                hideRouteDropdown();
+            }).catch(function(err) {
+                console.error('Σφάλμα φόρτωσης φωτογραφιών:', err);
+                alert('Σφάλμα κατά τη φόρτωση των φωτογραφιών.');
+            });
         }
 
         function deleteRouteFromList(index) {
@@ -864,6 +1025,14 @@
             
             var routeName = routes[index].name;
             if (confirm('Θέλετε να διαγράψετε τη διαδρομή "' + routeName + '";')) {
+                // Διαγραφή των φωτογραφιών από το IndexedDB
+                var photoIds = routes[index].photoIds || [];
+                photoIds.forEach(function(id) {
+                    deletePhotoFromDB(id).catch(function(err) {
+                        console.warn('Δεν μπόρεσε να διαγραφεί η φωτογραφία:', id, err);
+                    });
+                });
+                
                 routes.splice(index, 1);
                 saveRoutesToStorage(routes);
                 showRoutesList();
@@ -885,9 +1054,10 @@
                 var route = routes[i];
                 var date = new Date(route.date).toLocaleDateString('el');
                 var dist = route.distance ? route.distance.toFixed(1) + ' km' : '';
+                var photoCount = (route.photoIds || []).length;
                 html += '<div class="route-item" data-index="' + i + '">';
                 html += '<div class="info">';
-                html += '<div class="name">📍 ' + route.name + '</div>';
+                html += '<div class="name">📍 ' + route.name + ' <span style="font-size:10px;color:#8e44ad;">📸' + photoCount + '</span></div>';
                 html += '<div class="details">' + route.startName + ' → ' + route.endName + ' ' + dist + ' (' + date + ')</div>';
                 html += '</div>';
                 html += '<div class="actions">';
@@ -1018,6 +1188,7 @@
             routeLines = [];
             for (var k = 0; k < photoMarkers.length; k++) { map.removeLayer(photoMarkers[k]); }
             photoMarkers = [];
+            // Δεν διαγράφουμε τις φωτογραφίες από το IndexedDB, μόνο από τη μνήμη
             routePhotos = [];
             startPoint = null; endPoint = null;
             lastMainDistance = null; lastMainGeometry = null;
@@ -1214,7 +1385,7 @@
         }
 
         // ============================================================
-        //  ΦΩΤΟΓΡΑΦΙΕΣ
+        //  ΦΩΤΟΓΡΑΦΙΕΣ - ΜΕ ΑΠΟΘΗΚΕΥΣΗ ΣΕ INDEXEDDB
         // ============================================================
         function takePhoto() {
             var input = document.getElementById('galleryInput');
@@ -1236,11 +1407,11 @@
                             navigator.geolocation.getCurrentPosition(
                                 function(pos) {
                                     position = L.latLng(pos.coords.latitude, pos.coords.longitude);
-                                    addPhotoToRoute(ev.target.result, position, file.name);
+                                    saveAndAddPhoto(ev.target.result, position, file.name);
                                 },
                                 function() {
                                     position = map.getCenter();
-                                    addPhotoToRoute(ev.target.result, position, file.name);
+                                    saveAndAddPhoto(ev.target.result, position, file.name);
                                 },
                                 { enableHighAccuracy: true, timeout: 5000 }
                             );
@@ -1251,7 +1422,7 @@
                             position = map.getCenter();
                         }
                         
-                        addPhotoToRoute(ev.target.result, position, file.name);
+                        saveAndAddPhoto(ev.target.result, position, file.name);
                     };
                     reader.readAsDataURL(file);
                 }
@@ -1259,7 +1430,7 @@
             };
         }
 
-        function addPhotoToRoute(imageData, position, filename) {
+        function saveAndAddPhoto(imageData, position, filename) {
             if (!position) {
                 alert('Δεν βρέθηκε θέση για τη φωτογραφία.');
                 return;
@@ -1267,8 +1438,53 @@
             
             var note = prompt('Σημείωση:', '');
             
+            // Αποθήκευση στο IndexedDB
+            savePhotoToDB(imageData, note || '', position.lat, position.lng, filename)
+                .then(function(photoId) {
+                    // Δημιουργία του αντικειμένου φωτογραφίας στη μνήμη
+                    var photo = {
+                        id: photoId,
+                        image: imageData,
+                        lat: position.lat,
+                        lng: position.lng,
+                        note: note || '',
+                        filename: filename || 'photo.jpg',
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    routePhotos.push(photo);
+                    addPhotoMarker(photo);
+                    updatePhotoList();
+                    updateInfo();
+                    showToast('✅ Φωτογραφία αποθηκεύτηκε!', '#8e44ad');
+                })
+                .catch(function(err) {
+                    console.error('Σφάλμα αποθήκευσης φωτογραφίας:', err);
+                    alert('Σφάλμα κατά την αποθήκευση της φωτογραφίας.');
+                });
+        }
+
+        function addPhotoMarker(photo) {
+            var photoIcon = L.divIcon({
+                className: 'photo-marker',
+                html: '<img src="' + photo.image + '" alt="photo">',
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+            });
+            
+            var marker = L.marker([photo.lat, photo.lng], { icon: photoIcon })
+                .addTo(map)
+                .bindPopup('<div class="photo-detail-popup"><img src="' + photo.image + '" alt="photo" style="max-width:180px;max-height:180px;border-radius:8px;"><div class="note">' + (photo.note || 'Χωρίς σημείωση') + '</div><div class="time">' + new Date(photo.timestamp).toLocaleString('el') + '</div></div>');
+            
+            photoMarkers.push(marker);
+        }
+
+        function addPhotoToRoute(imageData, position, filename) {
+            // Παλιά μέθοδος - διατηρείται για συμβατότητα
+            var note = prompt('Σημείωση:', '');
+            
             var photo = {
-                id: Date.now(),
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
                 image: imageData,
                 lat: position.lat,
                 lng: position.lng,
@@ -1278,21 +1494,18 @@
             };
             
             routePhotos.push(photo);
-            
-            var photoIcon = L.divIcon({
-                className: 'photo-marker',
-                html: '<img src="' + imageData + '" alt="photo">',
-                iconSize: [36, 36],
-                iconAnchor: [18, 18]
-            });
-            
-            var marker = L.marker([position.lat, position.lng], { icon: photoIcon })
-                .addTo(map)
-                .bindPopup('<div class="photo-detail-popup"><img src="' + imageData + '" alt="photo" style="max-width:180px;max-height:180px;border-radius:8px;"><div class="note">' + (note || 'Χωρίς σημείωση') + '</div><div class="time">' + new Date(photo.timestamp).toLocaleString('el') + '</div></div>');
-            
-            photoMarkers.push(marker);
+            addPhotoMarker(photo);
             updatePhotoList();
             updateInfo();
+            
+            // Προσπάθεια αποθήκευσης στο IndexedDB
+            savePhotoToDB(imageData, note || '', position.lat, position.lng, filename)
+                .then(function(photoId) {
+                    photo.id = photoId;
+                })
+                .catch(function(err) {
+                    console.warn('Δεν αποθηκεύτηκε στο IndexedDB:', err);
+                });
             
             showToast('✅ Φωτογραφία!', '#8e44ad');
         }
@@ -1317,11 +1530,19 @@
                 btn.addEventListener('click', function() {
                     var idx = parseInt(this.dataset.index);
                     if (confirm('Διαγραφή φωτογραφίας;')) {
+                        var photo = routePhotos[idx];
+                        // Διαγραφή από το IndexedDB
+                        if (photo.id) {
+                            deletePhotoFromDB(photo.id).catch(function(err) {
+                                console.warn('Δεν μπόρεσε να διαγραφεί η φωτογραφία:', err);
+                            });
+                        }
                         map.removeLayer(photoMarkers[idx]);
                         photoMarkers.splice(idx, 1);
                         routePhotos.splice(idx, 1);
                         updatePhotoList();
                         updateInfo();
+                        showToast('🗑️ Φωτογραφία διαγράφηκε', '#e74c3c');
                     }
                 });
             });
@@ -1376,7 +1597,7 @@
         });
 
         // ============================================================
-        //  ΑΠΟΘΗΚΕΥΣΗ / ΦΟΡΤΩΣΗ
+        //  ΑΠΟΘΗΚΕΥΣΗ / ΦΟΡΤΩΣΗ (κλασική μέθοδος - διατηρείται)
         // ============================================================
         function saveRoute() {
             if (!lastMainGeometry || lastMainGeometry.length < 2) {
@@ -1634,7 +1855,7 @@
                         if (file) {
                             var reader = new FileReader();
                             reader.onload = function(ev2) {
-                                addPhotoToRoute(ev2.target.result, e.latlng, file.name);
+                                saveAndAddPhoto(ev2.target.result, e.latlng, file.name);
                             };
                             reader.readAsDataURL(file);
                         }
@@ -2015,7 +2236,18 @@
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με αυτόματη θέση\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών\n📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n' +
+                  '📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n' +
+                  '📍 Θέση μου → Εντοπισμός με GPS ή IP\n' +
+                  '🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n' +
+                  '⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n' +
+                  '📸 Φωτογραφία → Λήψη με αυτόματη θέση (αποθηκεύεται στο IndexedDB)\n' +
+                  '💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n' +
+                  '📤 GPX → Εξαγωγή διαδρομής\n' +
+                  '📂 GPX/KML → Φόρτωση αρχείου\n' +
+                  '🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών\n' +
+                  '📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n\n' +
+                  '📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -2027,6 +2259,7 @@
         console.log('📍 Πατήστε "Θέση μου" για εντοπισμό');
         console.log('🗺️ Πατήστε το κουμπί για να δείτε/αποθηκεύσετε/διαγράψετε διαδρομές');
         console.log('📥 Πατήστε "Κατέβασμα" για να κατεβάσετε την περιοχή');
+        console.log('📸 Οι φωτογραφίες αποθηκεύονται στο IndexedDB (μεγαλύτερος χώρος)');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
