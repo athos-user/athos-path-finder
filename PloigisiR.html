@@ -575,6 +575,7 @@
 
     <button class="nav-photo-btn" id="floatingPhotoBtn">📸</button>
 
+    <!-- Κρυφά inputs για φωτογραφίες -->
     <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
     <input type="file" id="galleryInput" accept="image/*" style="display:none">
 
@@ -1385,49 +1386,89 @@
         }
 
         // ============================================================
-        //  ΦΩΤΟΓΡΑΦΙΕΣ - ΜΕ ΑΠΟΘΗΚΕΥΣΗ ΣΕ INDEXEDDB
+        //  ΦΩΤΟΓΡΑΦΙΕΣ - ΜΕ ΚΑΜΕΡΑ ΚΑΙ ΣΥΛΛΟΓΗ
         // ============================================================
         function takePhoto() {
-            var input = document.getElementById('galleryInput');
-            input.click();
-            input.onchange = function(e) {
-                var file = e.target.files[0];
-                if (file) {
-                    var reader = new FileReader();
-                    reader.onload = function(ev) {
-                        var position = null;
-                        
-                        if (userPositionMarker && isNavigating) {
-                            position = userPositionMarker.getLatLng();
-                        } else if (currentLocationMarker) {
-                            position = currentLocationMarker.getLatLng();
-                        }
-                        
-                        if (!position && navigator.geolocation) {
-                            navigator.geolocation.getCurrentPosition(
-                                function(pos) {
-                                    position = L.latLng(pos.coords.latitude, pos.coords.longitude);
-                                    saveAndAddPhoto(ev.target.result, position, file.name);
-                                },
-                                function() {
-                                    position = map.getCenter();
-                                    saveAndAddPhoto(ev.target.result, position, file.name);
-                                },
-                                { enableHighAccuracy: true, timeout: 5000 }
-                            );
-                            return;
-                        }
-                        
-                        if (!position) {
-                            position = map.getCenter();
-                        }
-                        
-                        saveAndAddPhoto(ev.target.result, position, file.name);
-                    };
-                    reader.readAsDataURL(file);
+            // Δημιουργία popup με επιλογές
+            var overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            
+            var box = document.createElement('div');
+            box.style.cssText = 'background:white;border-radius:16px;padding:20px;max-width:300px;width:90%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+            box.innerHTML = `
+                <h3 style="margin-bottom:12px;color:#2c5f2d;">📸 Φωτογραφία</h3>
+                <button id="cameraOption" style="background:#8e44ad;color:white;border:none;padding:12px 20px;border-radius:10px;font-size:16px;width:100%;margin-bottom:8px;cursor:pointer;">📷 Λήψη με κάμερα</button>
+                <button id="galleryOption" style="background:#2980b9;color:white;border:none;padding:12px 20px;border-radius:10px;font-size:16px;width:100%;margin-bottom:8px;cursor:pointer;">🖼️ Επιλογή από συλλογή</button>
+                <button id="cancelPhotoBtn" style="background:#888;color:white;border:none;padding:10px 20px;border-radius:10px;font-size:14px;width:100%;cursor:pointer;">✕ Ακύρωση</button>
+            `;
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            
+            // Events
+            document.getElementById('cameraOption').addEventListener('click', function() {
+                document.body.removeChild(overlay);
+                var input = document.getElementById('cameraInput');
+                input.click();
+                input.onchange = function(e) {
+                    var file = e.target.files[0];
+                    if (file) {
+                        processPhotoFile(file);
+                    }
+                    input.value = '';
+                };
+            });
+            
+            document.getElementById('galleryOption').addEventListener('click', function() {
+                document.body.removeChild(overlay);
+                var input = document.getElementById('galleryInput');
+                input.click();
+                input.onchange = function(e) {
+                    var file = e.target.files[0];
+                    if (file) {
+                        processPhotoFile(file);
+                    }
+                    input.value = '';
+                };
+            });
+            
+            document.getElementById('cancelPhotoBtn').addEventListener('click', function() {
+                document.body.removeChild(overlay);
+            });
+        }
+
+        function processPhotoFile(file) {
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                var position = null;
+                
+                if (userPositionMarker && isNavigating) {
+                    position = userPositionMarker.getLatLng();
+                } else if (currentLocationMarker) {
+                    position = currentLocationMarker.getLatLng();
                 }
-                input.value = '';
+                
+                if (!position && navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(pos) {
+                            position = L.latLng(pos.coords.latitude, pos.coords.longitude);
+                            saveAndAddPhoto(ev.target.result, position, file.name);
+                        },
+                        function() {
+                            position = map.getCenter();
+                            saveAndAddPhoto(ev.target.result, position, file.name);
+                        },
+                        { enableHighAccuracy: true, timeout: 5000 }
+                    );
+                    return;
+                }
+                
+                if (!position) {
+                    position = map.getCenter();
+                }
+                
+                saveAndAddPhoto(ev.target.result, position, file.name);
             };
+            reader.readAsDataURL(file);
         }
 
         function saveAndAddPhoto(imageData, position, filename) {
@@ -2241,7 +2282,7 @@
                   '📍 Θέση μου → Εντοπισμός με GPS ή IP\n' +
                   '🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n' +
                   '⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n' +
-                  '📸 Φωτογραφία → Λήψη με αυτόματη θέση (αποθηκεύεται στο IndexedDB)\n' +
+                  '📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n' +
                   '💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n' +
                   '📤 GPX → Εξαγωγή διαδρομής\n' +
                   '📂 GPX/KML → Φόρτωση αρχείου\n' +
