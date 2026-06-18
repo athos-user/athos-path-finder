@@ -1166,7 +1166,7 @@
         var userPositionMarker = null;
         
         // ============================================================
-        //  ΚΑΤΑΓΡΑΦΗ ΔΙΑΔΡΟΜΗΣ (ΑΠΟΘΗΚΕΥΣΗ ΣΕ GPX)
+        //  ΚΑΤΑΓΡΑΦΗ ΔΙΑΔΡΟΜΗΣ
         // ============================================================
         var isRecording = false;
         var recordedPoints = [];
@@ -1178,7 +1178,6 @@
             var btn = document.getElementById('recordBtn');
             
             if (isRecording) {
-                // ΣΤΑΜΑΤΗΜΑ ΚΑΤΑΓΡΑΦΗΣ
                 isRecording = false;
                 btn.classList.remove('recording');
                 btn.innerHTML = '⏺️ Καταγραφή';
@@ -1189,13 +1188,11 @@
                 }
                 
                 if (recordedPoints.length > 1) {
-                    // ★★★ ΑΠΟΘΗΚΕΥΣΗ ΤΗΣ ΚΑΤΑΓΕΓΡΑΜΜΕΝΗΣ ΔΙΑΔΡΟΜΗΣ ★★★
                     var name = prompt('Όνομα για την καταγεγραμμένη διαδρομή:', 'Καταγραφή ' + new Date().toLocaleDateString('el'));
                     if (name) {
                         recordedRouteName = name;
                         saveRecordedRoute(name);
                     } else {
-                        // Αν ο χρήστης ακύρωσε, διαγράφουμε τα σημεία
                         recordedPoints = [];
                         if (recordedLine) {
                             map.removeLayer(recordedLine);
@@ -1212,7 +1209,6 @@
                 }
                 
             } else {
-                // ΕΝΑΡΞΗ ΚΑΤΑΓΡΑΦΗΣ
                 if (!navigator.geolocation) {
                     alert('Ο browser σας δεν υποστηρίζει GPS.');
                     return;
@@ -1224,7 +1220,6 @@
                 btn.classList.add('recording');
                 btn.innerHTML = '⏹️ Διακοπή';
                 
-                // Αφαίρεση παλιάς γραμμής
                 if (recordedLine) {
                     map.removeLayer(recordedLine);
                     recordedLine = null;
@@ -1232,18 +1227,15 @@
                 
                 showToast('⏺️ Έναρξη καταγραφής...', '#e74c3c');
                 
-                // Έναρξη παρακολούθησης θέσης
                 recordingWatchId = navigator.geolocation.watchPosition(
                     function(pos) {
                         var lat = pos.coords.latitude;
                         var lng = pos.coords.longitude;
                         var acc = pos.coords.accuracy;
                         
-                        // Προσθήκη σημείου (μόνο αν η ακρίβεια είναι καλή)
                         if (acc < 100) {
                             recordedPoints.push({ lat: lat, lng: lng });
                             
-                            // Ενημέρωση της γραμμής σε πραγματικό χρόνο
                             if (recordedPoints.length > 1) {
                                 var latlngs = recordedPoints.map(function(p) { return [p.lat, p.lng]; });
                                 if (recordedLine) {
@@ -1252,7 +1244,6 @@
                                 recordedLine = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8 }).addTo(map);
                             }
                             
-                            // Ενημέρωση status
                             var statusEl = document.getElementById('statusText');
                             if (statusEl) {
                                 statusEl.innerHTML = '⏺️ Καταγραφή: ' + recordedPoints.length + ' σημεία';
@@ -1275,11 +1266,9 @@
                 return;
             }
             
-            // ★★★ ΔΗΜΙΟΥΡΓΙΑ ΓΕΩΜΕΤΡΙΑΣ ★★★
             var geometry = recordedPoints.map(function(p) { return [p.lng, p.lat]; });
             var distance = computeDistanceFromCoords(geometry);
             
-            // ★★★ ΑΠΟΘΗΚΕΥΣΗ ΩΣ ΔΙΑΔΡΟΜΗ ΣΤΟ LOCALSTORAGE ★★★
             var routeData = {
                 name: name,
                 geometry: geometry,
@@ -1295,7 +1284,6 @@
             saved.push(routeData);
             localStorage.setItem('athos_routes', JSON.stringify(saved));
             
-            // ★★★ ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΣΤΗ ΛΙΣΤΑ ΑΠΟΘΗΚΕΥΜΕΝΩΝ ★★★
             var savedRoutes = getSavedRoutes();
             var routeWithPhotos = {
                 name: name,
@@ -1310,7 +1298,6 @@
             savedRoutes.push(routeWithPhotos);
             saveRoutesToStorage(savedRoutes);
             
-            // ★★★ ΕΜΦΑΝΙΣΗ ΣΤΟΝ ΧΑΡΤΗ ★★★
             var latlngs = geometry.map(function(c) { return [c[1], c[0]]; });
             if (recordedLine) {
                 map.removeLayer(recordedLine);
@@ -1318,7 +1305,10 @@
             recordedLine = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8, dashArray: '5,5' }).addTo(map);
             map.fitBounds(recordedLine.getBounds(), { padding: [40,40] });
             
-            // ★★★ ΕΝΗΜΕΡΩΣΗ ΛΙΣΤΑΣ ★★★
+            // ★★★ ΕΝΗΜΕΡΩΣΗ ΤΗΣ ΤΡΕΧΟΥΣΑΣ ΔΙΑΔΡΟΜΗΣ ΓΙΑ ΠΛΟΗΓΗΣΗ ★★★
+            lastMainGeometry = geometry;
+            lastMainDistance = distance;
+            
             showRoutesList();
             updateSavedRoutesList();
             
@@ -1326,9 +1316,8 @@
             alert('✅ Η καταγραφή "' + name + '" αποθηκεύτηκε!\n' +
                   '📏 Μήκος: ' + distance.toFixed(2) + ' km\n' +
                   '📍 ' + recordedPoints.length + ' σημεία\n\n' +
-                  '📤 Μπορείτε να την εξάγετε ως GPX από το κουμπί "📤 GPX"');
+                  '🧭 Μπορείτε να ξεκινήσετε πλοήγηση!');
             
-            // Καθαρισμός
             recordedPoints = [];
         }
 
@@ -2223,17 +2212,31 @@
         }
 
         // ============================================================
-        //  ΠΛΟΗΓΗΣΗ
+        //  ΠΛΟΗΓΗΣΗ - ΛΕΙΤΟΥΡΓΕΙ ΚΑΙ ΜΕ ΚΑΤΑΓΕΓΡΑΜΜΕΝΕΣ ΔΙΑΔΡΟΜΕΣ
         // ============================================================
         function toggleNavigation() {
             if (isNavigating) { 
                 closeNavigation(); 
                 return; 
             }
+            
+            // ★★★ ΕΛΕΓΧΟΣ ΑΝ ΥΠΑΡΧΕΙ ΔΙΑΔΡΟΜΗ ★★★
             if (!lastMainGeometry || lastMainGeometry.length < 2) {
-                alert('Υπολογίστε πρώτα διαδρομή.');
-                return;
+                // Έλεγχος αν υπάρχει καταγεγραμμένη διαδρομή
+                if (recordedLine && recordedPoints.length > 1) {
+                    var geometry = recordedPoints.map(function(p) { return [p.lng, p.lat]; });
+                    lastMainGeometry = geometry;
+                    lastMainDistance = computeDistanceFromCoords(geometry);
+                } else {
+                    alert('Δεν υπάρχει διαδρομή για πλοήγηση.\n\n' +
+                          'Δημιουργήστε μια διαδρομή με:\n' +
+                          '• Σχεδίαση (Start → End)\n' +
+                          '• Φόρτωση GPX/KML\n' +
+                          '• Καταγραφή (⏺️ Καταγραφή)');
+                    return;
+                }
             }
+            
             startNavigation();
         }
 
@@ -2247,7 +2250,21 @@
             document.getElementById('navBtn').innerHTML = '🛑';
             document.getElementById('bottomNavBtn').innerHTML = '🛑';
             
-            generateSteps();
+            var geometryToUse = lastMainGeometry;
+            
+            if (!geometryToUse && recordedLine && recordedPoints.length > 1) {
+                geometryToUse = recordedPoints.map(function(p) { return [p.lng, p.lat]; });
+                lastMainGeometry = geometryToUse;
+                lastMainDistance = computeDistanceFromCoords(geometryToUse);
+            }
+            
+            if (!geometryToUse || geometryToUse.length < 2) {
+                alert('Δεν υπάρχει έγκυρη διαδρομή για πλοήγηση.');
+                closeNavigation();
+                return;
+            }
+            
+            generateSteps(geometryToUse);
             
             if (!userPositionMarker) {
                 var userIcon = L.divIcon({
@@ -2358,8 +2375,13 @@
             }
         }
 
-        function generateSteps() {
-            var coords = lastMainGeometry;
+        function generateSteps(geometry) {
+            var coords = geometry || lastMainGeometry;
+            if (!coords || coords.length < 2) {
+                alert('Δεν υπάρχει έγκυρη διαδρομή.');
+                return;
+            }
+            
             var steps = [];
             var total = coords.length;
             var stepSize = Math.max(1, Math.floor(total / 10));
@@ -2512,7 +2534,7 @@
         console.log('🗺️ Πατήστε το κουμπί για να δείτε/αποθηκεύσετε/διαγράψετε διαδρομές');
         console.log('📥 Πατήστε "Κατέβασμα" για να κατεβάσετε την περιοχή');
         console.log('⏺️ Πατήστε "Καταγραφή" για να καταγράψετε τη διαδρομή σας');
-        console.log('📸 Οι φωτογραφίες αποθηκεύονται στο IndexedDB (απεριόριστος χώρος)');
+        console.log('🧭 Η πλοήγηση λειτουργεί με οποιαδήποτε διαδρομή');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
