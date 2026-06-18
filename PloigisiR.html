@@ -1384,10 +1384,14 @@
             if (isNavigating) closeNavigation();
             if (isRecording) toggleRecording();
             
+            // ★★★ ΣΤΑΜΑΤΑ ΤΗΝ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ΘΕΣΗΣ ★★★
             if (locationWatchId) {
                 navigator.geolocation.clearWatch(locationWatchId);
                 locationWatchId = null;
             }
+            isLocationTracking = false;
+            document.getElementById('locateBtn').innerHTML = '📍';
+            document.getElementById('bottomLocateBtn').innerHTML = '📍';
             
             if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
             if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
@@ -1435,25 +1439,41 @@
         }
 
         // ============================================================
-        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ - ΜΕ ΣΥΝΕΧΗ ΠΑΡΑΚΟΛΟΥΘΗΣΗ
+        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ - ΜΕ ΕΛΕΥΘΕΡΗ ΚΙΝΗΣΗ ΣΤΟ ΧΑΡΤΗ
         // ============================================================
         var gpsAttempts = 0;
         var maxGpsAttempts = 3;
         var isLocating = false;
+        var isLocationTracking = false;
+        var userInteracted = false;
 
         function locateUser() {
             if (isLocating) return;
+            
+            // Αν είναι ήδη ενεργή η παρακολούθηση, σταμάτα την
+            if (isLocationTracking) {
+                stopLocationTracking();
+                return;
+            }
+            
             isLocating = true;
             gpsAttempts = 0;
             
             var statusEl = document.getElementById('statusText');
             statusEl.innerHTML = '⏳ Ενεργοποίηση GPS...';
             
+            // ★★★ ΣΥΝΕΧΗΣ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ΘΕΣΗΣ ★★★
             if (navigator.geolocation) {
                 if (locationWatchId) {
                     navigator.geolocation.clearWatch(locationWatchId);
                     locationWatchId = null;
                 }
+                
+                // Ενημέρωση κουμπιού
+                document.getElementById('locateBtn').innerHTML = '⏹️ Διακοπή';
+                document.getElementById('bottomLocateBtn').innerHTML = '⏹️';
+                isLocationTracking = true;
+                userInteracted = false;
                 
                 locationWatchId = navigator.geolocation.watchPosition(
                     function(pos) {
@@ -1461,6 +1481,7 @@
                         var lng = pos.coords.longitude;
                         var acc = pos.coords.accuracy;
                         
+                        // ★★★ ΕΝΗΜΕΡΩΣΗ ΤΟΥ MARKER ★★★
                         if (currentLocationMarker) {
                             currentLocationMarker.setLatLng([lat, lng]);
                         } else {
@@ -1475,8 +1496,12 @@
                                 .bindPopup('📍 Θέση σας<br><small>GPS</small>');
                         }
                         
-                        map.panTo([lat, lng]);
+                        // ★★★ ΚΕΝΤΡΑΡΙΣΜΑ ΜΟΝΟ ΑΝ ΔΕΝ ΕΧΕΙ ΠΑΡΕΜΒΕΙ Ο ΧΡΗΣΤΗΣ ★★★
+                        if (!userInteracted) {
+                            map.panTo([lat, lng]);
+                        }
                         
+                        // ★★★ ΕΝΗΜΕΡΩΣΗ STATUS ★★★
                         var statusEl = document.getElementById('statusText');
                         if (statusEl) {
                             var accText = acc < 50 ? ' (υψηλή ακρίβεια)' : acc < 200 ? ' (καλή ακρίβεια)' : '';
@@ -1487,17 +1512,8 @@
                     },
                     function(err) {
                         console.warn('GPS watch error:', err.code, err.message);
-                        
-                        if (gpsAttempts < maxGpsAttempts) {
-                            gpsAttempts++;
-                            var statusEl = document.getElementById('statusText');
-                            statusEl.innerHTML = '⏳ Προσπάθεια ' + gpsAttempts + '/' + maxGpsAttempts + '...';
-                            setTimeout(function() {
-                                locateByIP();
-                            }, 2000);
-                        } else {
-                            locateByIP();
-                        }
+                        stopLocationTracking();
+                        locateByIP();
                     },
                     { 
                         enableHighAccuracy: true, 
@@ -1508,6 +1524,25 @@
             } else {
                 locateByIP();
             }
+        }
+
+        function stopLocationTracking() {
+            if (locationWatchId) {
+                navigator.geolocation.clearWatch(locationWatchId);
+                locationWatchId = null;
+            }
+            isLocationTracking = false;
+            isLocating = false;
+            
+            document.getElementById('locateBtn').innerHTML = '📍';
+            document.getElementById('bottomLocateBtn').innerHTML = '📍';
+            
+            var statusEl = document.getElementById('statusText');
+            if (statusEl) {
+                statusEl.innerHTML = 'Πατήστε "Θέση μου"';
+            }
+            
+            showToast('📍 Παρακολούθηση σταμάτησε', '#888');
         }
 
         function locateByIP() {
@@ -1546,9 +1581,12 @@
                                 .bindPopup('📍 Εκτιμώμενη θέση<br><small>IP: ' + city + ', ' + country + '</small>');
                         }
                         
-                        map.panTo([lat, lng]);
+                        // ★★★ IP ΔΕΝ ΚΕΝΤΡΑΡΕΙ ΑΥΤΟΜΑΤΑ ★★★
+                        // map.panTo([lat, lng]);
+                        
                         statusEl.innerHTML = '📍 IP: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + ' (' + city + ')';
                         showToast('📍 Θέση από IP', '#3498db');
+                        stopLocationTracking();
                     } else {
                         throw new Error('No location from IP');
                     }
@@ -1575,13 +1613,15 @@
                                 .addTo(map)
                                 .bindPopup('📍 Αποθηκευμένη θέση');
                         }
-                        map.panTo([savedLocation.lat, savedLocation.lng]);
+                        // map.panTo([savedLocation.lat, savedLocation.lng]);
                         statusEl.innerHTML = '💾 Αποθηκευμένη: ' + savedLocation.lat.toFixed(5) + ', ' + savedLocation.lng.toFixed(5);
                         showToast('💾 Φόρτωση αποθηκευμένης θέσης', '#f39c12');
+                        stopLocationTracking();
                     } else {
                         showLocation(38.0, 23.7, 'Default (Ελλάδα)');
                         statusEl.innerHTML = '⚠️ Default θέση (Ελλάδα)';
                         showToast('⚠️ Default θέση', '#e74c3c');
+                        stopLocationTracking();
                     }
                 });
         }
@@ -1607,6 +1647,29 @@
             var zoom = isGPS ? 16 : 13;
             map.setView([lat, lng], zoom);
         }
+
+        // ★★★ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ΑΛΛΗΛΕΠΙΔΡΑΣΗΣ ΧΡΗΣΤΗ ★★★
+        map.on('dragstart', function() {
+            userInteracted = true;
+        });
+        
+        map.on('zoomstart', function() {
+            userInteracted = true;
+        });
+        
+        // ★★★ ΣΤΑΜΑΤΗΜΑ ΠΑΡΑΚΟΛΟΥΘΗΣΗΣ ΟΤΑΝ Ο ΧΡΗΣΤΗΣ ΚΙΝΗΘΕΙ ★★★
+        map.on('dragend', function() {
+            if (isLocationTracking) {
+                userInteracted = true;
+                // Σταματάμε την παρακολούθηση μετά από 30 δευτερόλεπτα αν ο χρήστης κινήθηκε
+                setTimeout(function() {
+                    if (isLocationTracking && userInteracted) {
+                        stopLocationTracking();
+                        showToast('📍 Παρακολούθηση σταμάτησε (χειρισμός χάρτη)', '#888');
+                    }
+                }, 30000);
+            }
+        });
 
         function showToast(message, color) {
             var toast = document.createElement('div');
@@ -2896,6 +2959,7 @@
             alert('🧭 Athos Path Finder\n\n' +
                   '📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n' +
                   '📍 Θέση μου → Εντοπισμός με GPS ή IP (συνεχής παρακολούθηση)\n' +
+                  '📍 Πατήστε ξανά "Θέση μου" για διακοπή παρακολούθησης\n' +
                   '🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n' +
                   '⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n' +
                   '📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n' +
@@ -2907,7 +2971,7 @@
                   '✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ\n' +
                   '📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n\n' +
                   '📸 Αυτόματη φωτογραφία σε Start / End / Ενδιάμεσα!\n' +
-                  '📍 Το στίγμα σας παρακολουθείται συνεχώς!\n' +
+                  '📍 Το στίγμα σας παρακολουθείται χωρίς να παρεμβαίνει στη σχεδίαση!\n' +
                   '📱 Βελτιστοποιημένο για κινητά');
         });
 
@@ -2919,6 +2983,7 @@
         updateWaypointsPanel();
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για συνεχή παρακολούθηση');
+        console.log('📍 Πατήστε ξανά "Θέση μου" για διακοπή');
         console.log('📸 Αυτόματη φωτογραφία σε Start/End/Ενδιάμεσα!');
         console.log('✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ');
         
