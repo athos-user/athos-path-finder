@@ -1866,7 +1866,7 @@
         });
 
         // ============================================================
-        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ
+        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ - ΜΕ ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΗ ΦΩΤΟΓΡΑΦΙΑ
         // ============================================================
         map.on('click', function(e) {
             var lat = e.latlng.lat;
@@ -1889,20 +1889,9 @@
                     map.closePopup();
                 });
                 document.getElementById('photoHereBtn')?.addEventListener('click', function() {
-                    var input = document.getElementById('galleryInput');
-                    input.click();
-                    input.onchange = function(ev) {
-                        var file = ev.target.files[0];
-                        if (file) {
-                            var reader = new FileReader();
-                            reader.onload = function(ev2) {
-                                saveAndAddPhoto(ev2.target.result, e.latlng, file.name);
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                        input.value = '';
-                    };
                     map.closePopup();
+                    // Χρησιμοποιούμε την takePhoto() που έχει τις επιλογές κάμερας/συλλογής
+                    takePhoto();
                 });
             }, 100);
         });
