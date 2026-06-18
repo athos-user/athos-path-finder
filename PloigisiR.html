@@ -1165,6 +1165,8 @@
         var navigationWatchId = null;
         var userPositionMarker = null;
         var locationWatchId = null;
+        var isLocationTracking = false;
+        var userInteracted = false;
         
         // POI
         var pois = [], poiNames = [], poiDescs = [], poiColors = [], poiElevs = [], poiImages = [], poiMarkers = [];
@@ -1385,13 +1387,9 @@
             if (isRecording) toggleRecording();
             
             // ★★★ ΣΤΑΜΑΤΑ ΤΗΝ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ΘΕΣΗΣ ★★★
-            if (locationWatchId) {
-                navigator.geolocation.clearWatch(locationWatchId);
-                locationWatchId = null;
+            if (isLocationTracking) {
+                stopLocationTracking();
             }
-            isLocationTracking = false;
-            document.getElementById('locateBtn').innerHTML = '📍';
-            document.getElementById('bottomLocateBtn').innerHTML = '📍';
             
             if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
             if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
@@ -1444,8 +1442,6 @@
         var gpsAttempts = 0;
         var maxGpsAttempts = 3;
         var isLocating = false;
-        var isLocationTracking = false;
-        var userInteracted = false;
 
         function locateUser() {
             if (isLocating) return;
@@ -1462,14 +1458,12 @@
             var statusEl = document.getElementById('statusText');
             statusEl.innerHTML = '⏳ Ενεργοποίηση GPS...';
             
-            // ★★★ ΣΥΝΕΧΗΣ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ΘΕΣΗΣ ★★★
             if (navigator.geolocation) {
                 if (locationWatchId) {
                     navigator.geolocation.clearWatch(locationWatchId);
                     locationWatchId = null;
                 }
                 
-                // Ενημέρωση κουμπιού
                 document.getElementById('locateBtn').innerHTML = '⏹️ Διακοπή';
                 document.getElementById('bottomLocateBtn').innerHTML = '⏹️';
                 isLocationTracking = true;
@@ -1481,7 +1475,6 @@
                         var lng = pos.coords.longitude;
                         var acc = pos.coords.accuracy;
                         
-                        // ★★★ ΕΝΗΜΕΡΩΣΗ ΤΟΥ MARKER ★★★
                         if (currentLocationMarker) {
                             currentLocationMarker.setLatLng([lat, lng]);
                         } else {
@@ -1501,7 +1494,6 @@
                             map.panTo([lat, lng]);
                         }
                         
-                        // ★★★ ΕΝΗΜΕΡΩΣΗ STATUS ★★★
                         var statusEl = document.getElementById('statusText');
                         if (statusEl) {
                             var accText = acc < 50 ? ' (υψηλή ακρίβεια)' : acc < 200 ? ' (καλή ακρίβεια)' : '';
@@ -1581,9 +1573,6 @@
                                 .bindPopup('📍 Εκτιμώμενη θέση<br><small>IP: ' + city + ', ' + country + '</small>');
                         }
                         
-                        // ★★★ IP ΔΕΝ ΚΕΝΤΡΑΡΕΙ ΑΥΤΟΜΑΤΑ ★★★
-                        // map.panTo([lat, lng]);
-                        
                         statusEl.innerHTML = '📍 IP: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + ' (' + city + ')';
                         showToast('📍 Θέση από IP', '#3498db');
                         stopLocationTracking();
@@ -1613,7 +1602,6 @@
                                 .addTo(map)
                                 .bindPopup('📍 Αποθηκευμένη θέση');
                         }
-                        // map.panTo([savedLocation.lat, savedLocation.lng]);
                         statusEl.innerHTML = '💾 Αποθηκευμένη: ' + savedLocation.lat.toFixed(5) + ', ' + savedLocation.lng.toFixed(5);
                         showToast('💾 Φόρτωση αποθηκευμένης θέσης', '#f39c12');
                         stopLocationTracking();
@@ -1661,7 +1649,6 @@
         map.on('dragend', function() {
             if (isLocationTracking) {
                 userInteracted = true;
-                // Σταματάμε την παρακολούθηση μετά από 30 δευτερόλεπτα αν ο χρήστης κινήθηκε
                 setTimeout(function() {
                     if (isLocationTracking && userInteracted) {
                         stopLocationTracking();
@@ -1860,9 +1847,21 @@
         }
 
         // ============================================================
-        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ - ΜΕ ΑΥΤΟΜΑΤΗ ΦΩΤΟΓΡΑΦΙΑ
+        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ - ΜΕ ΑΥΤΟΜΑΤΗ ΔΙΑΚΟΠΗ ΠΑΡΑΚΟΛΟΥΘΗΣΗΣ
         // ============================================================
         map.on('click', function(e) {
+            // ★★★ ΑΝ ΕΙΝΑΙ ΕΝΕΡΓΗ Η ΠΑΡΑΚΟΛΟΥΘΗΣΗ, ΣΤΑΜΑΤΑ ΤΗΝ ★★★
+            if (isLocationTracking) {
+                stopLocationTracking();
+                setTimeout(function() {
+                    showClickPopup(e);
+                }, 100);
+            } else {
+                showClickPopup(e);
+            }
+        });
+
+        function showClickPopup(e) {
             var lat = e.latlng.lat;
             var lng = e.latlng.lng;
             var popupContent = document.createElement('div');
@@ -1887,9 +1886,14 @@
                     takePhoto(e.latlng);
                 });
             }, 100);
-        });
+        }
 
         function setStartPoint(latlng) {
+            // ★★★ ΣΤΑΜΑΤΑ ΤΗΝ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ★★★
+            if (isLocationTracking) {
+                stopLocationTracking();
+            }
+            
             if (startMarker) map.removeLayer(startMarker);
             startPoint = latlng;
             startName = prompt('Όνομα:', 'Αφετηρία') || 'Αφετηρία';
@@ -1905,6 +1909,11 @@
         }
 
         function setEndPoint(latlng) {
+            // ★★★ ΣΤΑΜΑΤΑ ΤΗΝ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ★★★
+            if (isLocationTracking) {
+                stopLocationTracking();
+            }
+            
             if (endMarker) map.removeLayer(endMarker);
             endPoint = latlng;
             endName = prompt('Όνομα:', 'Προορισμός') || 'Προορισμός';
@@ -1920,6 +1929,11 @@
         }
 
         function addWaypoint(latlng) {
+            // ★★★ ΣΤΑΜΑΤΑ ΤΗΝ ΠΑΡΑΚΟΛΟΥΘΗΣΗ ★★★
+            if (isLocationTracking) {
+                stopLocationTracking();
+            }
+            
             var name = prompt('Όνομα:', 'Σημείο ' + (waypoints.length + 1));
             waypoints.push(latlng);
             waypointNames.push(name || 'Σημείο ' + (waypoints.length));
@@ -2959,6 +2973,7 @@
             alert('🧭 Athos Path Finder\n\n' +
                   '📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n' +
                   '📍 Θέση μου → Εντοπισμός με GPS ή IP (συνεχής παρακολούθηση)\n' +
+                  '📍 Η παρακολούθηση σταματά ΑΥΤΟΜΑΤΑ όταν κάνετε κλικ για σχεδίαση\n' +
                   '📍 Πατήστε ξανά "Θέση μου" για διακοπή παρακολούθησης\n' +
                   '🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n' +
                   '⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n' +
@@ -2983,6 +2998,7 @@
         updateWaypointsPanel();
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για συνεχή παρακολούθηση');
+        console.log('📍 Η παρακολούθηση σταματά όταν κάνετε κλικ για σχεδίαση');
         console.log('📍 Πατήστε ξανά "Θέση μου" για διακοπή');
         console.log('📸 Αυτόματη φωτογραφία σε Start/End/Ενδιάμεσα!');
         console.log('✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ');
