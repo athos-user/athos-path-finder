@@ -113,12 +113,25 @@
             max-height: 60vh;
             overflow-y: auto;
             display: none;
-            min-height: 200px;
+            min-height: 250px;
+            width: 100%;
         }
-        #navigationPanel.active { display: block; animation: slideUp 0.3s ease; }
+        #navigationPanel.active { 
+            display: block; 
+            animation: slideUp 0.3s ease; 
+        }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
-        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid #eee; flex-wrap: wrap; gap: 5px; }
+        .nav-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 8px; 
+            padding-bottom: 8px; 
+            border-bottom: 2px solid #eee; 
+            flex-wrap: wrap; 
+            gap: 5px; 
+        }
         .nav-header h3 { color: #2c5f2d; font-size: 16px; }
         .nav-close { background: none; border: none; font-size: 22px; color: #b22222; cursor: pointer; padding: 5px 10px; }
         .nav-minimize-btn { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 0 8px; }
@@ -876,16 +889,16 @@
         
         #navigationPanel.draggable {
             position: fixed;
-            bottom: auto;
-            left: auto;
-            right: auto;
-            top: auto;
-            max-width: 450px;
-            width: 90%;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) !important;
+            max-width: 500px;
+            width: 92%;
             max-height: 70vh;
             z-index: 2000;
             border-radius: 16px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            min-height: 200px;
         }
         #navigationPanel.draggable .nav-header {
             cursor: grab;
@@ -1145,7 +1158,13 @@
             #sosContainer .sos-fields textarea { font-size: 12px; padding: 6px 8px; }
             #sosContainer .sos-buttons button { font-size: 12px; padding: 8px; }
             #tileProgress { bottom: 100px; padding: 10px 16px; font-size: 12px; min-width: 150px; }
-            #navigationPanel.draggable { max-width: 95%; width: 95%; max-height: 80vh; }
+            #navigationPanel.draggable { 
+                max-width: 95%; 
+                width: 95%; 
+                max-height: 80vh;
+                min-height: 150px;
+                bottom: 10px;
+            }
             #waypointsPanel.draggable { max-width: 95%; width: 95%; max-height: 70vh; }
             #routeDropdownContainer.draggable { max-width: 95%; width: 95%; max-height: 80vh; }
             #routeInfo.draggable { max-width: 95%; width: 95%; }
@@ -1183,8 +1202,18 @@
                 max-width: 140px;
             }
             .bottom-bar { display: none; }
-            #navigationPanel { max-width: 450px; left: 50%; transform: translateX(-50%); border-radius: 16px; bottom: 20px; }
-            #navigationPanel.active { transform: translateX(-50%) translateY(0); }
+            #navigationPanel { 
+                max-width: 500px; 
+                left: 50%; 
+                transform: translateX(-50%); 
+                border-radius: 16px; 
+                bottom: 20px;
+                width: 92%;
+                min-height: 250px;
+            }
+            #navigationPanel.active { 
+                transform: translateX(-50%) translateY(0); 
+            }
             .nav-photo-btn { bottom: 85px; right: 25px; }
             #miniNavBar { bottom: 85px; }
             #routeDropdownContainer {
@@ -1201,10 +1230,6 @@
             }
             #sosContainer {
                 max-width: 420px;
-            }
-            #navigationPanel {
-                min-height: 250px;
-                max-height: 60vh;
             }
         }
     </style>
@@ -3961,12 +3986,13 @@
                         if (data) {
                             var pos = JSON.parse(data);
                             panel.style.position = 'fixed';
-                            panel.style.left = pos.left + 'px';
-                            panel.style.top = pos.top + 'px';
-                            panel.style.bottom = 'auto';
+                            panel.style.left = '50%';
+                            panel.style.top = 'auto';
+                            panel.style.bottom = '20px';
                             panel.style.right = 'auto';
-                            panel.style.transform = 'none';
-                            panel.style.width = pos.width + 'px';
+                            panel.style.transform = 'translateX(-50%)';
+                            panel.style.width = pos.width || '92%';
+                            panel.style.maxWidth = '500px';
                         }
                     } catch(e) {}
                 }
