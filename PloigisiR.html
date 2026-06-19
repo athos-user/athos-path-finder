@@ -62,6 +62,7 @@
         #recordBtn.recording { background: #c0392b; animation: pulse 1.5s infinite; }
         #toggleWaypointsBtn { background: #2980b9; }
         #showMultipleRoutesBtn { background: #9b59b6; }
+        #sosBtn { background: #e74c3c; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
         /* ★★★ ΛΟΓΟΤΥΠΟ ΣΤΟ ΠΑΝΕΛ ΕΛΕΓΧΟΥ ★★★ */
@@ -791,6 +792,102 @@
             width: 0%;
         }
         
+        /* ★★★ SOS CONTAINER ★★★ */
+        #sosContainer {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3000;
+            background: rgba(255,255,255,0.97);
+            padding: 16px 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+            display: none;
+            max-width: 400px;
+            width: 92%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 2px solid #e74c3c;
+        }
+        #sosContainer .sos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 8px;
+        }
+        #sosContainer .sos-header span {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e74c3c;
+        }
+        #sosContainer .sos-header button {
+            background: #888;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #sosContainer .sos-coords {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 10px;
+            background: #fff5f5;
+            padding: 8px;
+            border-radius: 8px;
+            border-left: 3px solid #e74c3c;
+        }
+        #sosContainer .sos-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        #sosContainer .sos-fields input,
+        #sosContainer .sos-fields select,
+        #sosContainer .sos-fields textarea {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        #sosContainer .sos-fields textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+        #sosContainer .sos-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        #sosContainer .sos-buttons button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            min-width: 80px;
+        }
+        #sosContainer .sos-buttons .sms-btn { background: #27ae60; color: white; }
+        #sosContainer .sos-buttons .email-btn { background: #2980b9; color: white; }
+        #sosContainer .sos-buttons .call-btn { background: #e74c3c; color: white; font-size: 16px; }
+        #sosContainer .sos-footer {
+            margin-top: 8px;
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 6px;
+        }
+        
         /* ★★★ ΜΕΤΑΚΙΝΗΣΙΜΑ ΠΑΝΕΛ ★★★ */
         .draggable-panel {
             cursor: grab;
@@ -1120,6 +1217,16 @@
             #multipleRoutesContainer .mr-item .mr-name {
                 font-size: 10px;
             }
+            #sosContainer {
+                padding: 12px 14px;
+                max-width: 95%;
+                max-height: 85vh;
+            }
+            #sosContainer .sos-header span { font-size: 16px; }
+            #sosContainer .sos-fields input,
+            #sosContainer .sos-fields select,
+            #sosContainer .sos-fields textarea { font-size: 12px; padding: 6px 8px; }
+            #sosContainer .sos-buttons button { font-size: 12px; padding: 8px; }
             #tileProgress { bottom: 100px; padding: 10px 16px; font-size: 12px; min-width: 150px; }
             #navigationPanel.draggable { max-width: 95%; width: 95%; max-height: 80vh; }
             #waypointsPanel.draggable { max-width: 95%; width: 95%; max-height: 70vh; }
@@ -1166,6 +1273,9 @@
                 max-width: 420px;
                 min-width: 320px;
             }
+            #sosContainer {
+                max-width: 420px;
+            }
         }
     </style>
 </head>
@@ -1181,6 +1291,7 @@
 
     <div class="controls">
         <button id="locateBtn" title="Εντοπισμός θέσης (GPS/IP)">📍</button>
+        <button id="sosBtn" title="Αποστολή θέσης SOS" style="background:#e74c3c;">🆘 SOS</button>
         <button id="navBtn" title="Έναρξη/Διακοπή πλοήγησης">🧭</button>
         <button id="photoBtn" title="Λήψη φωτογραφίας">📸</button>
         <button id="recordBtn" title="Έναρξη/Διακοπή καταγραφής διαδρομής">⏺️ Καταγραφή</button>
@@ -1235,6 +1346,37 @@
             <button id="closeMultipleRoutesBtn" title="Κλείσιμο">✕</button>
         </div>
         <div class="mr-list" id="multipleRoutesList"></div>
+    </div>
+
+    <!-- ★★★ SOS - ΦΟΡΜΑ ΑΠΟΣΤΟΛΗΣ ΘΕΣΗΣ ★★★ -->
+    <div id="sosContainer">
+        <div class="sos-header">
+            <span>🆘 SOS - Αποστολή Θέσης</span>
+            <button id="closeSosBtn">✕</button>
+        </div>
+        <div class="sos-coords">
+            📍 <span id="sosCoords">Φόρτωση θέσης...</span>
+        </div>
+        <div class="sos-fields">
+            <input type="text" id="sosName" placeholder="Ονοματεπώνυμο (π.χ. Παπαδόπουλος Γιώργος)">
+            <select id="sosType">
+                <option value="Χάθηκα">🧭 Χάθηκα</option>
+                <option value="Χτύπησα">🩹 Χτύπησα</option>
+                <option value="Πρόβλημα υγείας">🏥 Πρόβλημα υγείας</option>
+                <option value="Έκτακτη ανάγκη">🚨 Έκτακτη ανάγκη</option>
+                <option value="Άλλο">📝 Άλλο</option>
+            </select>
+            <input type="tel" id="sosPhone" placeholder="Τηλέφωνο επικοινωνίας (π.χ. 6988321619)">
+            <textarea id="sosHistory" placeholder="Ιστορικό διαδρομής (π.χ. Ξεκίνησα από την Μονή Παντοκράτορος με κατεύθυνση την Μονή Σταυρονικήτα)"></textarea>
+        </div>
+        <div class="sos-buttons">
+            <button class="sms-btn" id="sosSendSms">📱 SMS</button>
+            <button class="email-btn" id="sosSendEmail">✉️ Email</button>
+            <button class="call-btn" id="sosCall112">📞 112</button>
+        </div>
+        <div class="sos-footer">
+            Το μήνυμα θα σταλεί με τις συντεταγμένες σας
+        </div>
     </div>
 
     <div id="savedRoutesList"></div>
@@ -2215,6 +2357,179 @@
         document.getElementById('showMultipleRoutesBtn')?.addEventListener('click', toggleMultipleRoutes);
         document.getElementById('closeMultipleRoutesBtn')?.addEventListener('click', function() {
             document.getElementById('multipleRoutesContainer').classList.remove('active');
+        });
+
+        // ============================================================
+        //  SOS - ΑΠΟΣΤΟΛΗ ΘΕΣΗΣ
+        // ============================================================
+        var sosPosition = null;
+        var sosLocationInterval = null;
+
+        function openSosDialog() {
+            var container = document.getElementById('sosContainer');
+            container.style.display = 'block';
+            
+            // Λήψη τρέχουσας θέσης
+            if (currentLocationMarker) {
+                var pos = currentLocationMarker.getLatLng();
+                sosPosition = pos;
+                document.getElementById('sosCoords').textContent = 
+                    '📍 ' + pos.lat.toFixed(6) + ', ' + pos.lng.toFixed(6) + ' (GPS)';
+            } else if (navigator.geolocation) {
+                document.getElementById('sosCoords').textContent = '⏳ Λήψη θέσης GPS...';
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        sosPosition = L.latLng(pos.coords.latitude, pos.coords.longitude);
+                        document.getElementById('sosCoords').textContent = 
+                            '📍 ' + pos.coords.latitude.toFixed(6) + ', ' + pos.coords.longitude.toFixed(6) + ' (GPS)';
+                    },
+                    function() {
+                        document.getElementById('sosCoords').textContent = '⚠️ Δεν βρέθηκε θέση GPS';
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                document.getElementById('sosCoords').textContent = '⚠️ GPS μη διαθέσιμο';
+            }
+            
+            // Auto-fill με διαθέσιμα δεδομένα
+            if (lastMainGeometry && lastMainGeometry.length > 0) {
+                var start = startName || 'Αφετηρία';
+                var end = endName || 'Προορισμός';
+                var historyEl = document.getElementById('sosHistory');
+                if (!historyEl.value) {
+                    historyEl.value = 'Ξεκίνησα από: ' + start + ' με κατεύθυνση: ' + end + 
+                        '. Συνολική απόσταση: ' + (lastMainDistance ? lastMainDistance.toFixed(1) + ' km' : '');
+                }
+            }
+            
+            // Auto-fill με το όνομα από localStorage
+            try {
+                var savedName = localStorage.getItem('sos_user_name');
+                if (savedName) {
+                    document.getElementById('sosName').value = savedName;
+                }
+            } catch(e) {}
+            
+            // Έναρξη ενημέρωσης θέσης
+            startSosLocationUpdate();
+        }
+
+        function closeSosDialog() {
+            document.getElementById('sosContainer').style.display = 'none';
+            if (sosLocationInterval) {
+                clearInterval(sosLocationInterval);
+                sosLocationInterval = null;
+            }
+        }
+
+        function startSosLocationUpdate() {
+            if (sosLocationInterval) {
+                clearInterval(sosLocationInterval);
+            }
+            sosLocationInterval = setInterval(function() {
+                var container = document.getElementById('sosContainer');
+                if (container && container.style.display === 'block') {
+                    if (currentLocationMarker) {
+                        var pos = currentLocationMarker.getLatLng();
+                        sosPosition = pos;
+                        document.getElementById('sosCoords').textContent = 
+                            '📍 ' + pos.lat.toFixed(6) + ', ' + pos.lng.toFixed(6) + ' (GPS)';
+                    }
+                } else {
+                    if (sosLocationInterval) {
+                        clearInterval(sosLocationInterval);
+                        sosLocationInterval = null;
+                    }
+                }
+            }, 3000);
+        }
+
+        function generateSosMessage() {
+            var name = document.getElementById('sosName').value || 'Ανώνυμος';
+            var type = document.getElementById('sosType').value;
+            var phone = document.getElementById('sosPhone').value || 'Δεν δόθηκε τηλέφωνο';
+            var history = document.getElementById('sosHistory').value || 'Δεν δόθηκε ιστορικό';
+            var coords = document.getElementById('sosCoords').textContent;
+            
+            var msg = '🆘 SOS - ΑΘΟΣ PATH FINDER\n\n' +
+                      '👤 Ονοματεπώνυμο: ' + name + '\n' +
+                      '🆘 Τύπος βοήθειας: ' + type + '\n' +
+                      '📱 Τηλέφωνο: ' + phone + '\n' +
+                      '📍 Θέση: ' + coords + '\n' +
+                      '📝 Ιστορικό: ' + history + '\n\n' +
+                      '---\n' +
+                      '📅 ' + new Date().toLocaleString('el') + '\n' +
+                      '📍 https://www.google.com/maps?q=' + 
+                      (sosPosition ? sosPosition.lat + ',' + sosPosition.lng : '') +
+                      '\n\n' +
+                      'Παρακαλώ βοηθήστε!';
+            
+            return msg;
+        }
+
+        function sendSosSms() {
+            var msg = generateSosMessage();
+            var phone = document.getElementById('sosPhone').value || '6988321619';
+            var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                window.location.href = 'sms:' + phone + '?body=' + encodeURIComponent(msg);
+            } else {
+                navigator.clipboard.writeText(msg).then(function() {
+                    showToast('✅ Το μήνυμα αντιγράφηκε στο πρόχειρο - στείλτε το στο ' + phone, '#27ae60');
+                }).catch(function() {
+                    alert('📱 Αντιγράψτε αυτό το μήνυμα και στείλτε το στο ' + phone + ':\n\n' + msg);
+                });
+            }
+            
+            try {
+                var name = document.getElementById('sosName').value;
+                if (name) {
+                    localStorage.setItem('sos_user_name', name);
+                }
+            } catch(e) {}
+            
+            closeSosDialog();
+        }
+
+        function sendSosEmail() {
+            var msg = generateSosMessage();
+            var email = 'athosmaps.gr@gmail.com';
+            var subject = '🆘 SOS - Athos Path Finder - ' + new Date().toLocaleDateString('el');
+            
+            window.location.href = 'mailto:' + email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(msg);
+            
+            try {
+                var name = document.getElementById('sosName').value;
+                if (name) {
+                    localStorage.setItem('sos_user_name', name);
+                }
+            } catch(e) {}
+            
+            closeSosDialog();
+        }
+
+        function call112() {
+            if (confirm('📞 Θα πραγματοποιηθεί κλήση στο 112 (Ευρωπαϊκός αριθμός έκτακτης ανάγκης). Συνεχίζετε;')) {
+                window.location.href = 'tel:112';
+            }
+        }
+
+        // Events SOS
+        document.getElementById('sosBtn')?.addEventListener('click', openSosDialog);
+        document.getElementById('closeSosBtn')?.addEventListener('click', closeSosDialog);
+        document.getElementById('sosSendSms')?.addEventListener('click', sendSosSms);
+        document.getElementById('sosSendEmail')?.addEventListener('click', sendSosEmail);
+        document.getElementById('sosCall112')?.addEventListener('click', call112);
+
+        // Κλείσιμο SOS με κλικ έξω
+        document.addEventListener('click', function(e) {
+            var container = document.getElementById('sosContainer');
+            if (container && container.style.display === 'block' && 
+                !e.target.closest('#sosContainer') && !e.target.closest('#sosBtn')) {
+                closeSosDialog();
+            }
         });
 
         // ============================================================
@@ -4247,6 +4562,7 @@
                   '📍 Θέση μου → Εντοπισμός με GPS ή IP (συνεχής παρακολούθηση)\n' +
                   '📍 Η παρακολούθηση σταματά ΑΥΤΟΜΑΤΑ όταν κάνετε κλικ για σχεδίαση\n' +
                   '📍 Πατήστε ξανά "Θέση μου" για διακοπή παρακολούθησης\n' +
+                  '🆘 SOS → Αποστολή θέσης με SMS/Email/112\n' +
                   '🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n' +
                   '⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n' +
                   '📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n' +
@@ -4286,6 +4602,7 @@
         console.log('📍 Πατήστε "Θέση μου" για συνεχή παρακολούθηση');
         console.log('📍 Η παρακολούθηση σταματά όταν κάνετε κλικ για σχεδίαση');
         console.log('📍 Πατήστε ξανά "Θέση μου" για διακοπή');
+        console.log('🆘 SOS: Πατήστε το κόκκινο κουμπί 🆘 SOS');
         console.log('📸 Αυτόματη φωτογραφία σε Start/End/Ενδιάμεσα!');
         console.log('🗑️ Διαγραφή ενδιάμεσων σημείων από το πάνελ 📍 Σημεία');
         console.log('📚 Πολλαπλές διαδρομές: Πατήστε το κουμπί 📚 Πολλαπλές');
