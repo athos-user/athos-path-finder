@@ -1432,6 +1432,7 @@
             localStorage.setItem('athos_saved_routes', JSON.stringify(routes));
         }
 
+        // ★★★ ΔΙΟΡΘΩΜΕΝΗ saveCurrentRouteToList ★★★
         function saveCurrentRouteToList() {
             if (!lastMainGeometry || lastMainGeometry.length < 2) {
                 alert('Δεν υπάρχει διαδρομή για αποθήκευση.');
@@ -1443,11 +1444,13 @@
             
             var routes = getSavedRoutes();
             
+            // Έλεγχος αν υπάρχει ήδη διαδρομή με αυτό το όνομα
             var exists = routes.some(function(r) { return r.name === name; });
             if (exists) {
                 if (!confirm('Υπάρχει ήδη διαδρομή με αυτό το όνομα. Θέλετε να την αντικαταστήσετε;')) {
                     return;
                 }
+                // Διαγραφή παλιών φωτογραφιών
                 var oldRoute = routes.find(function(r) { return r.name === name; });
                 if (oldRoute && oldRoute.photoIds) {
                     oldRoute.photoIds.forEach(function(id) {
@@ -1482,10 +1485,12 @@
                     photoIds: photoIds
                 };
                 
+                // ★★★ ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΣΤΑ ΔΥΟ STORAGE ★★★
+                // 1. Αποθήκευση στο athos_saved_routes
                 routes.push(routeData);
                 saveRoutesToStorage(routes);
                 
-                // ★★★ ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΣΤΟ athos_routes ★★★
+                // 2. Αποθήκευση στο athos_routes
                 var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
                 var existingIndex = saved.findIndex(function(r) { return r.name === name; });
                 if (existingIndex >= 0) {
@@ -1495,6 +1500,7 @@
                 }
                 localStorage.setItem('athos_routes', JSON.stringify(saved));
                 
+                // ★★★ ΕΜΦΑΝΙΣΗ ΣΤΗ ΛΙΣΤΑ ★★★
                 showRoutesList();
                 showToast('✅ Αποθηκεύτηκε: ' + name, '#2ecc71');
                 alert('✅ Η διαδρομή "' + name + '" αποθηκεύτηκε με ' + photoIds.length + ' φωτογραφίες!');
