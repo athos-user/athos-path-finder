@@ -225,11 +225,12 @@
         }
         .bottom-bar button:active { transform: scale(0.95); }
         
+        /* ★★★ INFO PANEL - ΜΕΤΑΚΙΝΗΣΙΜΟ ★★★ */
         .info-panel {
-            position: absolute;
+            position: fixed;
             bottom: 65px;
-            left: 10px;
-            right: 10px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 1000;
             background: rgba(255,255,255,0.95);
             padding: 8px 12px;
@@ -237,8 +238,35 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             font-size: 12px;
             max-width: 380px;
-            margin: 0 auto;
+            width: 85%;
             text-align: center;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            transition: none;
+        }
+        .info-panel:active {
+            cursor: grabbing;
+        }
+        .info-panel .drag-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 0 4px 0;
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            font-size: 9px;
+            color: #999;
+            cursor: grab;
+            border-radius: 4px;
+        }
+        .info-panel .drag-area:active {
+            cursor: grabbing;
+        }
+        .info-panel .drag-area .dots {
+            letter-spacing: 2px;
+            font-size: 12px;
         }
         .info-panel span { font-weight: 700; color: #2c5f2d; }
         .info-panel hr { margin: 3px 0; border: 0.5px solid #ddd; }
@@ -873,7 +901,8 @@
                 height: 22px;
                 max-width: 80px;
             }
-            .info-panel { font-size: 11px; padding: 6px 10px; bottom: 60px; }
+            .info-panel { font-size: 11px; padding: 6px 10px; bottom: 60px; max-width: 95%; width: 92%; }
+            .info-panel .drag-area { font-size: 8px; }
             .nav-photo-btn { width: 44px; height: 44px; font-size: 20px; bottom: 70px; right: 10px; }
             .location-marker { font-size: 24px; }
             #statusText { font-size: 10px; }
@@ -989,6 +1018,10 @@
                 max-width: 500px;
                 min-width: 380px;
             }
+            .info-panel {
+                max-width: 400px;
+                width: 70%;
+            }
         }
     </style>
 </head>
@@ -1052,7 +1085,12 @@
 
     <div id="savedRoutesList"></div>
 
+    <!-- ★★★ INFO PANEL - ΜΕΤΑΚΙΝΗΣΙΜΟ ★★★ -->
     <div class="info-panel" id="routeInfo">
+        <div class="drag-area">
+            <span class="dots">⠿</span>
+            <span style="font-size:8px;color:#999;">μετακίνηση</span>
+        </div>
         <div><span>🥾</span> <span id="dist1">-</span> km · <span id="time1">-</span></div>
         <hr>
         <div style="font-size:10px; color:#555;">Δυσκολία: <span id="difficultyRating">-</span> · 📸 <span id="photoCount">0</span></div>
@@ -1451,8 +1489,14 @@
         }
 
         // ============================================================
-        //  ΔΙΑΔΡΟΜΕΣ - ΛΙΣΤΑ (ΜΕ ΑΛΦΑΒΗΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ)
+        //  ΔΙΑΔΡΟΜΕΣ - ΛΙΣΤΑ (ΜΕ ID ΚΑΙ ΑΛΦΑΒΗΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ)
         // ============================================================
+        
+        // ★★★ ΔΗΜΙΟΥΡΓΙΑ ΜΟΝΑΔΙΚΟΥ ID ★★★
+        function generateRouteId() {
+            return 'route_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        }
+
         function getSavedRoutes() {
             try {
                 return JSON.parse(localStorage.getItem('athos_saved_routes') || '[]');
@@ -1465,7 +1509,7 @@
             localStorage.setItem('athos_saved_routes', JSON.stringify(routes));
         }
 
-        // ★★★ ΔΙΟΡΘΩΜΕΝΗ saveCurrentRouteToList ★★★
+        // ★★★ saveCurrentRouteToList ΜΕ ID ★★★
         function saveCurrentRouteToList() {
             if (!lastMainGeometry || lastMainGeometry.length < 2) {
                 alert('Δεν υπάρχει διαδρομή για αποθήκευση.');
@@ -1477,13 +1521,11 @@
             
             var routes = getSavedRoutes();
             
-            // Έλεγχος αν υπάρχει ήδη διαδρομή με αυτό το όνομα
             var exists = routes.some(function(r) { return r.name === name; });
             if (exists) {
                 if (!confirm('Υπάρχει ήδη διαδρομή με αυτό το όνομα. Θέλετε να την αντικαταστήσετε;')) {
                     return;
                 }
-                // Διαγραφή παλιών φωτογραφιών
                 var oldRoute = routes.find(function(r) { return r.name === name; });
                 if (oldRoute && oldRoute.photoIds) {
                     oldRoute.photoIds.forEach(function(id) {
@@ -1505,7 +1547,9 @@
             });
             
             Promise.all(savePromises).then(function() {
+                var routeId = generateRouteId();
                 var routeData = {
+                    id: routeId,
                     name: name,
                     geometry: lastMainGeometry,
                     distance: lastMainDistance,
@@ -1518,12 +1562,9 @@
                     photoIds: photoIds
                 };
                 
-                // ★★★ ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΣΤΑ ΔΥΟ STORAGE ★★★
-                // 1. Αποθήκευση στο athos_saved_routes
                 routes.push(routeData);
                 saveRoutesToStorage(routes);
                 
-                // 2. Αποθήκευση στο athos_routes
                 var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
                 var existingIndex = saved.findIndex(function(r) { return r.name === name; });
                 if (existingIndex >= 0) {
@@ -1533,25 +1574,25 @@
                 }
                 localStorage.setItem('athos_routes', JSON.stringify(saved));
                 
-                // ★★★ ΕΜΦΑΝΙΣΗ ΣΤΗ ΛΙΣΤΑ ★★★
                 showRoutesList();
                 showToast('✅ Αποθηκεύτηκε: ' + name, '#2ecc71');
                 alert('✅ Η διαδρομή "' + name + '" αποθηκεύτηκε με ' + photoIds.length + ' φωτογραφίες!');
             });
         }
 
-        function loadRouteFromList(index) {
+        // ★★★ loadRouteFromList ΜΕ ID ★★★
+        function loadRouteFromList(routeId) {
             var routes = getSavedRoutes();
-            if (index < 0 || index >= routes.length) {
+            var route = routes.find(function(r) { return r.id === routeId; });
+            if (!route) {
                 alert('Η διαδρομή δεν βρέθηκε.');
                 return;
             }
             
-            var route = routes[index];
             var photoIds = route.photoIds || [];
             
             if (photoIds.length === 0) {
-                loadRouteDirect(route, index, []);
+                loadRouteDirect(route, null, []);
                 hideRouteDropdown();
                 return;
             }
@@ -1572,17 +1613,18 @@
                     showToast('⚠️ ' + missing + ' φωτογραφία/ες δεν βρέθηκαν και αγνοήθηκαν', '#f39c12');
                 }
                 
-                loadRouteDirect(route, index, validPhotos);
+                loadRouteDirect(route, null, validPhotos);
                 hideRouteDropdown();
                 
             }).catch(function(err) {
                 console.error('Σφάλμα φόρτωσης φωτογραφιών:', err);
                 showToast('⚠️ Πρόβλημα με φωτογραφίες - φόρτωση χωρίς αυτές', '#e74c3c');
-                loadRouteDirect(route, index, []);
+                loadRouteDirect(route, null, []);
                 hideRouteDropdown();
             });
         }
 
+        // ★★★ loadRouteDirect ★★★
         function loadRouteDirect(route, index, photos) {
             if (!route.geometry || route.geometry.length < 2) {
                 alert('Μη έγκυρη διαδρομή.');
@@ -1644,25 +1686,29 @@
             showToast('✅ Φορτώθηκε: ' + route.name + ' με ' + photoCount + ' φωτογραφίες', '#2ecc71');
         }
 
-        function deleteRouteFromList(index) {
+        // ★★★ deleteRouteFromList ΜΕ ID ★★★
+        function deleteRouteFromList(routeId) {
             var routes = getSavedRoutes();
-            if (index < 0 || index >= routes.length) return;
+            var routeIndex = routes.findIndex(function(r) { return r.id === routeId; });
+            if (routeIndex < 0) {
+                alert('Η διαδρομή δεν βρέθηκε.');
+                return;
+            }
             
-            var routeName = routes[index].name;
+            var routeName = routes[routeIndex].name;
             if (confirm('Θέλετε να διαγράψετε τη διαδρομή "' + routeName + '";')) {
-                var photoIds = routes[index].photoIds || [];
+                var photoIds = routes[routeIndex].photoIds || [];
                 photoIds.forEach(function(id) {
                     deletePhotoFromDB(id).catch(function(err) {
                         console.warn('Δεν μπόρεσε να διαγραφεί η φωτογραφία:', id, err);
                     });
                 });
                 
-                routes.splice(index, 1);
+                routes.splice(routeIndex, 1);
                 saveRoutesToStorage(routes);
                 
-                // ★★★ ΔΙΑΓΡΑΦΗ ΚΑΙ ΑΠΟ ΤΟ athos_routes ★★★
                 var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
-                var savedIndex = saved.findIndex(function(r) { return r.name === routeName; });
+                var savedIndex = saved.findIndex(function(r) { return r.id === routeId; });
                 if (savedIndex >= 0) {
                     saved.splice(savedIndex, 1);
                     localStorage.setItem('athos_routes', JSON.stringify(saved));
@@ -1673,12 +1719,11 @@
             }
         }
 
-        // ★★★ ΒΕΛΤΙΩΜΕΝΗ showRoutesList ΜΕ ΑΛΦΑΒΗΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ ★★★
+        // ★★★ showRoutesList ΜΕ ID ★★★
         function showRoutesList() {
             var routes = getSavedRoutes();
             var container = document.getElementById('routesList');
             
-            // ★★★ ΤΑΞΙΝΟΜΗΣΗ ΑΛΦΑΒΗΤΙΚΑ ★★★
             routes.sort(function(a, b) {
                 return a.name.localeCompare(b.name, 'el');
             });
@@ -1697,14 +1742,14 @@
                 var start = route.startName || 'Αφετηρία';
                 var end = route.endName || 'Προορισμός';
                 
-                html += '<div class="route-item" data-index="' + i + '">';
+                html += '<div class="route-item" data-id="' + route.id + '">';
                 html += '<div class="info">';
                 html += '<div class="name">📍 ' + route.name + ' <span style="font-size:10px;color:#8e44ad;">📸' + photoCount + '</span></div>';
                 html += '<div class="details">' + start + ' → ' + end + ' · ' + dist + ' · ' + date + '</div>';
                 html += '</div>';
                 html += '<div class="actions">';
-                html += '<button class="load-btn" data-index="' + i + '" title="Φόρτωση διαδρομής">📂</button>';
-                html += '<button class="delete-btn" data-index="' + i + '" title="Διαγραφή διαδρομής">✖</button>';
+                html += '<button class="load-btn" data-id="' + route.id + '" title="Φόρτωση διαδρομής">📂</button>';
+                html += '<button class="delete-btn" data-id="' + route.id + '" title="Διαγραφή διαδρομής">✖</button>';
                 html += '</div>';
                 html += '</div>';
             }
@@ -1713,23 +1758,23 @@
             container.querySelectorAll('.load-btn').forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    var index = parseInt(this.dataset.index);
-                    loadRouteFromList(index);
+                    var id = this.dataset.id;
+                    loadRouteFromList(id);
                 });
             });
             
             container.querySelectorAll('.delete-btn').forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    var index = parseInt(this.dataset.index);
-                    deleteRouteFromList(index);
+                    var id = this.dataset.id;
+                    deleteRouteFromList(id);
                 });
             });
             
             container.querySelectorAll('.route-item').forEach(function(el) {
                 el.addEventListener('click', function() {
-                    var index = parseInt(this.dataset.index);
-                    loadRouteFromList(index);
+                    var id = this.dataset.id;
+                    loadRouteFromList(id);
                 });
             });
         }
@@ -1912,8 +1957,10 @@
             
             var geometry = recordedPoints.map(function(p) { return [p.lng, p.lat]; });
             var distance = computeDistanceFromCoords(geometry);
+            var routeId = generateRouteId();
             
             var routeData = {
+                id: routeId,
                 name: name,
                 geometry: geometry,
                 distance: distance,
@@ -1930,6 +1977,7 @@
             
             var savedRoutes = getSavedRoutes();
             var routeWithPhotos = {
+                id: routeId,
                 name: name,
                 geometry: geometry,
                 distance: distance,
@@ -2842,7 +2890,9 @@
             });
             
             Promise.all(savePromises).then(function() {
+                var routeId = generateRouteId();
                 var routeData = {
+                    id: routeId,
                     name: name,
                     geometry: lastMainGeometry,
                     distance: lastMainDistance,
@@ -2855,13 +2905,13 @@
                     photoIds: photoIds
                 };
                 
-                // ★★★ ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΣΤΑ ΔΥΟ STORAGE ★★★
                 var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
                 saved.push(routeData);
                 localStorage.setItem('athos_routes', JSON.stringify(saved));
                 
                 var savedRoutes = getSavedRoutes();
                 var routeWithPhotos = {
+                    id: routeId,
                     name: name,
                     geometry: lastMainGeometry,
                     distance: lastMainDistance,
@@ -2980,7 +3030,6 @@
                 return;
             }
             
-            // ★★★ ΤΑΞΙΝΟΜΗΣΗ ΑΛΦΑΒΗΤΙΚΑ ★★★
             saved.sort(function(a, b) {
                 return a.name.localeCompare(b.name, 'el');
             });
@@ -3696,14 +3745,8 @@
             var infoPanel = document.getElementById('routeInfo');
             if (infoPanel) {
                 infoPanel.classList.add('draggable');
-                if (!infoPanel.querySelector('.panel-drag-handle')) {
-                    var dragHandle = document.createElement('div');
-                    dragHandle.className = 'panel-drag-handle';
-                    dragHandle.style.cssText = 'display:flex;justify-content:center;padding:2px 0;margin-bottom:4px;background:rgba(0,0,0,0.03);border-radius:6px;cursor:grab;';
-                    dragHandle.innerHTML = '<span class="dots" style="letter-spacing:2px;font-size:12px;color:#888;">⠿</span> <span style="font-size:9px;color:#888;">μετακίνηση</span>';
-                    infoPanel.insertBefore(dragHandle, infoPanel.firstChild);
-                }
-                makeDraggable(infoPanel, null, 'info_panel_position');
+                // Το drag-area υπάρχει ήδη στο HTML
+                makeDraggable(infoPanel, '.drag-area', 'info_panel_position');
             }
             
             // Saved Routes List
@@ -3797,7 +3840,8 @@
                   '🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών (αλφαβητικά)\n' +
                   '📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n' +
                   '✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ ή από το popup του marker\n' +
-                  '📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n\n' +
+                  '📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n' +
+                  'ℹ️ Το πάνελ πληροφοριών είναι ΜΕΤΑΚΙΝΗΣΙΜΟ (σύρτε το από την ένδειξη ⠿)\n' +
                   '🖱️ ΟΛΑ τα πάνελ είναι ΜΕΤΑΚΙΝΗΣΙΜΑ (σύρτε τα από την ένδειξη ⠿)\n' +
                   '📍 Το στίγμα σας παρακολουθείται χωρίς να παρεμβαίνει στη σχεδίαση!\n' +
                   '📱 Βελτιστοποιημένο για κινητά');
@@ -3818,10 +3862,12 @@
         console.log('   • Από το πάνελ 📍 Σημεία');
         console.log('   • Από το popup του marker στον χάρτη');
         console.log('🖱️ ΟΛΑ τα πάνελ είναι ΜΕΤΑΚΙΝΗΣΙΜΑ - σύρτε τα από την ένδειξη ⠿');
+        console.log('ℹ️ Το info panel εμφανίζεται κεντραρισμένα κάτω και είναι μετακινήσιμο');
         console.log('📸 Οι φωτογραφίες αποθηκεύονται στο IndexedDB');
         console.log('⚠️ Αν μια φωτογραφία λείπει, η εφαρμογή συνεχίζει κανονικά');
         console.log('📋 Οι διαδρομές εμφανίζονται ΑΛΦΑΒΗΤΙΚΑ');
         console.log('🏷️ Λογότυπο πάνω δεξιά - οδηγεί στο agionorosroutes.blogspot.com');
+        console.log('🔑 Κάθε διαδρομή έχει ΜΟΝΑΔΙΚΟ ID - δεν μπερδεύονται οι φορτώσεις');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
