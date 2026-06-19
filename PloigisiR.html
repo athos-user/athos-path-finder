@@ -62,6 +62,7 @@
         #toggleWaypointsBtn { background: #2980b9; }
         #sosBtn { background: #e74c3c; }
         #batchImportBtn { background: #8e44ad; }
+        #helpManualBtn { background: #2c5f2d; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
         .controls .logo-link {
@@ -858,6 +859,138 @@
             padding-top: 6px;
         }
         
+        /* ★★★ MANUAL MODAL ★★★ */
+        #manualModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        #manualModal.active {
+            display: block;
+        }
+        #manualModal .manual-content {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+        }
+        #manualModal .manual-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #2c5f2d;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        #manualModal .manual-header h2 {
+            color: #2c5f2d;
+            margin: 0;
+        }
+        #manualModal .manual-header .close-btn {
+            background: #b22222;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        #manualModal .manual-header .close-btn:hover {
+            background: #8b1a1a;
+        }
+        #manualModal .manual-body {
+            line-height: 1.6;
+        }
+        #manualModal .manual-body h3 {
+            color: #2c5f2d;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        #manualModal .manual-body h4 {
+            color: #333;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        #manualModal .manual-body ul {
+            padding-left: 20px;
+        }
+        #manualModal .manual-body li {
+            margin-bottom: 4px;
+        }
+        #manualModal .manual-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        #manualModal .manual-body table th {
+            background: #2c5f2d;
+            color: white;
+            padding: 6px 10px;
+            text-align: left;
+        }
+        #manualModal .manual-body table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        #manualModal .manual-body table tr:hover {
+            background: #f5f8f5;
+        }
+        #manualModal .manual-body .highlight {
+            background: #f0f8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        #manualModal .manual-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #manualModal .manual-footer button {
+            padding: 10px 30px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        #manualModal .manual-footer .print-btn {
+            background: #2c5f2d;
+            color: white;
+        }
+        #manualModal .manual-footer .print-btn:hover {
+            background: #1f4520;
+        }
+        #manualModal .manual-footer .close-modal-btn {
+            background: #888;
+            color: white;
+        }
+        #manualModal .manual-footer .close-modal-btn:hover {
+            background: #666;
+        }
+        
         .draggable-panel {
             cursor: grab;
             touch-action: none;
@@ -1186,6 +1319,21 @@
                 max-height: 55vh;
                 padding: 10px 12px;
             }
+            #manualModal .manual-content {
+                padding: 15px;
+                margin: 10px auto;
+            }
+            #manualModal .manual-body table {
+                font-size: 11px;
+            }
+            #manualModal .manual-body table th,
+            #manualModal .manual-body table td {
+                padding: 4px 6px;
+            }
+            #manualModal .manual-footer button {
+                padding: 8px 20px;
+                font-size: 12px;
+            }
             button[title]:hover::after,
             input[title]:hover::after,
             select[title]:hover::after {
@@ -1231,6 +1379,9 @@
             #sosContainer {
                 max-width: 420px;
             }
+            #manualModal .manual-content {
+                padding: 40px;
+            }
         }
     </style>
 </head>
@@ -1249,7 +1400,7 @@
         <button id="navBtn" title="Έναρξη/Διακοπή πλοήγησης">🧭</button>
         <button id="photoBtn" title="Λήψη φωτογραφίας">📸</button>
         <button id="recordBtn" title="Έναρξη/Διακοπή καταγραφής διαδρομής">⏺️ Καταγραφή</button>
-        <button id="helpBtn" title="Βοήθεια και οδηγίες">❓</button>
+        <button id="helpManualBtn" title="Εγχειρίδιο χρήσης">📖 Οδηγίες</button>
         <button id="clearBtn" title="Καθαρισμός όλων των σημείων και διαδρομών">🗑️</button>
         <button id="showRoutesBtn" title="Εμφάνιση αποθηκευμένων διαδρομών">🗺️</button>
         <button id="toggleWaypointsBtn" title="Εμφάνιση/Απόκρυψη σημείων διαδρομής">📍 Σημεία</button>
@@ -1267,6 +1418,150 @@
         <a href="https://agionorosroutes.blogspot.com/" target="_blank" class="logo-link" title="Άγιον Όρος διαδρομές - agionorosroutes.blogspot.com">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPPmMNFQHezTEW7KFjFuPm3nFmS-waV6gjwBA7x_IyoPvA1bUUI3PlfEJuCfs3IXhaNP_eM-UvlNVywDfU6GCoVESm5WRTuCuq8VxSbVQ8wo88AA3rghIlvzjVnHUsvN5ct-JvkBV4p_qT9LYLQ3Bva=w300-h75-s-no-gm?authuser=2" alt="Άγιον Όρος διαδρομές" loading="lazy">
         </a>
+    </div>
+
+    <!-- ★★★ MANUAL MODAL ★★★ -->
+    <div id="manualModal">
+        <div class="manual-content">
+            <div class="manual-header">
+                <h2>📖 Athos Path Finder - Εγχειρίδιο Χρήσης</h2>
+                <button class="close-btn" onclick="closeManual()">✕</button>
+            </div>
+            <div class="manual-body">
+                <h3>🏁 Γρήγορη Εκκίνηση</h3>
+                <ol>
+                    <li><strong>Άνοιξε</strong> την εφαρμογή στον browser σου</li>
+                    <li><strong>Πάτησε 📍 Θέση μου</strong> για να εντοπιστείς (GPS ή IP)</li>
+                    <li><strong>Σχεδίασε</strong> διαδρομή ή <strong>φόρτωσε</strong> GPX αρχείο</li>
+                    <li><strong>Ξεκίνα</strong> πλοήγηση ή καταγραφή</li>
+                </ol>
+
+                <h3>🔘 Κουμπιά Ελέγχου</h3>
+                
+                <h4>🧭 Πλοήγηση</h4>
+                <table>
+                    <tr><th>Κουμπί</th><th>Λειτουργία</th><th>Περιγραφή</th></tr>
+                    <tr><td>🧭</td><td>Έναρξη/Παύση</td><td>Ξεκινά ή κάνει παύση στην πλοήγηση</td></tr>
+                    <tr><td>▶️ Έναρξη</td><td>Ξεκίνα</td><td>Ξεκινά την καθοδήγηση στη διαδρομή</td></tr>
+                    <tr><td>⏸️ Παύση</td><td>Παύση</td><td>Σταματά προσωρινά την παρακολούθηση GPS</td></tr>
+                    <tr><td>⏹️ Τερματισμός</td><td>Τερματισμός</td><td>Κλείνει εντελώς την πλοήγηση</td></tr>
+                    <tr><td>⬇</td><td>Ελαχιστοποίηση</td><td>Κρύβει το πάνελ (μένει μικρή μπάρα)</td></tr>
+                </table>
+
+                <h4>⏺️ Καταγραφή</h4>
+                <table>
+                    <tr><th>Κουμπί</th><th>Λειτουργία</th><th>Περιγραφή</th></tr>
+                    <tr><td>⏺️ Καταγραφή</td><td>Έναρξη/Διακοπή</td><td>Ξεκινά ή σταματά την καταγραφή διαδρομής</td></tr>
+                    <tr><td>🔴 (αναβοσβήνει)</td><td>Ενεργή καταγραφή</td><td>Δείχνει ότι καταγράφεται η πορεία σας</td></tr>
+                </table>
+
+                <h4>🗺️ Διαχείριση Διαδρομών</h4>
+                <table>
+                    <tr><th>Κουμπί</th><th>Λειτουργία</th><th>Περιγραφή</th></tr>
+                    <tr><td>🗺️</td><td>Λίστα διαδρομών</td><td>Εμφανίζει όλες τις αποθηκευμένες διαδρομές</td></tr>
+                    <tr><td>📂</td><td>Φόρτωση</td><td>Φορτώνει επιλεγμένη διαδρομή</td></tr>
+                    <tr><td>✖</td><td>Διαγραφή</td><td>Διαγράφει διαδρομή από τη λίστα</td></tr>
+                    <tr><td>💾</td><td>Αποθήκευση</td><td>Αποθηκεύει την τρέχουσα διαδρομή</td></tr>
+                    <tr><td>📤</td><td>Εξαγωγή GPX</td><td>Εξάγει τη διαδρομή σε αρχείο GPX</td></tr>
+                </table>
+
+                <h4>📸 Φωτογραφίες</h4>
+                <table>
+                    <tr><th>Κουμπί</th><th>Λειτουργία</th><th>Περιγραφή</th></tr>
+                    <tr><td>📸</td><td>Λήψη φωτογραφίας</td><td>Ανοίγει κάμερα ή συλλογή</td></tr>
+                    <tr><td>📸 (κυκλικό)</td><td>Γρήγορη λήψη</td><td>Λήψη φωτογραφίας από το πάνελ πλοήγησης</td></tr>
+                </table>
+
+                <h4>📍 Θέση & SOS</h4>
+                <table>
+                    <tr><th>Κουμπί</th><th>Λειτουργία</th><th>Περιγραφή</th></tr>
+                    <tr><td>📍</td><td>Θέση μου</td><td>Εντοπισμός GPS/IP (συνεχής παρακολούθηση)</td></tr>
+                    <tr><td>🆘 SOS</td><td>SOS</td><td>Αποστολή θέσης έκτακτης ανάγκης</td></tr>
+                </table>
+
+                <h4>🛠️ Άλλες Λειτουργίες</h4>
+                <table>
+                    <tr><th>Κουμπί</th><th>Λειτουργία</th><th>Περιγραφή</th></tr>
+                    <tr><td>📍 Σημεία</td><td>Σημεία διαδρομής</td><td>Εμφανίζει/κρύβει τα σημεία (Start/End/Ενδιάμεσα)</td></tr>
+                    <tr><td>📥 Κατέβασμα</td><td>Offline χάρτης</td><td>Κατεβάζει την περιοχή για offline χρήση</td></tr>
+                    <tr><td>📖 Οδηγίες</td><td>Εγχειρίδιο</td><td>Εμφανίζει αυτό το εγχειρίδιο χρήσης</td></tr>
+                    <tr><td>🗑️</td><td>Καθαρισμός</td><td>Διαγράφει όλες τις διαδρομές και σημεία</td></tr>
+                </table>
+
+                <h3>🗺️ Σχεδίαση Διαδρομής</h3>
+                <ol>
+                    <li><strong>Κάνε κλικ</strong> στον χάρτη → εμφανίζεται μενού</li>
+                    <li><strong>Επίλεξε:</strong>
+                        <ul>
+                            <li><strong>🚩 Start</strong> = Αφετηρία (πράσινος δείκτης)</li>
+                            <li><strong>🏁 End</strong> = Προορισμός (κόκκινος δείκτης)</li>
+                            <li><strong>📍 Ενδιάμεσο</strong> = Ενδιάμεσο σημείο (μπλε δείκτης)</li>
+                            <li><strong>📸</strong> = Φωτογραφία στη θέση αυτή</li>
+                        </ul>
+                    </li>
+                    <li>Η διαδρομή υπολογίζεται αυτόματα</li>
+                    <li>Μπορείς να σύρεις τους δείκτες για αλλαγή θέσης</li>
+                </ol>
+
+                <h3>💡 Συμβουλές</h3>
+                <ul>
+                    <li><strong>Ενεργοποίησε GPS</strong> για ακριβή εντοπισμό</li>
+                    <li><strong>Αποθήκευσε</strong> τις διαδρομές που σου αρέσουν</li>
+                    <li><strong>Κατέβασε</strong> τον χάρτη offline πριν βγεις στην εξοχή</li>
+                    <li><strong>Βγάλε φωτογραφίες</strong> σε σημεία που θέλεις να θυμάσαι</li>
+                    <li><strong>Χρησιμοποίησε SOS</strong> μόνο σε πραγματικές ανάγκες</li>
+                </ul>
+
+                <h3>🆘 SOS - Έκτακτη Ανάγκη</h3>
+                <ol>
+                    <li><strong>Πάτα 🆘 SOS</strong></li>
+                    <li><strong>Συμπλήρωσε</strong> τα στοιχεία σου</li>
+                    <li><strong>Επίλεξε</strong> μέσο αποστολής:
+                        <ul>
+                            <li><strong>📱 SMS</strong> → Στέλνει μήνυμα</li>
+                            <li><strong>✉️ Email</strong> → Στέλνει email</li>
+                            <li><strong>📞 112</strong> → Καλεί άμεσα το 112</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h3>🔄 Ροή Εργασίας</h3>
+                <ul>
+                    <li><strong>📊 Για να δημιουργήσεις διαδρομή:</strong> Start + End → Υπολογισμός → Αποθήκευση → Πλοήγηση</li>
+                    <li><strong>📂 Για να φορτώσεις GPX:</strong> Φόρτωση αρχείου → Επιλογή διαδρομής → Φόρτωση → Πλοήγηση</li>
+                    <li><strong>⏺️ Για να καταγράψεις:</strong> ⏺️ Καταγραφή → Περπάτημα → ⏺️ Διακοπή → Ονομασία → Αποθήκευση</li>
+                    <li><strong>🗺️ Για offline χρήση:</strong> 📥 Κατέβασμα → Επιλογή περιοχής → Αναμονή → Offline έτοιμο</li>
+                </ul>
+
+                <h3>❓ Συχνές Ερωτήσεις</h3>
+                <p><strong>🤔 Γιατί σταματά η παρακολούθηση;</strong><br>
+                Σταματά <strong>αυτόματα</strong> όταν κάνεις κλικ για σχεδίαση διαδρομής, για να μην παρεμβαίνει.</p>
+                
+                <p><strong>🤔 Πού αποθηκεύονται οι φωτογραφίες;</strong><br>
+                Σε <strong>IndexedDB</strong> (τοπική βάση δεδομένων του browser). Δεν χάνονται με ανανέωση.</p>
+                
+                <p><strong>🤔 Τι γίνεται αν χάσω το σήμα;</strong><br>
+                Ο χάρτης παραμένει ορατός (αν τον έχεις κατεβάσει offline). Η πλοήγηση συνεχίζεται με το τελευταίο γνωστό στίγμα.</p>
+
+                <h3>🎯 Σύνοψη</h3>
+                <table>
+                    <tr><th>Θέλω να...</th><th>Χρησιμοποιώ...</th></tr>
+                    <tr><td>Βρω πού βρίσκομαι</td><td>📍 Θέση μου</td></tr>
+                    <tr><td>Πάω σε μια διαδρομή</td><td>🧭 Πλοήγηση</td></tr>
+                    <tr><td>Αποθηκεύσω μια διαδρομή</td><td>⏺️ Καταγραφή</td></tr>
+                    <tr><td>Δω αποθηκευμένες διαδρομές</td><td>🗺️</td></tr>
+                    <tr><td>Βγάλω φωτογραφία</td><td>📸</td></tr>
+                    <tr><td>Στείλω βοήθεια</td><td>🆘 SOS</td></tr>
+                    <tr><td>Καθαρίσω τον χάρτη</td><td>🗑️</td></tr>
+                </table>
+
+                <p style="text-align:center;margin-top:20px;color:#888;">📱 Βελτιστοποιημένο για κινητά · 🏔️ Καλές διαδρομές!</p>
+            </div>
+            <div class="manual-footer">
+                <button class="print-btn" onclick="window.print()">🖨️ Εκτύπωση / PDF</button>
+                <button class="close-modal-btn" onclick="closeManual()">✕ Κλείσιμο</button>
+            </div>
+        </div>
     </div>
 
     <div id="routeDropdownContainer">
@@ -1385,7 +1680,38 @@
     <script src="https://cdn.jsdelivr.net/npm/@mapbox/togeojson@0.16.0/togeojson.min.js"></script>
     
     <script>
-        // API KEYS
+        // ============================================================
+        //  MANUAL MODAL FUNCTIONS
+        // ============================================================
+        function openManual() {
+            document.getElementById('manualModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeManual() {
+            document.getElementById('manualModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Κλείσιμο με κλικ έξω από το modal
+        document.getElementById('manualModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeManual();
+            }
+        });
+
+        // Κλείσιμο με Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeManual();
+            }
+        });
+
+        document.getElementById('helpManualBtn')?.addEventListener('click', openManual);
+
+        // ============================================================
+        //  API KEYS
+        // ============================================================
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
         var GRAPHHOPPER_API_KEY = '5fece833-cd75-4373-a6ba-a4137d3f5132';
 
@@ -4527,31 +4853,6 @@
             }
         });
 
-        document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n' +
-                  '📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n' +
-                  '📍 Θέση μου → Εντοπισμός με GPS ή IP (συνεχής παρακολούθηση)\n' +
-                  '📍 Η παρακολούθηση σταματά ΑΥΤΟΜΑΤΑ όταν κάνετε κλικ για σχεδίαση\n' +
-                  '📍 Πατήστε ξανά "Θέση μου" για διακοπή παρακολούθησης\n' +
-                  '🆘 SOS → Αποστολή θέσης με SMS/Email/112\n' +
-                  '🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n' +
-                  '⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n' +
-                  '📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n' +
-                  '⏺️ Καταγραφή → Καταγραφή της διαδρομής που περπατάτε\n' +
-                  '💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n' +
-                  '📤 GPX → Εξαγωγή διαδρομής\n' +
-                  '📂 GPX/KML → Φόρτωση αρχείου (μία ή πολλαπλές διαδρομές)\n' +
-                  '📂 Μαζική → Εισαγωγή πολλών αρχείων GPX ταυτόχρονα\n' +
-                  '🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών (αλφαβητικά)\n' +
-                  '📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n' +
-                  '✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ ή από το popup του marker\n' +
-                  '📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n' +
-                  'ℹ️ Το πάνελ πληροφοριών είναι ΜΕΤΑΚΙΝΗΣΙΜΟ (σύρτε το από την ένδειξη ⠿)\n' +
-                  '🖱️ ΟΛΑ τα πάνελ είναι ΜΕΤΑΚΙΝΗΣΙΜΑ (σύρτε τα από την ένδειξη ⠿)\n' +
-                  '📍 Το στίγμα σας παρακολουθείται χωρίς να παρεμβαίνει στη σχεδίαση!\n' +
-                  '📱 Βελτιστοποιημένο για κινητά');
-        });
-
         // ============================================================
         //  ΕΚΚΙΝΗΣΗ
         // ============================================================
@@ -4582,6 +4883,7 @@
         console.log('🧭 Πλοήγηση με κουμπιά: Έναρξη, Παύση, Τερματισμός');
         console.log('⏸️ Παύση: Σταματά προσωρινά την παρακολούθηση GPS');
         console.log('⏹️ Τερματισμός: Κλείνει εντελώς την πλοήγηση');
+        console.log('📖 Οδηγίες: Πατήστε το κουμπί "📖 Οδηγίες" για το εγχειρίδιο χρήσης');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
