@@ -61,6 +61,7 @@
         #recordBtn { background: #e74c3c; }
         #recordBtn.recording { background: #c0392b; animation: pulse 1.5s infinite; }
         #toggleWaypointsBtn { background: #2980b9; }
+        #showMultipleRoutesBtn { background: #9b59b6; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
         /* ★★★ ΛΟΓΟΤΥΠΟ ΣΤΟ ΠΑΝΕΛ ΕΛΕΓΧΟΥ ★★★ */
@@ -383,24 +384,24 @@
             padding: 0 4px;
         }
         
-        /* ★★★ ΒΕΛΤΙΩΜΕΝΟ ΠΑΝΕΛ ΔΙΑΔΡΟΜΩΝ ★★★ */
+        /* ★★★ ΠΑΝΕΛ ΔΙΑΔΡΟΜΩΝ - ΚΕΝΤΡΑΡΙΣΜΕΝΟ ★★★ */
         #routeDropdownContainer {
-            position: absolute;
-            top: 70px;
+            position: fixed;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
             z-index: 1000;
             background: rgba(255,255,255,0.97);
-            padding: 10px 14px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            padding: 12px 16px;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
             border: 1px solid #ddd;
             display: none;
-            backdrop-filter: blur(5px);
-            max-height: 60vh;
-            min-width: 320px;
+            backdrop-filter: blur(10px);
+            max-height: 70vh;
+            min-width: 350px;
             width: 90%;
-            max-width: 500px;
+            max-width: 520px;
             overflow-y: auto;
         }
         #routeDropdownContainer.active {
@@ -418,7 +419,7 @@
         #routeDropdownContainer .routes-header span {
             font-weight: 600;
             color: #2c5f2d;
-            font-size: 13px;
+            font-size: 14px;
         }
         #routeDropdownContainer .routes-header .header-buttons {
             display: flex;
@@ -435,7 +436,7 @@
             white-space: nowrap;
         }
         #routesList {
-            max-height: 250px;
+            max-height: 280px;
             overflow-y: auto;
             margin-top: 4px;
         }
@@ -492,6 +493,13 @@
         }
         #routesList .route-item .actions .load-btn:hover {
             background: #1f4520;
+        }
+        #routesList .route-item .actions .add-multiple-btn {
+            background: #9b59b6;
+            color: white;
+        }
+        #routesList .route-item .actions .add-multiple-btn:hover {
+            background: #8e44ad;
         }
         #routesList .route-item .actions .delete-btn {
             background: #b22222;
@@ -649,6 +657,108 @@
             margin-right: 4px;
         }
         
+        /* ★★★ ΠΟΛΛΑΠΛΕΣ ΔΙΑΔΡΟΜΕΣ ★★★ */
+        #multipleRoutesContainer {
+            position: fixed;
+            bottom: 130px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 900;
+            background: rgba(255,255,255,0.97);
+            padding: 10px 14px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            border: 1px solid #ddd;
+            display: none;
+            max-height: 250px;
+            overflow-y: auto;
+            min-width: 280px;
+            max-width: 380px;
+            font-size: 12px;
+        }
+        #multipleRoutesContainer.active {
+            display: block;
+        }
+        #multipleRoutesContainer .mr-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 4px;
+        }
+        #multipleRoutesContainer .mr-header span {
+            font-weight: 600;
+            color: #2c5f2d;
+            font-size: 13px;
+        }
+        #multipleRoutesContainer .mr-header button {
+            background: #888;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 2px 10px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        #multipleRoutesContainer .mr-list {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        #multipleRoutesContainer .mr-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 6px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        #multipleRoutesContainer .mr-item:hover {
+            background: #f0f8f0;
+        }
+        #multipleRoutesContainer .mr-item .mr-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        #multipleRoutesContainer .mr-item .mr-name {
+            flex: 1;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #multipleRoutesContainer .mr-item .mr-remove {
+            background: none;
+            border: none;
+            color: #b22222;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 4px;
+        }
+        #multipleRoutesContainer .mr-item .mr-remove:hover {
+            color: #8b1a1a;
+        }
+        #multipleRoutesContainer .mr-empty {
+            color: #999;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 12px;
+        }
+        
+        .route-color-0 { border-color: #e74c3c; background: #e74c3c; }
+        .route-color-1 { border-color: #3498db; background: #3498db; }
+        .route-color-2 { border-color: #2ecc71; background: #2ecc71; }
+        .route-color-3 { border-color: #f39c12; background: #f39c12; }
+        .route-color-4 { border-color: #9b59b6; background: #9b59b6; }
+        .route-color-5 { border-color: #1abc9c; background: #1abc9c; }
+        .route-color-6 { border-color: #e67e22; background: #e67e22; }
+        .route-color-7 { border-color: #e84393; background: #e84393; }
+        
         /* Tile Download Progress */
         #tileProgress {
             position: absolute;
@@ -762,9 +872,9 @@
             top: auto;
             max-width: 550px;
             width: 90%;
-            max-height: 60vh;
+            max-height: 70vh;
             z-index: 1000;
-            border-radius: 12px;
+            border-radius: 14px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         }
         #routeDropdownContainer.draggable .routes-header {
@@ -832,6 +942,27 @@
             user-select: none;
         }
         #miniNavBar.draggable:active {
+            cursor: grabbing;
+        }
+        
+        /* ★★★ ΜΕΤΑΚΙΝΗΣΙΜΟ ΠΟΛΛΑΠΛΕΣ ΔΙΑΔΡΟΜΕΣ ★★★ */
+        #multipleRoutesContainer.draggable {
+            position: fixed;
+            bottom: auto;
+            left: auto;
+            right: auto;
+            top: auto;
+            max-width: 420px;
+            width: 90%;
+            max-height: 70vh;
+            z-index: 900;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        #multipleRoutesContainer.draggable .mr-header {
+            cursor: grab;
+        }
+        #multipleRoutesContainer.draggable .mr-header:active {
             cursor: grabbing;
         }
         
@@ -914,15 +1045,13 @@
             }
             #miniNavBar .mini-progress { width: 60px; }
             #routeDropdownContainer {
-                top: 65px;
-                padding: 8px 10px;
-                max-height: 60vh;
-                min-width: 280px;
+                min-width: 300px;
                 width: 95%;
-                max-width: 400px;
+                max-height: 80vh;
+                padding: 10px 12px;
             }
             #routeDropdownContainer .routes-header span {
-                font-size: 11px;
+                font-size: 12px;
             }
             #routeDropdownContainer .routes-header .header-buttons button {
                 font-size: 9px;
@@ -943,7 +1072,7 @@
                 padding: 3px 8px;
             }
             #routesList {
-                max-height: 180px;
+                max-height: 200px;
             }
             #waypointsPanel {
                 bottom: 120px;
@@ -981,13 +1110,24 @@
             .waypoint-type-icon {
                 font-size: 14px;
             }
+            #multipleRoutesContainer {
+                bottom: 120px;
+                max-height: 200px;
+                min-width: 240px;
+                max-width: 320px;
+                padding: 8px 10px;
+            }
+            #multipleRoutesContainer .mr-item .mr-name {
+                font-size: 10px;
+            }
             #tileProgress { bottom: 100px; padding: 10px 16px; font-size: 12px; min-width: 150px; }
             #navigationPanel.draggable { max-width: 95%; width: 95%; max-height: 80vh; }
             #waypointsPanel.draggable { max-width: 95%; width: 95%; max-height: 70vh; }
-            #routeDropdownContainer.draggable { max-width: 95%; width: 95%; max-height: 70vh; }
+            #routeDropdownContainer.draggable { max-width: 95%; width: 95%; max-height: 80vh; }
             #routeInfo.draggable { max-width: 95%; width: 95%; }
             #savedRoutesList.draggable { max-width: 95%; width: 95%; }
             #miniNavBar.draggable { max-width: 95%; width: auto; }
+            #multipleRoutesContainer.draggable { max-width: 95%; width: 95%; max-height: 70vh; }
             .panel-drag-handle { font-size: 8px; padding: 1px 5px; }
             .panel-drag-handle .dots { font-size: 10px; }
             button[title]:hover::after,
@@ -1022,6 +1162,10 @@
                 max-width: 400px;
                 width: 70%;
             }
+            #multipleRoutesContainer {
+                max-width: 420px;
+                min-width: 320px;
+            }
         }
     </style>
 </head>
@@ -1044,6 +1188,7 @@
         <button id="clearBtn" title="Καθαρισμός όλων των σημείων και διαδρομών">🗑️</button>
         <button id="showRoutesBtn" title="Εμφάνιση αποθηκευμένων διαδρομών">🗺️</button>
         <button id="toggleWaypointsBtn" title="Εμφάνιση/Απόκρυψη σημείων διαδρομής">📍 Σημεία</button>
+        <button id="showMultipleRoutesBtn" title="Εμφάνιση πολλαπλών διαδρομών">📚 Πολλαπλές</button>
         <button id="downloadTilesBtn" title="Λήψη χάρτη για offline χρήση">📥 Κατέβασμα</button>
         <input type="file" id="fileInput" accept=".gpx,.kml,.xml" title="Φόρτωση αρχείου GPX ή KML">
         <button id="saveRouteBtn" title="Αποθήκευση τρέχουσας διαδρομής">💾</button>
@@ -1059,7 +1204,7 @@
         </a>
     </div>
 
-    <!-- Λίστα διαδρομών -->
+    <!-- Λίστα διαδρομών - ΚΕΝΤΡΑΡΙΣΜΕΝΗ -->
     <div id="routeDropdownContainer">
         <div class="routes-header">
             <span>🗺️ Διαδρομές</span>
@@ -1081,6 +1226,15 @@
             </div>
         </div>
         <ul id="waypointsList"></ul>
+    </div>
+
+    <!-- ★★★ ΠΟΛΛΑΠΛΕΣ ΔΙΑΔΡΟΜΕΣ ★★★ -->
+    <div id="multipleRoutesContainer">
+        <div class="mr-header">
+            <span>📚 Ενεργές Διαδρομές</span>
+            <button id="closeMultipleRoutesBtn" title="Κλείσιμο">✕</button>
+        </div>
+        <div class="mr-list" id="multipleRoutesList"></div>
     </div>
 
     <div id="savedRoutesList"></div>
@@ -1158,7 +1312,6 @@
         function upgradeRoutesWithId() {
             var upgraded = false;
             
-            // Αναβάθμιση στο athos_saved_routes
             try {
                 var savedRoutes = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]');
                 for (var i = 0; i < savedRoutes.length; i++) {
@@ -1175,7 +1328,6 @@
                 console.warn('⚠️ Σφάλμα αναβάθμισης athos_saved_routes:', e);
             }
             
-            // Αναβάθμιση στο athos_routes
             try {
                 var routes = JSON.parse(localStorage.getItem('athos_routes') || '[]');
                 var upgraded2 = false;
@@ -1555,7 +1707,6 @@
             localStorage.setItem('athos_saved_routes', JSON.stringify(routes));
         }
 
-        // ★★★ saveCurrentRouteToList ΜΕ ID ★★★
         function saveCurrentRouteToList() {
             if (!lastMainGeometry || lastMainGeometry.length < 2) {
                 alert('Δεν υπάρχει διαδρομή για αποθήκευση.');
@@ -1626,7 +1777,6 @@
             });
         }
 
-        // ★★★ loadRouteFromList ΜΕ ID ★★★
         function loadRouteFromList(routeId) {
             var routes = getSavedRoutes();
             var route = routes.find(function(r) { return r.id === routeId; });
@@ -1670,12 +1820,14 @@
             });
         }
 
-        // ★★★ loadRouteDirect ★★★
         function loadRouteDirect(route, index, photos) {
             if (!route.geometry || route.geometry.length < 2) {
                 alert('Μη έγκυρη διαδρομή.');
                 return;
             }
+            
+            // ★★★ ΚΑΘΑΡΙΣΜΟΣ ΠΟΛΛΑΠΛΩΝ ★★★
+            clearMultipleRoutes();
             
             clearAll();
             
@@ -1732,7 +1884,6 @@
             showToast('✅ Φορτώθηκε: ' + route.name + ' με ' + photoCount + ' φωτογραφίες', '#2ecc71');
         }
 
-        // ★★★ deleteRouteFromList ΜΕ ID ★★★
         function deleteRouteFromList(routeId) {
             var routes = getSavedRoutes();
             var routeIndex = routes.findIndex(function(r) { return r.id === routeId; });
@@ -1750,6 +1901,18 @@
                     });
                 });
                 
+                // ★★★ ΑΦΑΙΡΕΣΗ ΑΠΟ ΠΟΛΛΑΠΛΕΣ ★★★
+                var multiIndex = activeRoutes.indexOf(routeId);
+                if (multiIndex >= 0) {
+                    if (multiIndex < routeLayers.length) {
+                        map.removeLayer(routeLayers[multiIndex]);
+                        routeLayers.splice(multiIndex, 1);
+                    }
+                    activeRoutes.splice(multiIndex, 1);
+                    delete routeDataCache[routeId];
+                    updateMultipleRoutesList();
+                }
+                
                 routes.splice(routeIndex, 1);
                 saveRoutesToStorage(routes);
                 
@@ -1765,7 +1928,7 @@
             }
         }
 
-        // ★★★ showRoutesList ΜΕ ID ★★★
+        // ★★★ showRoutesList ΜΕ ID ΚΑΙ ΠΟΛΛΑΠΛΕΣ ★★★
         function showRoutesList() {
             var routes = getSavedRoutes();
             var container = document.getElementById('routesList');
@@ -1787,14 +1950,16 @@
                 var photoCount = (route.photoIds || []).length;
                 var start = route.startName || 'Αφετηρία';
                 var end = route.endName || 'Προορισμός';
+                var isActive = activeRoutes.indexOf(route.id) >= 0;
                 
                 html += '<div class="route-item" data-id="' + route.id + '">';
                 html += '<div class="info">';
-                html += '<div class="name">📍 ' + route.name + ' <span style="font-size:10px;color:#8e44ad;">📸' + photoCount + '</span></div>';
+                html += '<div class="name">📍 ' + route.name + ' <span style="font-size:10px;color:#8e44ad;">📸' + photoCount + '</span>' + (isActive ? ' <span style="font-size:10px;color:#2ecc71;">✅</span>' : '') + '</div>';
                 html += '<div class="details">' + start + ' → ' + end + ' · ' + dist + ' · ' + date + '</div>';
                 html += '</div>';
                 html += '<div class="actions">';
                 html += '<button class="load-btn" data-id="' + route.id + '" title="Φόρτωση διαδρομής">📂</button>';
+                html += '<button class="add-multiple-btn" data-id="' + route.id + '" title="Προσθήκη σε πολλαπλές" style="background:#9b59b6;color:white;">➕</button>';
                 html += '<button class="delete-btn" data-id="' + route.id + '" title="Διαγραφή διαδρομής">✖</button>';
                 html += '</div>';
                 html += '</div>';
@@ -1805,7 +1970,20 @@
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     var id = this.dataset.id;
-                    loadRouteFromList(id);
+                    var route = getSavedRoutes().find(function(r) { return r.id === id; });
+                    if (route) {
+                        loadRouteDirect(route, null, []);
+                    }
+                    hideRouteDropdown();
+                });
+            });
+            
+            container.querySelectorAll('.add-multiple-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var id = this.dataset.id;
+                    addRouteToMultiple(id);
+                    hideRouteDropdown();
                 });
             });
             
@@ -1820,7 +1998,11 @@
             container.querySelectorAll('.route-item').forEach(function(el) {
                 el.addEventListener('click', function() {
                     var id = this.dataset.id;
-                    loadRouteFromList(id);
+                    var route = getSavedRoutes().find(function(r) { return r.id === id; });
+                    if (route) {
+                        loadRouteDirect(route, null, []);
+                    }
+                    hideRouteDropdown();
                 });
             });
         }
@@ -1828,6 +2010,7 @@
         function showRouteDropdown() {
             showRoutesList();
             routeDropdownContainer.classList.add('active');
+            // ★★★ ΦΟΡΤΩΣΗ ΘΕΣΗΣ ★★★
             setTimeout(function() {
                 var panel = document.getElementById('routeDropdownContainer');
                 if (panel && panel.classList.contains('active')) {
@@ -1857,6 +2040,182 @@
         document.getElementById('saveRouteFromListBtn')?.addEventListener('click', saveCurrentRouteToList);
         document.getElementById('hideRoutesBtn')?.addEventListener('click', hideRouteDropdown);
         document.getElementById('showRoutesBtn')?.addEventListener('click', showRouteDropdown);
+
+        // ============================================================
+        //  ΠΟΛΛΑΠΛΕΣ ΔΙΑΔΡΟΜΕΣ
+        // ============================================================
+        var activeRoutes = [];
+        var routeColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#e84393'];
+        var routeLayers = [];
+        var routeDataCache = {};
+
+        function toggleMultipleRoutes() {
+            var container = document.getElementById('multipleRoutesContainer');
+            if (container.classList.contains('active')) {
+                container.classList.remove('active');
+            } else {
+                container.classList.add('active');
+                updateMultipleRoutesList();
+                setTimeout(function() {
+                    try {
+                        var data = localStorage.getItem('multiple_routes_position');
+                        if (data) {
+                            var pos = JSON.parse(data);
+                            container.style.position = 'fixed';
+                            container.style.left = pos.left + 'px';
+                            container.style.top = pos.top + 'px';
+                            container.style.bottom = 'auto';
+                            container.style.right = 'auto';
+                            container.style.transform = 'none';
+                            container.style.width = pos.width + 'px';
+                        }
+                    } catch(e) {}
+                }, 50);
+            }
+        }
+
+        function updateMultipleRoutesList() {
+            var list = document.getElementById('multipleRoutesList');
+            if (!list) return;
+            
+            if (activeRoutes.length === 0) {
+                list.innerHTML = '<div class="mr-empty">📭 Δεν υπάρχουν ενεργές διαδρομές</div>';
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < activeRoutes.length; i++) {
+                var routeId = activeRoutes[i];
+                var route = getSavedRoutes().find(function(r) { return r.id === routeId; });
+                if (!route) continue;
+                var color = routeColors[i % routeColors.length];
+                var isActive = i === activeRoutes.length - 1;
+                
+                html += '<div class="mr-item" data-id="' + routeId + '">';
+                html += '<span class="mr-color" style="background:' + color + ';border-color:' + color + ';"></span>';
+                html += '<span class="mr-name">' + (isActive ? '⭐ ' : '') + route.name + '</span>';
+                html += '<button class="mr-remove" data-id="' + routeId + '" title="Αφαίρεση διαδρομής">✖</button>';
+                html += '</div>';
+            }
+            list.innerHTML = html;
+            
+            list.querySelectorAll('.mr-remove').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var id = this.dataset.id;
+                    removeRouteFromMultiple(id);
+                });
+            });
+            
+            list.querySelectorAll('.mr-item').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var id = this.dataset.id;
+                    focusRoute(id);
+                });
+            });
+        }
+
+        function addRouteToMultiple(routeId) {
+            if (activeRoutes.indexOf(routeId) >= 0) {
+                showToast('ℹ️ Η διαδρομή είναι ήδη ενεργή', '#3498db');
+                return;
+            }
+            
+            var route = getSavedRoutes().find(function(r) { return r.id === routeId; });
+            if (!route) {
+                alert('Η διαδρομή δεν βρέθηκε.');
+                return;
+            }
+            
+            loadRouteMultiple(route);
+            activeRoutes.push(routeId);
+            updateMultipleRoutesList();
+            showToast('✅ Προστέθηκε: ' + route.name, '#2ecc71');
+        }
+
+        function loadRouteMultiple(route) {
+            if (!route.geometry || route.geometry.length < 2) {
+                alert('Μη έγκυρη διαδρομή.');
+                return;
+            }
+            
+            var colorIndex = activeRoutes.length % routeColors.length;
+            var color = routeColors[colorIndex];
+            
+            var latlngs = route.geometry.map(function(c) { return [c[1], c[0]]; });
+            var line = L.polyline(latlngs, { 
+                color: color, 
+                weight: 4, 
+                opacity: 0.8,
+                dashArray: activeRoutes.length > 0 ? '8,6' : null
+            }).addTo(map);
+            
+            routeLayers.push(line);
+            routeDataCache[route.id] = route;
+            
+            line.bindPopup('📍 ' + route.name + '<br><small>' + (route.distance ? route.distance.toFixed(1) + ' km' : '') + '</small>');
+            
+            if (activeRoutes.length === 0) {
+                map.fitBounds(line.getBounds(), { padding: [40,40] });
+            }
+        }
+
+        function removeRouteFromMultiple(routeId) {
+            var index = activeRoutes.indexOf(routeId);
+            if (index < 0) return;
+            
+            if (index < routeLayers.length) {
+                map.removeLayer(routeLayers[index]);
+                routeLayers.splice(index, 1);
+            }
+            
+            activeRoutes.splice(index, 1);
+            delete routeDataCache[routeId];
+            
+            updateMultipleRoutesList();
+            showToast('🗑️ Αφαιρέθηκε η διαδρομή', '#e74c3c');
+            
+            if (activeRoutes.length === 0) {
+                document.getElementById('multipleRoutesContainer').classList.remove('active');
+            }
+        }
+
+        function focusRoute(routeId) {
+            var route = routeDataCache[routeId];
+            if (!route) {
+                var savedRoute = getSavedRoutes().find(function(r) { return r.id === routeId; });
+                if (savedRoute) {
+                    var idx = activeRoutes.indexOf(routeId);
+                    if (idx >= 0 && idx < routeLayers.length) {
+                        map.fitBounds(routeLayers[idx].getBounds(), { padding: [40,40] });
+                        showToast('🔍 Εστίαση: ' + savedRoute.name, '#f39c12');
+                    }
+                }
+                return;
+            }
+            
+            var idx = activeRoutes.indexOf(routeId);
+            if (idx >= 0 && idx < routeLayers.length) {
+                map.fitBounds(routeLayers[idx].getBounds(), { padding: [40,40] });
+                showToast('🔍 Εστίαση: ' + route.name, '#f39c12');
+            }
+        }
+
+        function clearMultipleRoutes() {
+            for (var i = 0; i < routeLayers.length; i++) {
+                map.removeLayer(routeLayers[i]);
+            }
+            routeLayers = [];
+            activeRoutes = [];
+            routeDataCache = {};
+            updateMultipleRoutesList();
+            document.getElementById('multipleRoutesContainer').classList.remove('active');
+        }
+
+        document.getElementById('showMultipleRoutesBtn')?.addEventListener('click', toggleMultipleRoutes);
+        document.getElementById('closeMultipleRoutesBtn')?.addEventListener('click', function() {
+            document.getElementById('multipleRoutesContainer').classList.remove('active');
+        });
 
         // ============================================================
         //  ΧΑΡΤΗΣ
@@ -2076,7 +2435,6 @@
             });
         }
 
-        // ★★★ ΔΙΟΡΘΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ ΜΟΡΦΟΠΟΙΗΣΗΣ ΩΡΩΝ ★★★
         function formatTime(hours) {
             if (hours === null || isNaN(hours) || hours < 0) return '-';
             
@@ -2654,7 +3012,6 @@
             updateWaypointsPanel();
         }
 
-        // ★★★ ΒΕΛΤΙΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ ΜΕ ΚΟΥΜΠΙ ΔΙΑΓΡΑΦΗΣ ★★★
         function addWaypoint(latlng) {
             if (isLocationTracking) {
                 stopLocationTracking();
@@ -2685,7 +3042,6 @@
             updateWaypointsPanel();
         }
 
-        // ★★★ ΣΥΝΑΡΤΗΣΗ ΔΙΑΓΡΑΦΗΣ ★★★
         function removeWaypoint(index) {
             if (index >= 0 && index < waypoints.length) {
                 if (confirm('Θέλετε να διαγράψετε το σημείο "' + waypointNames[index] + '";')) {
@@ -2701,7 +3057,6 @@
                     waypointStops.splice(index, 1);
                     markers.splice(index, 1);
                     
-                    // Ενημέρωση των δεικτών στα markers
                     for (var i = 0; i < markers.length; i++) {
                         if (markers[i]) {
                             markers[i].setPopupContent('📍 ' + waypointNames[i] + '<br><button onclick="removeWaypoint(' + i + ')" style="background:#b22222;color:white;border:none;padding:4px 10px;border-radius:6px;margin-top:4px;cursor:pointer;">✖ Διαγραφή</button>');
@@ -2715,7 +3070,6 @@
             }
         }
 
-        // Δηλώνουμε τη συνάρτηση ως global για να μπορεί να καλείται από το popup
         window.removeWaypoint = removeWaypoint;
 
         function takePhotoForPoint(position, label) {
@@ -2990,6 +3344,7 @@
             }
             
             clearAll();
+            clearMultipleRoutes();
             
             lastMainGeometry = route.geometry;
             lastMainDistance = route.distance || computeDistanceFromCoords(route.geometry);
@@ -3066,7 +3421,6 @@
             alert('✅ Φορτώθηκε: ' + route.name + ' με ' + routePhotos.length + ' φωτογραφίες');
         }
 
-        // ★★★ loadSavedRoutes ΜΕ ΑΛΦΑΒΗΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ ★★★
         function loadSavedRoutes() {
             var list = document.getElementById('savedRoutesList');
             var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
@@ -3184,7 +3538,6 @@
             list.innerHTML = html;
             if (countSpan) countSpan.innerText = total;
 
-            // Events για διαγραφή
             document.querySelectorAll('.remove-waypoint-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var i = parseInt(this.dataset.index);
@@ -3192,7 +3545,6 @@
                 });
             });
 
-            // Events για ενημέρωση ονόματος
             document.querySelectorAll('.set-waypoint-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var i = parseInt(this.dataset.index);
@@ -3791,7 +4143,6 @@
             var infoPanel = document.getElementById('routeInfo');
             if (infoPanel) {
                 infoPanel.classList.add('draggable');
-                // Το drag-area υπάρχει ήδη στο HTML
                 makeDraggable(infoPanel, '.drag-area', 'info_panel_position');
             }
             
@@ -3822,7 +4173,22 @@
                 }
                 makeDraggable(miniNav, null, 'mini_nav_position');
             }
-        }, 100);
+            
+            // Multiple Routes
+            var multiContainer = document.getElementById('multipleRoutesContainer');
+            if (multiContainer) {
+                multiContainer.classList.add('draggable');
+                var multiHeader = multiContainer.querySelector('.mr-header');
+                if (multiHeader && !multiHeader.querySelector('.panel-drag-handle')) {
+                    var dragHandle = document.createElement('span');
+                    dragHandle.className = 'panel-drag-handle';
+                    dragHandle.innerHTML = '<span class="dots">⠿</span>';
+                    dragHandle.style.cssText = 'cursor:grab;padding:2px 6px;';
+                    multiHeader.insertBefore(dragHandle, multiHeader.firstChild);
+                }
+                makeDraggable(multiContainer, '.mr-header', 'multiple_routes_position');
+            }
+        }, 200);
 
         // ============================================================
         //  EVENTS
@@ -3868,6 +4234,11 @@
             if (panel && panel.classList.contains('active') && !e.target.closest('#waypointsPanel') && !e.target.closest('#toggleWaypointsBtn')) {
                 panel.classList.remove('active');
             }
+            
+            var multiPanel = document.getElementById('multipleRoutesContainer');
+            if (multiPanel && multiPanel.classList.contains('active') && !e.target.closest('#multipleRoutesContainer') && !e.target.closest('#showMultipleRoutesBtn')) {
+                multiPanel.classList.remove('active');
+            }
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
@@ -3885,6 +4256,8 @@
                   '📂 GPX/KML → Φόρτωση αρχείου\n' +
                   '🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών (αλφαβητικά)\n' +
                   '📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n' +
+                  '📚 Πολλαπλές → Εμφάνιση πολλαπλών διαδρομών ταυτόχρονα\n' +
+                  '➕ Προσθήκη σε πολλαπλές από τη λίστα διαδρομών\n' +
                   '✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ ή από το popup του marker\n' +
                   '📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n' +
                   'ℹ️ Το πάνελ πληροφοριών είναι ΜΕΤΑΚΙΝΗΣΙΜΟ (σύρτε το από την ένδειξη ⠿)\n' +
@@ -3914,13 +4287,11 @@
         console.log('📍 Η παρακολούθηση σταματά όταν κάνετε κλικ για σχεδίαση');
         console.log('📍 Πατήστε ξανά "Θέση μου" για διακοπή');
         console.log('📸 Αυτόματη φωτογραφία σε Start/End/Ενδιάμεσα!');
-        console.log('🗑️ Διαγραφή ενδιάμεσων σημείων:');
-        console.log('   • Από το πάνελ 📍 Σημεία');
-        console.log('   • Από το popup του marker στον χάρτη');
+        console.log('🗑️ Διαγραφή ενδιάμεσων σημείων από το πάνελ 📍 Σημεία');
+        console.log('📚 Πολλαπλές διαδρομές: Πατήστε το κουμπί 📚 Πολλαπλές');
+        console.log('➕ Προσθήκη σε πολλαπλές: Από τη λίστα διαδρομών (🗺️) πατήστε ➕');
         console.log('🖱️ ΟΛΑ τα πάνελ είναι ΜΕΤΑΚΙΝΗΣΙΜΑ - σύρτε τα από την ένδειξη ⠿');
         console.log('ℹ️ Το info panel εμφανίζεται κεντραρισμένα κάτω και είναι μετακινήσιμο');
-        console.log('📸 Οι φωτογραφίες αποθηκεύονται στο IndexedDB');
-        console.log('⚠️ Αν μια φωτογραφία λείπει, η εφαρμογή συνεχίζει κανονικά');
         console.log('📋 Οι διαδρομές εμφανίζονται ΑΛΦΑΒΗΤΙΚΑ');
         console.log('🏷️ Λογότυπο πάνω δεξιά - οδηγεί στο agionorosroutes.blogspot.com');
         console.log('🔑 Κάθε διαδρομή έχει ΜΟΝΑΔΙΚΟ ID - δεν μπερδεύονται οι φορτώσεις');
