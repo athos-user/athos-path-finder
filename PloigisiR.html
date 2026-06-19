@@ -1463,6 +1463,8 @@
                     <tr><td>✖</td><td>Διαγραφή</td><td>Διαγράφει διαδρομή από τη λίστα</td></tr>
                     <tr><td>💾</td><td>Αποθήκευση</td><td>Αποθηκεύει την τρέχουσα διαδρομή</td></tr>
                     <tr><td>📤</td><td>Εξαγωγή GPX</td><td>Εξάγει τη διαδρομή σε αρχείο GPX</td></tr>
+                    <tr><td>📂 GPX</td><td>Φόρτωση αρχείου</td><td>Φορτώνει GPX/KML από υπολογιστή</td></tr>
+                    <tr><td>📂 Μαζική</td><td>Μαζική εισαγωγή</td><td>Εισάγει πολλά GPX αρχεία ταυτόχρονα</td></tr>
                 </table>
 
                 <h4>📸 Φωτογραφίες</h4>
@@ -2430,72 +2432,8 @@
         document.getElementById('showRoutesBtn')?.addEventListener('click', showRouteDropdown);
 
         // ============================================================
-        //  ΦΟΡΤΩΣΗ ΠΟΛΛΑΠΛΩΝ ΔΙΑΔΡΟΜΩΝ ΑΠΟ GPX (ΜΟΝΟ ΓΙΑ ΑΠΟΘΗΚΕΥΣΗ)
+        //  ΦΟΡΤΩΣΗ ΑΡΧΕΙΩΝ GPX/KML - ΜΙΑ ΔΙΑΔΡΟΜΗ
         // ============================================================
-        function loadMultipleGpxTracks(file) {
-            var reader = new FileReader();
-            reader.onload = function(ev) {
-                try {
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(ev.target.result, 'text/xml');
-                    if (doc.getElementsByTagName('parsererror').length > 0) {
-                        throw new Error('Λάθος XML');
-                    }
-
-                    var geojson = toGeoJSON.gpx(doc);
-                    var tracks = [];
-                    
-                    if (geojson.features) {
-                        for (var i = 0; i < geojson.features.length; i++) {
-                            var feat = geojson.features[i];
-                            if (feat.geometry && feat.geometry.type === 'LineString') {
-                                var coords = feat.geometry.coordinates;
-                                var name = feat.properties?.name || 'Διαδρομή ' + (i + 1);
-                                
-                                var route = {
-                                    id: generateRouteId(),
-                                    name: name,
-                                    geometry: coords,
-                                    distance: computeDistanceFromCoords(coords),
-                                    date: new Date().toISOString(),
-                                    startName: 'Start ' + name,
-                                    endName: 'End ' + name,
-                                    waypoints: [],
-                                    photoIds: []
-                                };
-                                tracks.push(route);
-                            }
-                        }
-                    }
-
-                    if (tracks.length === 0) {
-                        alert('Δεν βρέθηκαν διαδρομές στο αρχείο.');
-                        return;
-                    }
-
-                    var savedRoutes = getSavedRoutes();
-                    var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
-                    
-                    for (var i = 0; i < tracks.length; i++) {
-                        savedRoutes.push(tracks[i]);
-                        saved.push(tracks[i]);
-                    }
-                    
-                    saveRoutesToStorage(savedRoutes);
-                    localStorage.setItem('athos_routes', JSON.stringify(saved));
-                    
-                    showRoutesList();
-                    showToast('✅ Φορτώθηκαν ' + tracks.length + ' διαδρομές', '#2ecc71');
-                    alert('✅ Φορτώθηκαν ' + tracks.length + ' διαδρομές από το GPX!\n\n' +
-                          '📂 Βρείτε τις διαδρομές στη λίστα (κουμπί 🗺️)');
-                    
-                } catch (err) {
-                    alert('Σφάλμα: ' + err.message);
-                }
-            };
-            reader.readAsText(file);
-        }
-
         function loadSingleGpxTrack(file) {
             var reader = new FileReader();
             reader.onload = function(ev) {
@@ -2504,11 +2442,17 @@
                     var doc = parser.parseFromString(ev.target.result, 'text/xml');
                     if (doc.getElementsByTagName('parsererror').length > 0) throw new Error('Λάθος XML');
 
-                    var geojson = toGeoJSON.gpx(doc);
+                    var geojson = null;
+                    if (doc.getElementsByTagName('gpx').length > 0) {
+                        geojson = toGeoJSON.gpx(doc);
+                    } else if (doc.getElementsByTagName('kml').length > 0) {
+                        geojson = toGeoJSON.kml(doc);
+                    }
+                    
                     clearAll();
 
                     var geometry = null;
-                    if (geojson.features) {
+                    if (geojson && geojson.features) {
                         for (var i = 0; i < geojson.features.length; i++) {
                             var feat = geojson.features[i];
                             if (feat.geometry && (feat.geometry.type === 'LineString' || feat.geometry.type === 'MultiLineString')) {
@@ -2547,28 +2491,11 @@
             reader.readAsText(file);
         }
 
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            var file = e.target.files[0];
-            if (!file) return;
-
-            if (confirm('Θέλετε να φορτώσετε ΟΛΕΣ τις διαδρομές από το αρχείο GPX;\n\n' +
-                        '• Ναι → Θα φορτωθούν ΟΛΕΣ οι διαδρομές στη λίστα\n' +
-                        '• Όχι → Θα φορτωθεί μόνο η πρώτη διαδρομή')) {
-                loadMultipleGpxTracks(file);
-            } else {
-                loadSingleGpxTrack(file);
-            }
-            
-            e.target.value = '';
-        });
-
-        document.getElementById('batchImportBtn')?.addEventListener('click', function() {
-            document.getElementById('batchFileInput').click();
-        });
-
-        document.getElementById('batchFileInput')?.addEventListener('change', function(e) {
-            var files = e.target.files;
-            if (files.length === 0) return;
+        // ============================================================
+        //  ΜΑΖΙΚΗ ΕΙΣΑΓΩΓΗ GPX - ΠΛΗΡΩΣ ΛΕΙΤΟΥΡΓΙΚΗ
+        // ============================================================
+        function handleBatchFiles(files) {
+            if (!files || files.length === 0) return;
             
             var totalRoutes = 0;
             var allRoutes = [];
@@ -2583,27 +2510,43 @@
                         var doc = parser.parseFromString(ev.target.result, 'text/xml');
                         if (doc.getElementsByTagName('parsererror').length > 0) return;
                         
-                        var geojson = toGeoJSON.gpx(doc);
-                        if (geojson.features) {
+                        var geojson = null;
+                        if (doc.getElementsByTagName('gpx').length > 0) {
+                            geojson = toGeoJSON.gpx(doc);
+                        } else if (doc.getElementsByTagName('kml').length > 0) {
+                            geojson = toGeoJSON.kml(doc);
+                        }
+                        
+                        if (geojson && geojson.features) {
                             for (var i = 0; i < geojson.features.length; i++) {
                                 var feat = geojson.features[i];
-                                if (feat.geometry && feat.geometry.type === 'LineString') {
-                                    var coords = feat.geometry.coordinates;
-                                    var name = feat.properties?.name || file.name.replace('.gpx', '') + '_' + (i + 1);
+                                if (feat.geometry && (feat.geometry.type === 'LineString' || feat.geometry.type === 'MultiLineString')) {
+                                    var coords = [];
+                                    if (feat.geometry.type === 'LineString') {
+                                        coords = feat.geometry.coordinates;
+                                    } else if (feat.geometry.type === 'MultiLineString') {
+                                        for (var j = 0; j < feat.geometry.coordinates.length; j++) {
+                                            coords = coords.concat(feat.geometry.coordinates[j]);
+                                        }
+                                    }
                                     
-                                    var route = {
-                                        id: generateRouteId(),
-                                        name: name,
-                                        geometry: coords,
-                                        distance: computeDistanceFromCoords(coords),
-                                        date: new Date().toISOString(),
-                                        startName: 'Start ' + name,
-                                        endName: 'End ' + name,
-                                        waypoints: [],
-                                        photoIds: []
-                                    };
-                                    allRoutes.push(route);
-                                    totalRoutes++;
+                                    if (coords.length > 1) {
+                                        var name = feat.properties?.name || file.name.replace(/\.[^.]+$/, '') + '_' + (i + 1);
+                                        
+                                        var route = {
+                                            id: generateRouteId(),
+                                            name: name,
+                                            geometry: coords,
+                                            distance: computeDistanceFromCoords(coords),
+                                            date: new Date().toISOString(),
+                                            startName: 'Start ' + name,
+                                            endName: 'End ' + name,
+                                            waypoints: [],
+                                            photoIds: []
+                                        };
+                                        allRoutes.push(route);
+                                        totalRoutes++;
+                                    }
                                 }
                             }
                         }
@@ -2613,6 +2556,11 @@
                     
                     processed++;
                     if (processed === files.length) {
+                        if (totalRoutes === 0) {
+                            alert('⚠️ Δεν βρέθηκαν έγκυρες διαδρομές στα αρχεία.');
+                            return;
+                        }
+                        
                         var savedRoutes = getSavedRoutes();
                         var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
                         
@@ -2634,8 +2582,57 @@
                 };
                 reader.readAsText(file);
             }
+        }
+
+        // ============================================================
+        //  EVENT LISTENERS ΓΙΑ ΦΟΡΤΩΣΗ ΑΡΧΕΙΩΝ
+        // ============================================================
+        
+        // ★★★ ΦΟΡΤΩΣΗ ΕΝΟΣ ΑΡΧΕΙΟΥ ★★★
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            if (confirm('Θέλετε να φορτώσετε ΟΛΕΣ τις διαδρομές από το αρχείο;\n\n' +
+                        '• Ναι → Θα φορτωθούν ΟΛΕΣ οι διαδρομές στη λίστα\n' +
+                        '• Όχι → Θα φορτωθεί μόνο η πρώτη διαδρομή')) {
+                // Φόρτωση πολλαπλών διαδρομών
+                var files = [file];
+                handleBatchFiles(files);
+            } else {
+                // Φόρτωση μίας διαδρομής
+                loadSingleGpxTrack(file);
+            }
             
             e.target.value = '';
+        });
+
+        // ★★★ ΜΑΖΙΚΗ ΕΙΣΑΓΩΓΗ ★★★
+        document.getElementById('batchImportBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            var input = document.getElementById('batchFileInput');
+            if (input) {
+                input.value = '';
+                input.click();
+            } else {
+                var newInput = document.createElement('input');
+                newInput.type = 'file';
+                newInput.accept = '.gpx,.kml,.xml';
+                newInput.multiple = true;
+                newInput.style.display = 'none';
+                document.body.appendChild(newInput);
+                newInput.click();
+                newInput.onchange = function(e) {
+                    handleBatchFiles(e.target.files);
+                    document.body.removeChild(newInput);
+                };
+            }
+        });
+
+        // ★★★ HIDDEN INPUT ΓΙΑ ΜΑΖΙΚΗ ★★★
+        document.getElementById('batchFileInput')?.addEventListener('change', function(e) {
+            handleBatchFiles(e.target.files);
+            this.value = '';
         });
 
         // ============================================================
@@ -4874,7 +4871,7 @@
         console.log('📍 Πατήστε ξανά "Θέση μου" για διακοπή');
         console.log('🆘 SOS: Πατήστε το κόκκινο κουμπί 🆘 SOS');
         console.log('📂 GPX: Φόρτωση μίας ή πολλαπλών διαδρομών από GPX');
-        console.log('📂 Μαζική: Εισαγωγή πολλών αρχείων GPX ταυτόχρονα');
+        console.log('📂 Μαζική: Εισαγωγή πολλών αρχείων GPX ταυτόχρονα - ΛΕΙΤΟΥΡΓΕΙ!');
         console.log('🖱️ ΟΛΑ τα πάνελ είναι ΜΕΤΑΚΙΝΗΣΙΜΑ - σύρτε τα από την ένδειξη ⠿');
         console.log('ℹ️ Το info panel εμφανίζεται κεντραρισμένα κάτω και είναι μετακινήσιμο');
         console.log('📋 Οι διαδρομές εμφανίζονται ΑΛΦΑΒΗΤΙΚΑ');
@@ -4884,6 +4881,7 @@
         console.log('⏸️ Παύση: Σταματά προσωρινά την παρακολούθηση GPS');
         console.log('⏹️ Τερματισμός: Κλείνει εντελώς την πλοήγηση');
         console.log('📖 Οδηγίες: Πατήστε το κουμπί "📖 Οδηγίες" για το εγχειρίδιο χρήσης');
+        console.log('📂 Μαζική εισαγωγή: Επιλέξτε πολλά GPX/KML αρχεία ταυτόχρονα!');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
