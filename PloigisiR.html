@@ -1146,6 +1146,57 @@
         var GRAPHHOPPER_API_KEY = '5fece833-cd75-4373-a6ba-a4137d3f5132';
 
         // ============================================================
+        //  ΔΗΜΙΟΥΡΓΙΑ ΜΟΝΑΔΙΚΟΥ ID
+        // ============================================================
+        function generateRouteId() {
+            return 'route_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        }
+
+        // ============================================================
+        //  ΑΝΑΒΑΘΜΙΣΗ ΠΑΛΙΩΝ ΔΙΑΔΡΟΜΩΝ ΜΕ ID
+        // ============================================================
+        function upgradeRoutesWithId() {
+            var upgraded = false;
+            
+            // Αναβάθμιση στο athos_saved_routes
+            try {
+                var savedRoutes = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]');
+                for (var i = 0; i < savedRoutes.length; i++) {
+                    if (!savedRoutes[i].id) {
+                        savedRoutes[i].id = generateRouteId();
+                        upgraded = true;
+                    }
+                }
+                if (upgraded) {
+                    localStorage.setItem('athos_saved_routes', JSON.stringify(savedRoutes));
+                    console.log('✅ Αναβαθμίστηκαν ' + savedRoutes.length + ' διαδρομές στο athos_saved_routes με ID');
+                }
+            } catch(e) {
+                console.warn('⚠️ Σφάλμα αναβάθμισης athos_saved_routes:', e);
+            }
+            
+            // Αναβάθμιση στο athos_routes
+            try {
+                var routes = JSON.parse(localStorage.getItem('athos_routes') || '[]');
+                var upgraded2 = false;
+                for (var i = 0; i < routes.length; i++) {
+                    if (!routes[i].id) {
+                        routes[i].id = generateRouteId();
+                        upgraded2 = true;
+                    }
+                }
+                if (upgraded2) {
+                    localStorage.setItem('athos_routes', JSON.stringify(routes));
+                    console.log('✅ Αναβαθμίστηκαν ' + routes.length + ' διαδρομές στο athos_routes με ID');
+                }
+            } catch(e) {
+                console.warn('⚠️ Σφάλμα αναβάθμισης athos_routes:', e);
+            }
+            
+            return upgraded;
+        }
+
+        // ============================================================
         //  INDEXEDDB - ΑΠΟΘΗΚΕΥΣΗ ΦΩΤΟΓΡΑΦΙΩΝ
         // ============================================================
         var db = null;
@@ -1492,11 +1543,6 @@
         //  ΔΙΑΔΡΟΜΕΣ - ΛΙΣΤΑ (ΜΕ ID ΚΑΙ ΑΛΦΑΒΗΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ)
         // ============================================================
         
-        // ★★★ ΔΗΜΙΟΥΡΓΙΑ ΜΟΝΑΔΙΚΟΥ ID ★★★
-        function generateRouteId() {
-            return 'route_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-        }
-
         function getSavedRoutes() {
             try {
                 return JSON.parse(localStorage.getItem('athos_saved_routes') || '[]');
@@ -3853,6 +3899,16 @@
         resetInfo();
         updatePhotoList();
         updateWaypointsPanel();
+        
+        // ★★★ ΑΝΑΒΑΘΜΙΣΗ ΠΑΛΙΩΝ ΔΙΑΔΡΟΜΩΝ ΜΕ ID ★★★
+        setTimeout(function() {
+            var upgraded = upgradeRoutesWithId();
+            if (upgraded) {
+                showRoutesList();
+                console.log('✅ Οι παλιές διαδρομές αναβαθμίστηκαν με μοναδικό ID');
+            }
+        }, 200);
+        
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Πατήστε "Θέση μου" για συνεχή παρακολούθηση');
         console.log('📍 Η παρακολούθηση σταματά όταν κάνετε κλικ για σχεδίαση');
