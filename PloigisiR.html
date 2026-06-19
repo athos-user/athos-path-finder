@@ -4507,7 +4507,7 @@
         });
 
         // ============================================================
-        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ
+        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - ΔΙΟΡΘΩΜΕΝΟ
         // ============================================================
         function calculateRoute() {
             var allPoints = [];
@@ -4529,69 +4529,130 @@
                 return;
             }
             
-            if (allPoints.length === 2 && !waypoints.length) {
-                fetchRouteFromORS(allPoints[0], allPoints[1]);
+            // Χρησιμοποιούμε το ORS API για ΟΛΕΣ τις περιπτώσεις
+            fetchRouteFromORS(allPoints);
+        }
+
+        function fetchRouteFromORS(points) {
+            // Αν έχουμε μόνο 2 σημεία, χρησιμοποιούμε το απλό API
+            if (points.length === 2) {
+                var url = 'https://api.openrouteservice.org/v2/directions/foot-walking/geojson';
+                var body = {
+                    coordinates: points,
+                    instructions: true,
+                    language: 'el'
+                };
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': ORS_API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then(function(response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.features && data.features.length > 0) {
+                        var coords = data.features[0].geometry.coordinates;
+                        var dist = data.features[0].properties.segments[0].distance / 1000;
+                        drawRoute(coords, dist);
+                        showToast('✅ Διαδρομή υπολογίστηκε', '#2ecc71');
+                    } else {
+                        throw new Error('Δεν βρέθηκε διαδρομή');
+                    }
+                })
+                .catch(function(err) {
+                    console.error('ORS error:', err);
+                    // Fallback: ευθεία γραμμή
+                    var geometry = [points[0], points[1]];
+                    var dist = L.latLng(points[0][1], points[0][0]).distanceTo(L.latLng(points[1][1], points[1][0])) / 1000;
+                    drawRoute(geometry, dist);
+                    showToast('⚠️ Χρησιμοποιήθηκε ευθεία γραμμή', '#f39c12');
+                });
                 return;
             }
             
-            var geometry = [];
+            // Για πολλά σημεία, κάνουμε διαδοχικά requests
+            var allCoords = [];
             var totalDist = 0;
             
-            for (var i = 0; i < allPoints.length - 1; i++) {
-                var from = allPoints[i];
-                var to = allPoints[i+1];
-                
-                var segment = [from, to];
-                if (geometry.length === 0) {
-                    geometry.push(from);
+            function fetchSegment(index) {
+                if (index >= points.length - 1) {
+                    // Όλα τα τμήματα ολοκληρώθηκαν
+                    drawRoute(allCoords, totalDist);
+                    showToast('✅ Διαδρομή υπολογίστηκε', '#2ecc71');
+                    return;
                 }
-                geometry.push(to);
                 
-                var dist = L.latLng(from[1], from[0]).distanceTo(L.latLng(to[1], to[0]));
-                totalDist += dist;
+                var from = points[index];
+                var to = points[index + 1];
+                
+                var url = 'https://api.openrouteservice.org/v2/directions/foot-walking/geojson';
+                var body = {
+                    coordinates: [from, to],
+                    instructions: true,
+                    language: 'el'
+                };
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': ORS_API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then(function(response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.features && data.features.length > 0) {
+                        var coords = data.features[0].geometry.coordinates;
+                        var dist = data.features[0].properties.segments[0].distance / 1000;
+                        
+                        // Προσθήκη των συντεταγμένων (αποφεύγοντας διπλότυπα)
+                        if (allCoords.length === 0) {
+                            allCoords = allCoords.concat(coords);
+                        } else {
+                            // Αφαιρούμε το πρώτο σημείο (που είναι το τελευταίο του προηγούμενου τμήματος)
+                            for (var i = 1; i < coords.length; i++) {
+                                allCoords.push(coords[i]);
+                            }
+                        }
+                        totalDist += dist;
+                    } else {
+                        // Fallback: ευθεία γραμμή για αυτό το τμήμα
+                        if (allCoords.length === 0) {
+                            allCoords.push(from);
+                        }
+                        allCoords.push(to);
+                        var dist = L.latLng(from[1], from[0]).distanceTo(L.latLng(to[1], to[0])) / 1000;
+                        totalDist += dist;
+                        showToast('⚠️ Χρησιμοποιήθηκε ευθεία γραμμή σε τμήμα', '#f39c12');
+                    }
+                    
+                    fetchSegment(index + 1);
+                })
+                .catch(function(err) {
+                    console.error('ORS segment error:', err);
+                    // Fallback: ευθεία γραμμή
+                    if (allCoords.length === 0) {
+                        allCoords.push(from);
+                    }
+                    allCoords.push(to);
+                    var dist = L.latLng(from[1], from[0]).distanceTo(L.latLng(to[1], to[0])) / 1000;
+                    totalDist += dist;
+                    
+                    fetchSegment(index + 1);
+                });
             }
             
-            drawRoute(geometry, totalDist / 1000);
-        }
-
-        function fetchRouteFromORS(from, to) {
-            var url = 'https://api.openrouteservice.org/v2/directions/foot-walking/geojson';
-            
-            var body = {
-                coordinates: [from, to],
-                instructions: true,
-                language: 'el'
-            };
-            
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Authorization': ORS_API_KEY,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            })
-            .then(function(response) {
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                return response.json();
-            })
-            .then(function(data) {
-                if (data.features && data.features.length > 0) {
-                    var coords = data.features[0].geometry.coordinates;
-                    var dist = data.features[0].properties.segments[0].distance / 1000;
-                    drawRoute(coords, dist);
-                    showToast('✅ Διαδρομή υπολογίστηκε', '#2ecc71');
-                } else {
-                    throw new Error('Δεν βρέθηκε διαδρομή');
-                }
-            })
-            .catch(function(err) {
-                console.error('ORS error:', err);
-                var geometry = [from, to];
-                var dist = L.latLng(from[1], from[0]).distanceTo(L.latLng(to[1], to[0])) / 1000;
-                drawRoute(geometry, dist);
-                showToast('⚠️ Χρησιμοποιήθηκε ευθεία γραμμή', '#f39c12');
-            });
+            fetchSegment(0);
         }
 
         function drawRoute(geometry, distance) {
