@@ -1418,7 +1418,7 @@
         }
 
         // ============================================================
-        //  ΔΙΑΔΡΟΜΕΣ - ΛΙΣΤΑ
+        //  ΔΙΑΔΡΟΜΕΣ - ΛΙΣΤΑ (ΜΕ ΑΛΦΑΒΗΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ)
         // ============================================================
         function getSavedRoutes() {
             try {
@@ -1484,6 +1484,16 @@
                 
                 routes.push(routeData);
                 saveRoutesToStorage(routes);
+                
+                // ★★★ ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΣΤΟ athos_routes ★★★
+                var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
+                var existingIndex = saved.findIndex(function(r) { return r.name === name; });
+                if (existingIndex >= 0) {
+                    saved[existingIndex] = routeData;
+                } else {
+                    saved.push(routeData);
+                }
+                localStorage.setItem('athos_routes', JSON.stringify(saved));
                 
                 showRoutesList();
                 showToast('✅ Αποθηκεύτηκε: ' + name, '#2ecc71');
@@ -1578,15 +1588,19 @@
             startPoint = { lat: first[1], lng: first[0] };
             endPoint = { lat: last[1], lng: last[0] };
             
+            startName = route.startName || 'Αφετηρία';
+            endName = route.endName || 'Προορισμός';
+            
             if (startMarker) map.removeLayer(startMarker);
             startMarker = L.marker([first[1], first[0]], { icon: getColorIcon('green') })
-                .addTo(map).bindPopup('🚩 ' + (route.startName || 'Αφετηρία'));
+                .addTo(map).bindPopup('🚩 ' + startName);
             
             if (endMarker) map.removeLayer(endMarker);
             endMarker = L.marker([last[1], last[0]], { icon: getColorIcon('red') })
-                .addTo(map).bindPopup('🏁 ' + (route.endName || 'Προορισμός'));
+                .addTo(map).bindPopup('🏁 ' + endName);
             
             updateInfo();
+            updateWaypointsPanel();
             var photoCount = (photos || []).length;
             showToast('✅ Φορτώθηκε: ' + route.name + ' με ' + photoCount + ' φωτογραφίες', '#2ecc71');
         }
@@ -1606,15 +1620,29 @@
                 
                 routes.splice(index, 1);
                 saveRoutesToStorage(routes);
+                
+                // ★★★ ΔΙΑΓΡΑΦΗ ΚΑΙ ΑΠΟ ΤΟ athos_routes ★★★
+                var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
+                var savedIndex = saved.findIndex(function(r) { return r.name === routeName; });
+                if (savedIndex >= 0) {
+                    saved.splice(savedIndex, 1);
+                    localStorage.setItem('athos_routes', JSON.stringify(saved));
+                }
+                
                 showRoutesList();
                 showToast('🗑️ Διαγράφηκε: ' + routeName, '#e74c3c');
             }
         }
 
-        // ★★★ ΒΕΛΤΙΩΜΕΝΗ showRoutesList ★★★
+        // ★★★ ΒΕΛΤΙΩΜΕΝΗ showRoutesList ΜΕ ΑΛΦΑΒΗΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ ★★★
         function showRoutesList() {
             var routes = getSavedRoutes();
             var container = document.getElementById('routesList');
+            
+            // ★★★ ΤΑΞΙΝΟΜΗΣΗ ΑΛΦΑΒΗΤΙΚΑ ★★★
+            routes.sort(function(a, b) {
+                return a.name.localeCompare(b.name, 'el');
+            });
             
             if (routes.length === 0) {
                 container.innerHTML = '<div style="color:#999;padding:12px;text-align:center;font-size:12px;">📭 Δεν υπάρχουν αποθηκευμένες διαδρομές</div>';
@@ -2756,7 +2784,7 @@
         // ============================================================
         function saveRoute() {
             if (!lastMainGeometry || lastMainGeometry.length < 2) {
-                alert('Δεν υπάρχει διαδρομή.');
+                alert('Δεν υπάρχει διαδρομή για αποθήκευση.');
                 return;
             }
             
@@ -2780,17 +2808,38 @@
                     geometry: lastMainGeometry,
                     distance: lastMainDistance,
                     date: new Date().toISOString(),
-                    startName: startName,
-                    endName: endName,
-                    waypoints: waypoints.map(function(p, i) { return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο' }; }),
+                    startName: startName || 'Αφετηρία',
+                    endName: endName || 'Προορισμός',
+                    waypoints: waypoints.map(function(p, i) { 
+                        return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο' }; 
+                    }),
                     photoIds: photoIds
                 };
                 
+                // ★★★ ΑΠΟΘΗΚΕΥΣΗ ΚΑΙ ΣΤΑ ΔΥΟ STORAGE ★★★
                 var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
                 saved.push(routeData);
                 localStorage.setItem('athos_routes', JSON.stringify(saved));
                 
-                alert('✅ Αποθηκεύτηκε με ' + photoIds.length + ' φωτογραφίες!');
+                var savedRoutes = getSavedRoutes();
+                var routeWithPhotos = {
+                    name: name,
+                    geometry: lastMainGeometry,
+                    distance: lastMainDistance,
+                    date: new Date().toISOString(),
+                    startName: startName || 'Αφετηρία',
+                    endName: endName || 'Προορισμός',
+                    waypoints: waypoints.map(function(p, i) { 
+                        return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο' }; 
+                    }),
+                    photoIds: photoIds
+                };
+                savedRoutes.push(routeWithPhotos);
+                saveRoutesToStorage(savedRoutes);
+                
+                showRoutesList();
+                showToast('✅ Αποθηκεύτηκε: ' + name, '#2ecc71');
+                alert('✅ Η διαδρομή "' + name + '" αποθηκεύτηκε με ' + photoIds.length + ' φωτογραφίες!');
                 updateSavedRoutesList();
             });
         }
@@ -2882,6 +2931,7 @@
             alert('✅ Φορτώθηκε: ' + route.name + ' με ' + routePhotos.length + ' φωτογραφίες');
         }
 
+        // ★★★ loadSavedRoutes ΜΕ ΑΛΦΑΒΗΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ ★★★
         function loadSavedRoutes() {
             var list = document.getElementById('savedRoutesList');
             var saved = JSON.parse(localStorage.getItem('athos_routes') || '[]');
@@ -2890,6 +2940,11 @@
                 alert('Δεν υπάρχουν αποθηκευμένες.');
                 return;
             }
+            
+            // ★★★ ΤΑΞΙΝΟΜΗΣΗ ΑΛΦΑΒΗΤΙΚΑ ★★★
+            saved.sort(function(a, b) {
+                return a.name.localeCompare(b.name, 'el');
+            });
             
             var html = '<div style="font-weight:600;padding:4px 0;border-bottom:1px solid #ddd;">Αποθηκευμένες:</div>';
             for (var i = 0; i < saved.length; i++) {
@@ -3700,7 +3755,7 @@
                   '💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n' +
                   '📤 GPX → Εξαγωγή διαδρομής\n' +
                   '📂 GPX/KML → Φόρτωση αρχείου\n' +
-                  '🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών\n' +
+                  '🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών (αλφαβητικά)\n' +
                   '📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n' +
                   '✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ ή από το popup του marker\n' +
                   '📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n\n' +
@@ -3726,6 +3781,7 @@
         console.log('🖱️ ΟΛΑ τα πάνελ είναι ΜΕΤΑΚΙΝΗΣΙΜΑ - σύρτε τα από την ένδειξη ⠿');
         console.log('📸 Οι φωτογραφίες αποθηκεύονται στο IndexedDB');
         console.log('⚠️ Αν μια φωτογραφία λείπει, η εφαρμογή συνεχίζει κανονικά');
+        console.log('📋 Οι διαδρομές εμφανίζονται ΑΛΦΑΒΗΤΙΚΑ');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
