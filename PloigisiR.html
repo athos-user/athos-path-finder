@@ -1882,6 +1882,9 @@
             });
         }
 
+        // ============================================================
+        //  ΦΟΡΤΩΣΗ ΔΙΑΔΡΟΜΗΣ ΜΕ ΑΠΟΚΑΤΑΣΤΑΣΗ WAYPOINTS ΚΑΙ ΦΩΤΟΓΡΑΦΙΩΝ
+        // ============================================================
         function loadRouteDirect(route, index, photos) {
             if (!route.geometry || route.geometry.length < 2) {
                 alert('Μη έγκυρη διαδρομή.');
@@ -1898,6 +1901,36 @@
             routeLines.push(line);
             map.fitBounds(line.getBounds(), { padding: [40,40] });
             
+            // === ΑΠΟΚΑΤΑΣΤΑΣΗ WAYPOINTS ΚΑΙ ΦΩΤΟΓΡΑΦΙΩΝ ΤΟΥΣ ===
+            if (route.waypoints && route.waypoints.length > 0) {
+                for (var i = 0; i < route.waypoints.length; i++) {
+                    var wp = route.waypoints[i];
+                    var latlng = L.latLng(wp.lat, wp.lng);
+                    waypoints.push(latlng);
+                    waypointNames.push(wp.name || 'Σημείο ' + (i + 1));
+                    waypointColors.push('blue');
+                    waypointDescs.push('');
+                    waypointElevs.push(null);
+                    waypointImages.push('');
+                    waypointStops.push(0);
+                    
+                    var marker = L.marker(latlng, { icon: getColorIcon('blue'), draggable: true })
+                        .addTo(map)
+                        .bindPopup('📍 ' + waypointNames[i] + '<br><button onclick="removeWaypoint(' + i + ')" style="background:#b22222;color:white;border:none;padding:4px 10px;border-radius:6px;margin-top:4px;cursor:pointer;">✖ Διαγραφή</button>');
+                    
+                    (function(idx) {
+                        marker.on('dragend', function(e) { 
+                            waypoints[idx] = e.target.getLatLng(); 
+                            calculateRoute(); 
+                        });
+                    })(i);
+                    
+                    markers.push(marker);
+                }
+                updateWaypointsPanel();
+            }
+            
+            // === ΑΠΟΚΑΤΑΣΤΑΣΗ ΦΩΤΟΓΡΑΦΙΩΝ ===
             if (photos && photos.length > 0) {
                 routePhotos = photos;
                 for (var i = 0; i < routePhotos.length; i++) {
@@ -1940,7 +1973,8 @@
             updateInfo();
             updateWaypointsPanel();
             var photoCount = (photos || []).length;
-            showToast('✅ Φορτώθηκε: ' + route.name + ' με ' + photoCount + ' φωτογραφίες', '#2ecc71');
+            var waypointCount = (route.waypoints || []).length;
+            showToast('✅ Φορτώθηκε: ' + route.name + ' με ' + photoCount + ' φωτογραφίες και ' + waypointCount + ' σημεία', '#2ecc71');
         }
 
         function deleteRouteFromList(routeId) {
