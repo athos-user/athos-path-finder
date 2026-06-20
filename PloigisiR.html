@@ -1442,6 +1442,7 @@
             });
         }
 
+        // ΒΕΛΤΙΩΜΕΝΗ: Χρησιμοποιεί το ID που υπολογίζεται εξωτερικά
         function savePhotoToDB(imageData, note, lat, lng, filename) {
             return new Promise(function(resolve, reject) {
                 if (!db) {
@@ -1451,8 +1452,11 @@
                     return;
                 }
                 
+                // Χρησιμοποιούμε το ίδιο ID που θα χρησιμοποιηθεί και για την αποθήκευση
+                var id = generatePhotoId(imageData);
+                
                 var photo = {
-                    id: generatePhotoId(imageData),
+                    id: id,
                     image: imageData,
                     note: note || '',
                     lat: lat,
@@ -1466,13 +1470,25 @@
                 var request = store.put(photo);
                 
                 request.onsuccess = function() {
-                    resolve(photo.id);
+                    resolve(id);
                 };
                 
                 request.onerror = function(event) {
                     reject(event.target.error);
                 };
             });
+        }
+
+        // ΒΕΛΤΙΩΜΕΝΗ: Πιο σταθερό hash με timestamp για μοναδικότητα
+        function generatePhotoId(imageData) {
+            var hash = 0;
+            var str = imageData.substring(0, 500);
+            for (var i = 0; i < str.length; i++) {
+                var char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return 'photo_' + Math.abs(hash).toString(36) + '_' + Date.now().toString(36);
         }
 
         function getPhotoFromDB(id) {
@@ -1552,17 +1568,6 @@
                     reject(event.target.error);
                 };
             });
-        }
-
-        function generatePhotoId(imageData) {
-            var hash = 0;
-            var str = imageData.substring(0, 200);
-            for (var i = 0; i < str.length; i++) {
-                var char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return 'photo_' + Math.abs(hash).toString(36);
         }
 
         openPhotoDB().catch(function(err) {
@@ -1901,7 +1906,7 @@
             routeLines.push(line);
             map.fitBounds(line.getBounds(), { padding: [40,40] });
             
-            // === ΑΠΟΚΑΤΑΣΤΑΣΗ WAYPOINTS ΚΑΙ ΦΩΤΟΓΡΑΦΙΩΝ ΤΟΥΣ ===
+            // === ΑΠΟΚΑΤΑΣΤΑΣΗ WAYPOINTS ===
             if (route.waypoints && route.waypoints.length > 0) {
                 for (var i = 0; i < route.waypoints.length; i++) {
                     var wp = route.waypoints[i];
@@ -2050,7 +2055,24 @@
                     var id = this.dataset.id;
                     var route = getSavedRoutes().find(function(r) { return r.id === id; });
                     if (route) {
-                        loadRouteDirect(route, null, []);
+                        // Φόρτωση με φωτογραφίες
+                        var photoIds = route.photoIds || [];
+                        if (photoIds.length > 0) {
+                            var photoPromises = photoIds.map(function(id) {
+                                return getPhotoFromDB(id);
+                            });
+                            Promise.all(photoPromises).then(function(photos) {
+                                var validPhotos = photos.filter(function(p) { 
+                                    return p !== null && p.image && p.image.length > 0;
+                                });
+                                routePhotos = validPhotos;
+                                loadRouteDirect(route, null, validPhotos);
+                            }).catch(function() {
+                                loadRouteDirect(route, null, []);
+                            });
+                        } else {
+                            loadRouteDirect(route, null, []);
+                        }
                     }
                     hideRouteDropdown();
                 });
@@ -2069,7 +2091,23 @@
                     var id = this.dataset.id;
                     var route = getSavedRoutes().find(function(r) { return r.id === id; });
                     if (route) {
-                        loadRouteDirect(route, null, []);
+                        var photoIds = route.photoIds || [];
+                        if (photoIds.length > 0) {
+                            var photoPromises = photoIds.map(function(id) {
+                                return getPhotoFromDB(id);
+                            });
+                            Promise.all(photoPromises).then(function(photos) {
+                                var validPhotos = photos.filter(function(p) { 
+                                    return p !== null && p.image && p.image.length > 0;
+                                });
+                                routePhotos = validPhotos;
+                                loadRouteDirect(route, null, validPhotos);
+                            }).catch(function() {
+                                loadRouteDirect(route, null, []);
+                            });
+                        } else {
+                            loadRouteDirect(route, null, []);
+                        }
                     }
                     hideRouteDropdown();
                 });
