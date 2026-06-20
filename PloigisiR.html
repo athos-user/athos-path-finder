@@ -2495,15 +2495,12 @@
         function parseGpxCoordinates(doc) {
             var tracks = [];
             
-            // Βρίσκουμε όλα τα trk στοιχεία
             var trkElements = doc.getElementsByTagName('trk');
             
-            // Αν δεν υπάρχουν trk, δοκιμάζουμε με route (rte)
             if (trkElements.length === 0) {
                 trkElements = doc.getElementsByTagName('rte');
             }
             
-            // Αν πάλι δεν υπάρχουν, δοκιμάζουμε με trkseg
             if (trkElements.length === 0) {
                 var trksegElements = doc.getElementsByTagName('trkseg');
                 if (trksegElements.length > 0) {
@@ -2687,8 +2684,18 @@
             saveRoutesToStorage(savedRoutes);
             localStorage.setItem('athos_routes', JSON.stringify(saved));
             
-            // ★★★ ΑΝΑΝΕΩΣΗ ΤΗΣ ΛΙΣΤΑΣ ★★★
+            // ★★★ ΑΝΑΓΚΑΣΤΙΚΗ ΑΝΑΝΕΩΣΗ ΤΗΣ ΛΙΣΤΑΣ ★★★
             showRoutesList();
+            
+            // Αν η λίστα είναι ανοιχτή, την κλείνουμε και την ξανανοίγουμε για ανανέωση
+            var container = document.getElementById('routeDropdownContainer');
+            if (container && container.classList.contains('active')) {
+                container.classList.remove('active');
+                setTimeout(function() {
+                    container.classList.add('active');
+                    showRoutesList();
+                }, 100);
+            }
             
             var msg = '✅ Εισαγωγή ολοκληρώθηκε!\n\n' +
                       '📂 Αρχεία: ' + totalFiles + '\n' +
