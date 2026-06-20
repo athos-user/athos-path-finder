@@ -990,40 +990,35 @@
             background: #666;
         }
         
-        .draggable-panel {
-            cursor: grab;
-            touch-action: none;
-            user-select: none;
-            transition: none;
-        }
-        .draggable-panel:active {
-            cursor: grabbing;
-        }
-        .drag-handle {
+        /* ★★★ ΜΕΤΑΚΙΝΗΣΙΜΑ ΠΑΝΕΛ - ΔΙΟΡΘΩΜΕΝΑ ★★★ */
+        .panel-drag-handle {
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: 4px;
             cursor: grab;
-            padding: 1px 4px;
-            border-radius: 4px;
+            padding: 4px 12px;
+            border-radius: 6px;
             background: rgba(0,0,0,0.05);
-            font-size: 9px;
+            font-size: 10px;
             color: #888;
+            user-select: none;
+            touch-action: none;
         }
-        .drag-handle:active {
+        .panel-drag-handle:active {
             cursor: grabbing;
         }
-        .drag-handle .dots {
+        .panel-drag-handle .dots {
             letter-spacing: 2px;
-            font-size: 10px;
+            font-size: 14px;
             line-height: 1;
         }
         
         #navigationPanel.draggable {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) !important;
+            position: fixed !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
             max-width: 500px;
             width: 92%;
             max-height: 70vh;
@@ -1031,6 +1026,9 @@
             border-radius: 16px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
             min-height: 200px;
+            transform: none !important;
+            transition: none !important;
+            touch-action: none;
         }
         #navigationPanel.draggable .nav-header {
             cursor: grab;
@@ -1040,17 +1038,20 @@
         }
         
         #waypointsPanel.draggable {
-            position: fixed;
-            bottom: auto;
-            left: auto;
-            right: auto;
-            top: auto;
+            position: fixed !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
             max-width: 520px;
             width: 90%;
             max-height: 70vh;
             z-index: 1000;
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            transform: none !important;
+            transition: none !important;
+            touch-action: none;
         }
         #waypointsPanel.draggable .panel-header {
             cursor: grab;
@@ -1060,17 +1061,20 @@
         }
         
         #routeDropdownContainer.draggable {
-            position: fixed;
-            bottom: auto;
-            left: auto;
-            right: auto;
-            top: auto;
+            position: fixed !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
             max-width: 550px;
             width: 90%;
             max-height: 70vh;
             z-index: 1000;
             border-radius: 14px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            transform: none !important;
+            transition: none !important;
+            touch-action: none;
         }
         #routeDropdownContainer.draggable .routes-header {
             cursor: grab;
@@ -1080,28 +1084,31 @@
         }
         
         #routeInfo.draggable {
-            position: fixed;
-            bottom: auto;
-            left: auto;
-            right: auto;
-            top: auto;
+            position: fixed !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
             max-width: 380px;
             width: 85%;
             z-index: 1000;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             cursor: grab;
+            transform: none !important;
+            transition: none !important;
+            touch-action: none;
         }
         #routeInfo.draggable:active {
             cursor: grabbing;
         }
         
         #savedRoutesList.draggable {
-            position: fixed;
-            bottom: auto;
-            left: auto;
-            right: auto;
-            top: auto;
+            position: fixed !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
             max-width: 300px;
             width: 80%;
             max-height: 60vh;
@@ -1109,6 +1116,9 @@
             border-radius: 10px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
             cursor: grab;
+            transform: none !important;
+            transition: none !important;
+            touch-action: none;
         }
         #savedRoutesList.draggable:active {
             cursor: grabbing;
@@ -1121,40 +1131,32 @@
         }
         
         #miniNavBar.draggable {
-            position: fixed;
-            bottom: auto;
-            left: auto;
-            right: auto;
-            top: auto;
+            position: fixed !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
             z-index: 1500;
             border-radius: 30px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             cursor: grab;
             touch-action: none;
             user-select: none;
+            transform: none !important;
+            transition: none !important;
         }
         #miniNavBar.draggable:active {
             cursor: grabbing;
         }
         
-        .panel-drag-handle {
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        .draggable-panel {
             cursor: grab;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: rgba(0,0,0,0.05);
-            font-size: 10px;
-            color: #888;
+            touch-action: none;
+            user-select: none;
+            transition: none;
         }
-        .panel-drag-handle:active {
+        .draggable-panel:active {
             cursor: grabbing;
-        }
-        .panel-drag-handle .dots {
-            letter-spacing: 2px;
-            font-size: 12px;
-            line-height: 1;
         }
         
         button[title], input[title], select[title] {
@@ -1290,29 +1292,28 @@
             #sosContainer .sos-fields textarea { font-size: 12px; padding: 6px 8px; }
             #sosContainer .sos-buttons button { font-size: 12px; padding: 8px; }
             #tileProgress { bottom: 100px; padding: 10px 16px; font-size: 12px; min-width: 150px; }
+            
+            /* ★★★ ΜΕΓΕΘΗ ΣΕ ΚΙΝΗΤΑ ★★★ */
             #navigationPanel.draggable { 
                 max-width: 95%; 
                 width: 95%; 
                 max-height: 80vh;
                 min-height: 150px;
-                bottom: 10px;
+                border-radius: 12px;
             }
-            #waypointsPanel.draggable { max-width: 95%; width: 95%; max-height: 70vh; }
-            #routeDropdownContainer.draggable { max-width: 95%; width: 95%; max-height: 80vh; }
-            #routeInfo.draggable { max-width: 95%; width: 95%; }
-            #savedRoutesList.draggable { max-width: 95%; width: 95%; }
-            #miniNavBar.draggable { max-width: 95%; width: auto; }
-            .panel-drag-handle { font-size: 8px; padding: 1px 5px; }
-            .panel-drag-handle .dots { font-size: 10px; }
-            .nav-controls button {
-                font-size: 11px;
-                padding: 6px 10px;
-                min-width: 55px;
+            #waypointsPanel.draggable { max-width: 95%; width: 95%; max-height: 70vh; border-radius: 12px; }
+            #routeDropdownContainer.draggable { max-width: 95%; width: 95%; max-height: 80vh; border-radius: 12px; }
+            #routeInfo.draggable { max-width: 95%; width: 95%; border-radius: 12px; }
+            #savedRoutesList.draggable { max-width: 95%; width: 95%; border-radius: 12px; }
+            #miniNavBar.draggable { max-width: 95%; width: auto; border-radius: 25px; }
+            .panel-drag-handle {
+                padding: 3px 8px;
+                font-size: 9px;
             }
-            .nav-controls .nav-status {
-                font-size: 10px;
-                min-width: 60px;
+            .panel-drag-handle .dots {
+                font-size: 12px;
             }
+            
             #navigationPanel {
                 min-height: 150px;
                 max-height: 55vh;
@@ -1349,38 +1350,23 @@
                 max-width: 140px;
             }
             .bottom-bar { display: none; }
-            #navigationPanel { 
+            
+            #navigationPanel.draggable { 
                 max-width: 500px; 
-                left: 50%; 
-                transform: translateX(-50%); 
-                border-radius: 16px; 
-                bottom: 20px;
                 width: 92%;
                 min-height: 250px;
+                border-radius: 16px;
             }
-            #navigationPanel.active { 
-                transform: translateX(-50%) translateY(0); 
-            }
+            #waypointsPanel.draggable { max-width: 500px; min-width: 380px; border-radius: 16px; }
+            #routeDropdownContainer.draggable { max-width: 550px; min-width: 400px; border-radius: 16px; }
+            #routeInfo.draggable { max-width: 400px; width: 70%; border-radius: 16px; }
+            #savedRoutesList.draggable { max-width: 300px; width: 80%; border-radius: 12px; }
+            #miniNavBar.draggable { border-radius: 30px; }
+            
             .nav-photo-btn { bottom: 85px; right: 25px; }
             #miniNavBar { bottom: 85px; }
-            #routeDropdownContainer {
-                max-width: 550px;
-                min-width: 400px;
-            }
-            #waypointsPanel {
-                max-width: 500px;
-                min-width: 380px;
-            }
-            .info-panel {
-                max-width: 400px;
-                width: 70%;
-            }
-            #sosContainer {
-                max-width: 420px;
-            }
-            #manualModal .manual-content {
-                padding: 40px;
-            }
+            #sosContainer { max-width: 420px; }
+            #manualModal .manual-content { padding: 40px; }
         }
     </style>
 </head>
@@ -3479,11 +3465,11 @@
                         if (data) {
                             var pos = JSON.parse(data);
                             panel.style.position = 'fixed';
-                            panel.style.left = '50%';
-                            panel.style.top = 'auto';
-                            panel.style.bottom = '20px';
+                            panel.style.left = pos.left + 'px';
+                            panel.style.top = pos.top + 'px';
+                            panel.style.bottom = 'auto';
                             panel.style.right = 'auto';
-                            panel.style.transform = 'translateX(-50%)';
+                            panel.style.transform = 'none';
                             panel.style.width = pos.width || '92%';
                             panel.style.maxWidth = '500px';
                         }
@@ -4417,21 +4403,41 @@
         }
 
         // ============================================================
-        //  DRAGGABLE PANELS
+        //  ΜΕΤΑΚΙΝΗΣΙΜΑ ΠΑΝΕΛ (DRAG) - ΒΕΛΤΙΩΜΕΝΟ
         // ============================================================
         function makeDraggable(element, handleSelector, storageKey) {
             if (!element) return;
+            if (element._dragData) return;
             
             var dragData = {
                 isDragging: false,
                 startX: 0,
                 startY: 0,
                 origX: 0,
-                origY: 0
+                origY: 0,
+                offsetX: 0,
+                offsetY: 0
             };
             
+            element._dragData = dragData;
+            
             var handle = handleSelector ? element.querySelector(handleSelector) : element;
-            if (!handle) return;
+            if (!handle) handle = element;
+            
+            handle.style.cursor = 'grab';
+            handle.style.touchAction = 'none';
+            
+            function getPosition() {
+                var rect = element.getBoundingClientRect();
+                var scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                return {
+                    left: rect.left + scrollX,
+                    top: rect.top + scrollY,
+                    width: rect.width,
+                    height: rect.height
+                };
+            }
             
             function loadPosition() {
                 if (!storageKey) return;
@@ -4439,7 +4445,9 @@
                     var data = localStorage.getItem(storageKey);
                     if (!data) return;
                     var pos = JSON.parse(data);
-                    if (pos.left < 0 || pos.top < 0 || pos.left > window.innerWidth - 100 || pos.top > window.innerHeight - 100) {
+                    if (pos.left < 0 || pos.top < 0 || 
+                        pos.left > window.innerWidth - 100 || 
+                        pos.top > window.innerHeight - 100) {
                         return;
                     }
                     element.style.position = 'fixed';
@@ -4451,7 +4459,10 @@
                     if (pos.width) {
                         element.style.width = pos.width + 'px';
                     }
-                } catch(e) {}
+                    element.classList.add('draggable');
+                } catch(e) {
+                    console.warn('Σφάλμα φόρτωσης θέσης:', e);
+                }
             }
             
             function savePosition() {
@@ -4461,31 +4472,46 @@
                 var pos = {
                     left: rect.left,
                     top: rect.top,
-                    width: rect.width
+                    width: rect.width,
+                    height: rect.height
                 };
+                var maxX = window.innerWidth - rect.width - 10;
+                var maxY = window.innerHeight - rect.height - 10;
+                pos.left = Math.max(10, Math.min(maxX, pos.left));
+                pos.top = Math.max(10, Math.min(maxY, pos.top));
                 try {
                     localStorage.setItem(storageKey, JSON.stringify(pos));
-                } catch(e) {}
+                } catch(e) {
+                    console.warn('Σφάλμα αποθήκευσης θέσης:', e);
+                }
             }
             
             function startDrag(clientX, clientY) {
                 var rect = element.getBoundingClientRect();
+                var scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                
                 dragData.isDragging = true;
                 dragData.startX = clientX;
                 dragData.startY = clientY;
-                dragData.origX = rect.left;
-                dragData.origY = rect.top;
+                dragData.origX = rect.left + scrollX;
+                dragData.origY = rect.top + scrollY;
+                dragData.offsetX = clientX - rect.left;
+                dragData.offsetY = clientY - rect.top;
                 
                 element.style.position = 'fixed';
-                element.style.left = rect.left + 'px';
-                element.style.top = rect.top + 'px';
+                element.style.left = (rect.left) + 'px';
+                element.style.top = (rect.top) + 'px';
                 element.style.bottom = 'auto';
                 element.style.right = 'auto';
                 element.style.transform = 'none';
+                element.style.transition = 'none';
                 element.style.cursor = 'grabbing';
                 element.classList.add('draggable');
                 
                 document.body.style.userSelect = 'none';
+                document.body.style.webkitUserSelect = 'none';
+                document.body.style.overflow = 'hidden';
             }
             
             function moveDrag(clientX, clientY) {
@@ -4504,14 +4530,19 @@
             }
             
             function endDrag() {
+                if (!dragData.isDragging) return;
                 dragData.isDragging = false;
                 element.style.cursor = '';
                 document.body.style.userSelect = '';
+                document.body.style.webkitUserSelect = '';
+                document.body.style.overflow = '';
                 savePosition();
             }
             
             handle.addEventListener('mousedown', function(e) {
-                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
+                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('textarea')) {
+                    return;
+                }
                 startDrag(e.clientX, e.clientY);
                 e.preventDefault();
             });
@@ -4530,7 +4561,9 @@
             });
             
             handle.addEventListener('touchstart', function(e) {
-                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
+                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('textarea')) {
+                    return;
+                }
                 var touch = e.touches[0];
                 startDrag(touch.clientX, touch.clientY);
                 e.preventDefault();
@@ -4550,6 +4583,21 @@
                 }
             }, { passive: false });
             
+            window.addEventListener('resize', function() {
+                if (!dragData.isDragging && element.classList.contains('draggable')) {
+                    var rect = element.getBoundingClientRect();
+                    var maxX = window.innerWidth - rect.width - 10;
+                    var maxY = window.innerHeight - rect.height - 10;
+                    if (rect.left > maxX || rect.top > maxY) {
+                        var newLeft = Math.min(rect.left, maxX);
+                        var newTop = Math.min(rect.top, maxY);
+                        element.style.left = Math.max(10, newLeft) + 'px';
+                        element.style.top = Math.max(10, newTop) + 'px';
+                        savePosition();
+                    }
+                }
+            });
+            
             loadPosition();
             
             var observer = new MutationObserver(function() {
@@ -4562,10 +4610,10 @@
             return { savePosition: savePosition, loadPosition: loadPosition };
         }
         
+        // ★★★ ΠΡΟΣΘΗΚΗ DRAG HANDLES ΣΕ ΟΛΑ ΤΑ ΠΑΝΕΛ ★★★
         setTimeout(function() {
             var navPanel = document.getElementById('navigationPanel');
             if (navPanel) {
-                navPanel.classList.add('draggable');
                 var navHandle = navPanel.querySelector('.nav-header');
                 if (navHandle && !navHandle.querySelector('.panel-drag-handle')) {
                     var dragHandle = document.createElement('span');
@@ -4578,13 +4626,12 @@
             
             var wpPanel = document.getElementById('waypointsPanel');
             if (wpPanel) {
-                wpPanel.classList.add('draggable');
                 var wpHeader = wpPanel.querySelector('.panel-header');
                 if (wpHeader && !wpHeader.querySelector('.panel-drag-handle')) {
                     var dragHandle = document.createElement('span');
                     dragHandle.className = 'panel-drag-handle';
                     dragHandle.innerHTML = '<span class="dots">⠿</span>';
-                    dragHandle.style.cssText = 'cursor:grab;padding:2px 6px;';
+                    dragHandle.style.cssText = 'cursor:grab;padding:2px 8px;';
                     wpHeader.insertBefore(dragHandle, wpHeader.firstChild);
                 }
                 makeDraggable(wpPanel, '.panel-header', 'waypoints_panel_position');
@@ -4592,13 +4639,12 @@
             
             var routesPanel = document.getElementById('routeDropdownContainer');
             if (routesPanel) {
-                routesPanel.classList.add('draggable');
                 var routesHeader = routesPanel.querySelector('.routes-header');
                 if (routesHeader && !routesHeader.querySelector('.panel-drag-handle')) {
                     var dragHandle = document.createElement('span');
                     dragHandle.className = 'panel-drag-handle';
                     dragHandle.innerHTML = '<span class="dots">⠿</span>';
-                    dragHandle.style.cssText = 'cursor:grab;padding:2px 6px;';
+                    dragHandle.style.cssText = 'cursor:grab;padding:2px 8px;';
                     routesHeader.insertBefore(dragHandle, routesHeader.firstChild);
                 }
                 makeDraggable(routesPanel, '.routes-header', 'routes_panel_position');
@@ -4606,18 +4652,16 @@
             
             var infoPanel = document.getElementById('routeInfo');
             if (infoPanel) {
-                infoPanel.classList.add('draggable');
                 makeDraggable(infoPanel, '.drag-area', 'info_panel_position');
             }
             
             var savedPanel = document.getElementById('savedRoutesList');
             if (savedPanel) {
-                savedPanel.classList.add('draggable');
                 if (!savedPanel.querySelector('.panel-drag-handle')) {
                     var dragHandle = document.createElement('div');
                     dragHandle.className = 'panel-drag-handle';
-                    dragHandle.style.cssText = 'display:flex;justify-content:center;padding:2px 0;margin-bottom:4px;background:rgba(0,0,0,0.03);border-radius:6px;cursor:grab;';
-                    dragHandle.innerHTML = '<span class="dots" style="letter-spacing:2px;font-size:12px;color:#888;">⠿</span> <span style="font-size:9px;color:#888;">μετακίνηση</span>';
+                    dragHandle.style.cssText = 'display:flex;justify-content:center;padding:4px 0;margin-bottom:4px;background:rgba(0,0,0,0.03);border-radius:6px;cursor:grab;';
+                    dragHandle.innerHTML = '<span class="dots" style="letter-spacing:2px;font-size:14px;color:#888;">⠿</span> <span style="font-size:9px;color:#888;">μετακίνηση</span>';
                     savedPanel.insertBefore(dragHandle, savedPanel.firstChild);
                 }
                 makeDraggable(savedPanel, null, 'saved_routes_panel_position');
@@ -4625,17 +4669,16 @@
             
             var miniNav = document.getElementById('miniNavBar');
             if (miniNav) {
-                miniNav.classList.add('draggable');
                 if (!miniNav.querySelector('.panel-drag-handle')) {
                     var dragHandle = document.createElement('span');
                     dragHandle.className = 'panel-drag-handle';
-                    dragHandle.style.cssText = 'margin-right:4px;padding:2px 6px;display:inline-block;';
-                    dragHandle.innerHTML = '<span class="dots" style="letter-spacing:2px;font-size:10px;color:#888;">⠿</span>';
+                    dragHandle.style.cssText = 'margin-right:6px;padding:2px 6px;display:inline-block;';
+                    dragHandle.innerHTML = '<span class="dots" style="letter-spacing:2px;font-size:12px;color:#888;">⠿</span>';
                     miniNav.insertBefore(dragHandle, miniNav.firstChild);
                 }
                 makeDraggable(miniNav, null, 'mini_nav_position');
             }
-        }, 200);
+        }, 300);
 
         // ============================================================
         //  EVENTS
@@ -4700,6 +4743,7 @@
         console.log('🔋 Wake Lock: Η οθόνη παραμένει αναμμένη κατά την καταγραφή/πλοήγηση');
         console.log('📖 Οδηγίες: Πατήστε το κουμπί "📖 Οδηγίες" για το εγχειρίδιο χρήσης');
         console.log('📍 Κάντε κλικ στον χάρτη για Start/End/Ενδιάμεσο σημείο');
+        console.log('🔄 Όλα τα πάνελ μετακινούνται ομαλά σε κινητά και υπολογιστές');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
