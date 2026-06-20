@@ -2486,13 +2486,165 @@
         var currentGpxDistance = null;
         
         // ============================================================
-        //  ΚΑΤΑΓΡΑΦΗ ΔΙΑΔΡΟΜΗΣ
+        //  ΚΑΤΑΓΡΑΦΗ ΔΙΑΔΡΟΜΗΣ - ΜΕ BACKUP ΚΑΙ VISIBILITY API
         // ============================================================
         var isRecording = false;
         var recordedPoints = [];
         var recordingWatchId = null;
         var recordedLine = null;
         var recordedRouteName = null;
+        var lastKnownPosition = null;
+        var isPageVisible = true;
+
+        // Backup κάθε 30 δευτερόλεπτα
+        setInterval(function() {
+            if (isRecording && recordedPoints.length > 0) {
+                try {
+                    var saveData = {
+                        points: recordedPoints,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem('athos_recording_backup', JSON.stringify(saveData));
+                } catch(e) {}
+            }
+        }, 30000);
+
+        // Ανάκτηση από backup
+        function restoreRecordingBackup() {
+            try {
+                var data = localStorage.getItem('athos_recording_backup');
+                if (data) {
+                    var backup = JSON.parse(data);
+                    if (Date.now() - backup.timestamp < 86400000) {
+                        if (backup.points && backup.points.length > 0) {
+                            var answer = confirm('📂 Βρέθηκε αποθηκευμένη καταγραφή με ' + backup.points.length + ' σημεία.\nΘέλετε να τη συνεχίσετε;');
+                            if (answer) {
+                                recordedPoints = backup.points;
+                                isRecording = true;
+                                document.getElementById('recordBtn').classList.add('recording');
+                                document.getElementById('recordBtn').innerHTML = '⏹️ Διακοπή';
+                                
+                                var latlngs = recordedPoints.map(function(p) { return [p.lat, p.lng]; });
+                                if (recordedLine) {
+                                    map.removeLayer(recordedLine);
+                                }
+                                recordedLine = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8 }).addTo(map);
+                                map.fitBounds(recordedLine.getBounds(), { padding: [40,40] });
+                                
+                                showToast('✅ Συνεχίζεται καταγραφή με ' + recordedPoints.length + ' σημεία', '#2ecc71');
+                                
+                                // Επανεκκίνηση GPS
+                                if (recordingWatchId) {
+                                    navigator.geolocation.clearWatch(recordingWatchId);
+                                    recordingWatchId = null;
+                                }
+                                recordingWatchId = navigator.geolocation.watchPosition(
+                                    function(pos) {
+                                        if (!isRecording) return;
+                                        var lat = pos.coords.latitude;
+                                        var lng = pos.coords.longitude;
+                                        var acc = pos.coords.accuracy;
+                                        lastKnownPosition = { lat: lat, lng: lng };
+                                        
+                                        if (acc < 100) {
+                                            recordedPoints.push({ lat: lat, lng: lng });
+                                            
+                                            if (recordedPoints.length > 1) {
+                                                var latlngs = recordedPoints.map(function(p) { return [p.lat, p.lng]; });
+                                                if (recordedLine) {
+                                                    map.removeLayer(recordedLine);
+                                                }
+                                                recordedLine = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8 }).addTo(map);
+                                            }
+                                            
+                                            var statusEl = document.getElementById('statusText');
+                                            if (statusEl) {
+                                                statusEl.innerHTML = '⏺️ Καταγραφή: ' + recordedPoints.length + ' σημεία';
+                                            }
+                                        }
+                                    },
+                                    function(err) {
+                                        console.warn('Recording error:', err.message);
+                                    },
+                                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                                );
+                                return true;
+                            } else {
+                                localStorage.removeItem('athos_recording_backup');
+                            }
+                        }
+                    } else {
+                        localStorage.removeItem('athos_recording_backup');
+                    }
+                }
+            } catch(e) {}
+            return false;
+        }
+
+        // Page Visibility API - συνεχίζει όταν η σελίδα γίνεται ορατή ξανά
+        document.addEventListener('visibilitychange', function() {
+            isPageVisible = !document.hidden;
+            
+            if (isPageVisible && isRecording) {
+                console.log('📱 Σελίδα ορατή - συνέχιση καταγραφής');
+                
+                if (lastKnownPosition) {
+                    var lat = lastKnownPosition.lat;
+                    var lng = lastKnownPosition.lng;
+                    recordedPoints.push({ lat: lat, lng: lng });
+                    
+                    if (recordedPoints.length > 1) {
+                        var latlngs = recordedPoints.map(function(p) { return [p.lat, p.lng]; });
+                        if (recordedLine) {
+                            map.removeLayer(recordedLine);
+                        }
+                        recordedLine = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8 }).addTo(map);
+                    }
+                    
+                    var statusEl = document.getElementById('statusText');
+                    if (statusEl) {
+                        statusEl.innerHTML = '⏺️ Καταγραφή: ' + recordedPoints.length + ' σημεία (συνέχεια)';
+                    }
+                    showToast('📍 Συνέχεια καταγραφής', '#2ecc71');
+                }
+                
+                // Επανεκκίνηση watchPosition
+                if (recordingWatchId) {
+                    navigator.geolocation.clearWatch(recordingWatchId);
+                    recordingWatchId = null;
+                }
+                recordingWatchId = navigator.geolocation.watchPosition(
+                    function(pos) {
+                        if (!isRecording) return;
+                        var lat = pos.coords.latitude;
+                        var lng = pos.coords.longitude;
+                        var acc = pos.coords.accuracy;
+                        lastKnownPosition = { lat: lat, lng: lng };
+                        
+                        if (acc < 100) {
+                            recordedPoints.push({ lat: lat, lng: lng });
+                            
+                            if (recordedPoints.length > 1) {
+                                var latlngs = recordedPoints.map(function(p) { return [p.lat, p.lng]; });
+                                if (recordedLine) {
+                                    map.removeLayer(recordedLine);
+                                }
+                                recordedLine = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8 }).addTo(map);
+                            }
+                            
+                            var statusEl = document.getElementById('statusText');
+                            if (statusEl) {
+                                statusEl.innerHTML = '⏺️ Καταγραφή: ' + recordedPoints.length + ' σημεία';
+                            }
+                        }
+                    },
+                    function(err) {
+                        console.warn('Recording error:', err.message);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+        });
 
         function toggleRecording() {
             var btn = document.getElementById('recordBtn');
@@ -2506,6 +2658,9 @@
                     navigator.geolocation.clearWatch(recordingWatchId);
                     recordingWatchId = null;
                 }
+                
+                // Διαγραφή backup
+                localStorage.removeItem('athos_recording_backup');
                 
                 if (recordedPoints.length > 1) {
                     var name = prompt('Όνομα για την καταγεγραμμένη διαδρομή:', 'Καταγραφή ' + new Date().toLocaleDateString('el'));
@@ -2534,6 +2689,11 @@
                     return;
                 }
                 
+                // Έλεγχος για backup
+                if (restoreRecordingBackup()) {
+                    return;
+                }
+                
                 isRecording = true;
                 recordedPoints = [];
                 recordedRouteName = null;
@@ -2545,6 +2705,12 @@
                     recordedLine = null;
                 }
                 
+                // Αποθήκευση αρχικής θέσης
+                if (currentLocationMarker) {
+                    var pos = currentLocationMarker.getLatLng();
+                    lastKnownPosition = { lat: pos.lat, lng: pos.lng };
+                }
+                
                 showToast('⏺️ Έναρξη καταγραφής...', '#e74c3c');
                 
                 recordingWatchId = navigator.geolocation.watchPosition(
@@ -2552,6 +2718,7 @@
                         var lat = pos.coords.latitude;
                         var lng = pos.coords.longitude;
                         var acc = pos.coords.accuracy;
+                        lastKnownPosition = { lat: lat, lng: lng };
                         
                         if (acc < 100) {
                             recordedPoints.push({ lat: lat, lng: lng });
@@ -2572,10 +2739,12 @@
                     },
                     function(err) {
                         console.warn('Recording error:', err.message);
-                        alert('Σφάλμα GPS κατά την καταγραφή: ' + err.message);
-                        toggleRecording();
+                        if (isRecording) {
+                            alert('Σφάλμα GPS κατά την καταγραφή: ' + err.message);
+                            toggleRecording();
+                        }
                     },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             }
         }
@@ -2635,6 +2804,9 @@
             showRoutesList();
             updateSavedRoutesList();
             
+            // Διαγραφή backup
+            localStorage.removeItem('athos_recording_backup');
+            
             showToast('✅ Καταγραφή αποθηκεύτηκε: ' + name, '#2ecc71');
             alert('✅ Η καταγραφή "' + name + '" αποθηκεύτηκε!\n\n' +
                   '📏 Μήκος: ' + distance.toFixed(2) + ' km\n' +
@@ -2646,6 +2818,11 @@
         }
 
         document.getElementById('recordBtn')?.addEventListener('click', toggleRecording);
+
+        // Κλήση κατά την εκκίνηση για έλεγχο backup
+        setTimeout(function() {
+            restoreRecordingBackup();
+        }, 1000);
 
         // ============================================================
         //  ΧΑΡΤΗΣ - ΣΥΝΕΧΕΙΑ
@@ -4616,6 +4793,8 @@
         console.log('🧭 Πλοήγηση με κουμπιά: Έναρξη, Παύση, Τερματισμός');
         console.log('⏸️ Παύση: Σταματά προσωρινά την παρακολούθηση GPS');
         console.log('⏹️ Τερματισμός: Κλείνει εντελώς την πλοήγηση');
+        console.log('📱 Καταγραφή: Συνεχίζεται αυτόματα όταν ξανανοίξετε την οθόνη');
+        console.log('💾 Backup καταγραφής: Αποθηκεύεται κάθε 30 δευτερόλεπτα');
         
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
