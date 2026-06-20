@@ -1442,7 +1442,6 @@
             });
         }
 
-        // ΒΕΛΤΙΩΜΕΝΗ: Χρησιμοποιεί το ID που υπολογίζεται εξωτερικά
         function savePhotoToDB(imageData, note, lat, lng, filename) {
             return new Promise(function(resolve, reject) {
                 if (!db) {
@@ -1452,7 +1451,6 @@
                     return;
                 }
                 
-                // Χρησιμοποιούμε το ίδιο ID που θα χρησιμοποιηθεί και για την αποθήκευση
                 var id = generatePhotoId(imageData);
                 
                 var photo = {
@@ -1479,7 +1477,6 @@
             });
         }
 
-        // ΒΕΛΤΙΩΜΕΝΗ: Πιο σταθερό hash με timestamp για μοναδικότητα
         function generatePhotoId(imageData) {
             var hash = 0;
             var str = imageData.substring(0, 500);
@@ -1887,9 +1884,6 @@
             });
         }
 
-        // ============================================================
-        //  ΦΟΡΤΩΣΗ ΔΙΑΔΡΟΜΗΣ ΜΕ ΑΠΟΚΑΤΑΣΤΑΣΗ WAYPOINTS ΚΑΙ ΦΩΤΟΓΡΑΦΙΩΝ
-        // ============================================================
         function loadRouteDirect(route, index, photos) {
             if (!route.geometry || route.geometry.length < 2) {
                 alert('Μη έγκυρη διαδρομή.');
@@ -1906,7 +1900,6 @@
             routeLines.push(line);
             map.fitBounds(line.getBounds(), { padding: [40,40] });
             
-            // === ΑΠΟΚΑΤΑΣΤΑΣΗ WAYPOINTS ===
             if (route.waypoints && route.waypoints.length > 0) {
                 for (var i = 0; i < route.waypoints.length; i++) {
                     var wp = route.waypoints[i];
@@ -1935,7 +1928,6 @@
                 updateWaypointsPanel();
             }
             
-            // === ΑΠΟΚΑΤΑΣΤΑΣΗ ΦΩΤΟΓΡΑΦΙΩΝ ===
             if (photos && photos.length > 0) {
                 routePhotos = photos;
                 for (var i = 0; i < routePhotos.length; i++) {
@@ -2055,7 +2047,6 @@
                     var id = this.dataset.id;
                     var route = getSavedRoutes().find(function(r) { return r.id === id; });
                     if (route) {
-                        // Φόρτωση με φωτογραφίες
                         var photoIds = route.photoIds || [];
                         if (photoIds.length > 0) {
                             var photoPromises = photoIds.map(function(id) {
@@ -3839,7 +3830,7 @@
         }
 
         // ============================================================
-        //  ΠΛΟΗΓΗΣΗ - ΒΕΛΤΙΩΜΕΝΗ ΜΕ PAUSE/STOP
+        //  ΠΛΟΗΓΗΣΗ - ΒΕΛΤΙΩΜΕΝΗ ΜΕ PAUSE/STOP ΚΑΙ ΣΩΣΤΗ ΘΕΣΗ
         // ============================================================
         function updateNavStatus(status, dotClass) {
             if (!navStatusEl) return;
@@ -3933,7 +3924,59 @@
             isPaused = false;
             isMinimized = false;
             
-            document.getElementById('navigationPanel').classList.add('active');
+            var navPanel = document.getElementById('navigationPanel');
+            
+            // Αφαιρούμε τυχόν προηγούμενες inline θέσεις
+            navPanel.style.position = '';
+            navPanel.style.left = '';
+            navPanel.style.top = '';
+            navPanel.style.bottom = '';
+            navPanel.style.right = '';
+            navPanel.style.transform = '';
+            navPanel.style.width = '';
+            navPanel.style.maxWidth = '';
+            navPanel.style.maxHeight = '';
+            navPanel.style.borderRadius = '';
+            navPanel.style.boxShadow = '';
+            navPanel.style.border = '';
+            navPanel.style.overflowY = '';
+            
+            // Ενεργοποιούμε το πάνελ
+            navPanel.classList.add('active');
+            
+            // Επαναφέρουμε τη θέση μετά από μια μικρή καθυστέρηση
+            setTimeout(function() {
+                var isMobile = window.innerWidth < 600;
+                var panelWidth = isMobile ? '95%' : '500px';
+                var maxWidth = isMobile ? '95%' : '500px';
+                var topPos = isMobile ? '10px' : '50px';
+                
+                navPanel.style.position = 'fixed';
+                navPanel.style.left = '50%';
+                navPanel.style.top = topPos;
+                navPanel.style.transform = 'translateX(-50%)';
+                navPanel.style.bottom = 'auto';
+                navPanel.style.right = 'auto';
+                navPanel.style.width = panelWidth;
+                navPanel.style.maxWidth = maxWidth;
+                navPanel.style.maxHeight = '80vh';
+                navPanel.style.borderRadius = '16px';
+                navPanel.style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)';
+                navPanel.style.border = '1px solid #ddd';
+                navPanel.style.overflowY = 'auto';
+                
+                // Αποθηκεύουμε τη θέση
+                try {
+                    var rect = navPanel.getBoundingClientRect();
+                    var pos = {
+                        left: rect.left,
+                        top: rect.top,
+                        width: rect.width
+                    };
+                    localStorage.setItem('nav_panel_position', JSON.stringify(pos));
+                } catch(e) {}
+            }, 100);
+            
             document.getElementById('floatingPhotoBtn').classList.add('active');
             document.getElementById('miniNavBar').classList.remove('active');
             document.getElementById('navBtn').innerHTML = '🧭';
@@ -3945,25 +3988,6 @@
                 navPauseBtn.classList.remove('paused');
             }
             updateNavStatus('Ενεργή', '');
-            
-            setTimeout(function() {
-                var panel = document.getElementById('navigationPanel');
-                if (panel && panel.classList.contains('active')) {
-                    try {
-                        var data = localStorage.getItem('nav_panel_position');
-                        if (data) {
-                            var pos = JSON.parse(data);
-                            panel.style.position = 'fixed';
-                            panel.style.left = pos.left + 'px';
-                            panel.style.top = pos.top + 'px';
-                            panel.style.bottom = 'auto';
-                            panel.style.right = 'auto';
-                            panel.style.transform = 'none';
-                            panel.style.width = pos.width + 'px';
-                        }
-                    } catch(e) {}
-                }
-            }, 50);
             
             var geometryToUse = lastMainGeometry;
             
@@ -4030,7 +4054,21 @@
         function closeNavigation() {
             isNavigating = false;
             isPaused = false;
-            document.getElementById('navigationPanel').classList.remove('active');
+            
+            var navPanel = document.getElementById('navigationPanel');
+            navPanel.classList.remove('active');
+            navPanel.style.position = '';
+            navPanel.style.left = '';
+            navPanel.style.top = '';
+            navPanel.style.transform = '';
+            navPanel.style.width = '';
+            navPanel.style.maxWidth = '';
+            navPanel.style.maxHeight = '';
+            navPanel.style.borderRadius = '';
+            navPanel.style.boxShadow = '';
+            navPanel.style.border = '';
+            navPanel.style.overflowY = '';
+            
             document.getElementById('floatingPhotoBtn').classList.remove('active');
             document.getElementById('miniNavBar').classList.remove('active');
             document.getElementById('navBtn').innerHTML = '🧭';
@@ -4065,7 +4103,15 @@
         function minimizeNavigation() {
             if (!isNavigating) return;
             isMinimized = true;
-            document.getElementById('navigationPanel').classList.remove('active');
+            
+            var navPanel = document.getElementById('navigationPanel');
+            navPanel.classList.remove('active');
+            navPanel.style.position = '';
+            navPanel.style.left = '';
+            navPanel.style.top = '';
+            navPanel.style.transform = '';
+            navPanel.style.width = '';
+            
             document.getElementById('miniNavBar').classList.add('active');
             updateMiniBar();
         }
@@ -4073,8 +4119,31 @@
         function expandNavigation() {
             if (!isNavigating) return;
             isMinimized = false;
-            document.getElementById('navigationPanel').classList.add('active');
+            
+            var navPanel = document.getElementById('navigationPanel');
+            navPanel.classList.add('active');
             document.getElementById('miniNavBar').classList.remove('active');
+            
+            setTimeout(function() {
+                var isMobile = window.innerWidth < 600;
+                var panelWidth = isMobile ? '95%' : '500px';
+                var maxWidth = isMobile ? '95%' : '500px';
+                var topPos = isMobile ? '10px' : '50px';
+                
+                navPanel.style.position = 'fixed';
+                navPanel.style.left = '50%';
+                navPanel.style.top = topPos;
+                navPanel.style.transform = 'translateX(-50%)';
+                navPanel.style.bottom = 'auto';
+                navPanel.style.right = 'auto';
+                navPanel.style.width = panelWidth;
+                navPanel.style.maxWidth = maxWidth;
+                navPanel.style.maxHeight = '80vh';
+                navPanel.style.borderRadius = '16px';
+                navPanel.style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)';
+                navPanel.style.border = '1px solid #ddd';
+                navPanel.style.overflowY = 'auto';
+            }, 50);
         }
 
         function updateMiniBar() {
