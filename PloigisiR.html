@@ -32,31 +32,46 @@
             height: 100%;
         }
         
+        /* ============================================================
+           ΠΑΝΩ ΠΑΝΕΛ - ΒΕΛΤΙΣΤΟΠΟΙΗΜΕΝΟ ΓΙΑ ΚΙΝΗΤΑ
+           ============================================================ */
         .controls {
             position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 6px;
+            left: 6px;
+            right: 6px;
             z-index: 1000;
+            background: rgba(255,255,255,0.92);
+            padding: 4px 6px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            background: rgba(255,255,255,0.95);
-            padding: 6px 8px;
-            border-radius: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border: 1px solid #ddd;
-            justify-content: center;
-            max-width: 95%;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 3px;
+            align-items: center;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            max-height: 44px;
         }
+        .controls::-webkit-scrollbar {
+            display: none;
+        }
+        
         .controls button, .controls select, .controls input {
-            padding: 6px 10px;
-            font-size: 11px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            min-height: 32px;
+            padding: 4px 6px;
+            font-size: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            min-height: 28px;
             touch-action: manipulation;
             background: white;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .controls button {
             background: #2c5f2d;
@@ -64,9 +79,18 @@
             font-weight: 600;
             border: none;
             cursor: pointer;
+            min-width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            font-size: 12px;
+            padding: 4px 8px;
         }
-        .controls button:active { transform: scale(0.95); }
-        .controls input[type="file"] { max-width: 100px; padding: 4px; }
+        .controls button:active { transform: scale(0.92); }
+        .controls input[type="file"] { max-width: 60px; padding: 2px 4px; font-size: 9px; }
+        
+        /* Κουμπιά με χρώματα */
         #clearBtn { background: #b22222; }
         #locateBtn { background: #27ae60; }
         #photoBtn { background: #8e44ad; }
@@ -78,27 +102,78 @@
         #downloadTilesBtn.active::after { content: ' ✅'; }
         #toggleWaypointsBtn { background: #2980b9; }
         #sosBtn { background: #e74c3c; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        #fileInput { max-width: 70px; padding: 2px 4px; font-size: 9px; }
+        #speedSelect { padding: 2px 4px; font-size: 9px; min-height: 26px; }
         
         .controls .logo-link {
             display: flex;
             align-items: center;
-            margin-left: auto;
-            padding: 2px 4px;
-            border-radius: 6px;
-            transition: opacity 0.2s;
+            flex-shrink: 0;
+            padding: 0 2px;
             text-decoration: none;
-        }
-        .controls .logo-link:hover {
-            opacity: 0.8;
+            margin-left: auto;
         }
         .controls .logo-link img {
-            height: 30px;
+            height: 22px;
             width: auto;
-            max-width: 120px;
+            max-width: 80px;
             object-fit: contain;
-            border-radius: 4px;
+            border-radius: 3px;
         }
+        
+        /* Σε desktop, το πάνελ απλώνεται */
+        @media (min-width: 768px) {
+            .controls {
+                flex-wrap: wrap;
+                max-height: none;
+                padding: 6px 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                max-width: 95%;
+                width: auto;
+                border-radius: 14px;
+                top: 10px;
+            }
+            .controls button, .controls select, .controls input {
+                padding: 6px 10px;
+                font-size: 11px;
+                min-height: 32px;
+            }
+            .controls button { font-size: 12px; padding: 6px 12px; }
+            .controls input[type="file"] { max-width: 100px; }
+            .controls .logo-link img { height: 30px; max-width: 120px; }
+        }
+        
+        @media (max-width: 480px) {
+            .controls {
+                top: 4px;
+                left: 4px;
+                right: 4px;
+                padding: 3px 4px;
+                border-radius: 10px;
+                max-height: 38px;
+            }
+            .controls button {
+                font-size: 10px;
+                padding: 3px 5px;
+                min-width: 28px;
+                min-height: 24px;
+            }
+            .controls button span { display: none; } /* κρύβουμε τα κείμενα, μόνο εικονίδια */
+            .controls .logo-link img { height: 18px; max-width: 60px; }
+            #fileInput { max-width: 50px; font-size: 8px; }
+            #speedSelect { font-size: 8px; padding: 2px 3px; min-height: 22px; max-width: 50px; }
+            .controls button#showRoutesBtn span,
+            .controls button#toggleWaypointsBtn span,
+            .controls button#saveRouteBtn span,
+            .controls button#exportGpxBtn span { display: none; }
+            .controls button#showRoutesBtn::after { content: '🗺️'; }
+            .controls button#toggleWaypointsBtn::after { content: '📍'; }
+            .controls button#saveRouteBtn::after { content: '💾'; }
+            .controls button#exportGpxBtn::after { content: '📤'; }
+        }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
         .photo-marker {
             background: white;
@@ -240,10 +315,10 @@
             transform: translateX(-50%);
             z-index: 1000;
             background: rgba(255,255,255,0.95);
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-size: 12px;
+            font-size: 11px;
             max-width: 380px;
             width: 85%;
             text-align: center;
@@ -260,10 +335,10 @@
             justify-content: center;
             align-items: center;
             gap: 4px;
-            padding: 2px 0 4px 0;
-            margin-bottom: 4px;
+            padding: 1px 0 3px 0;
+            margin-bottom: 2px;
             border-bottom: 1px solid rgba(0,0,0,0.06);
-            font-size: 9px;
+            font-size: 8px;
             color: #999;
             cursor: grab;
             border-radius: 4px;
@@ -273,10 +348,10 @@
         }
         .info-panel .drag-area .dots {
             letter-spacing: 2px;
-            font-size: 12px;
+            font-size: 10px;
         }
         .info-panel span { font-weight: 700; color: #2c5f2d; }
-        .info-panel hr { margin: 3px 0; border: 0.5px solid #ddd; }
+        .info-panel hr { margin: 2px 0; border: 0.5px solid #ddd; }
         
         #savedRoutesList {
             position: fixed;
@@ -349,7 +424,7 @@
         #savedRoutesList .route-item .del:hover { color: #8b1a1a; }
         #savedRoutesList .empty-msg { color: #999; padding: 20px; text-align: center; font-size: 13px; }
         
-        #statusText { font-weight: 600; color: #2c5f2d; font-size: 11px; }
+        #statusText { font-weight: 600; color: #2c5f2d; font-size: 10px; }
         
         #routeDropdownContainer {
             position: fixed;
@@ -547,87 +622,6 @@
         .panel-drag-handle .dots { letter-spacing: 2px; font-size: 12px; line-height: 1; }
         
         button[title], input[title], select[title] { position: relative; }
-        button[title]:hover::after, input[title]:hover::after, select[title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.85);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 10px;
-            white-space: nowrap;
-            z-index: 9999;
-            pointer-events: none;
-            margin-bottom: 4px;
-            font-weight: normal;
-        }
-        button[title]:hover::before, input[title]:hover::before, select[title]:hover::before {
-            content: '';
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 5px solid transparent;
-            border-top-color: rgba(0,0,0,0.85);
-            z-index: 9999;
-            pointer-events: none;
-            margin-bottom: -5px;
-        }
-        
-        @media (max-width: 600px) {
-            .controls button, .controls select, .controls input { padding: 4px 6px; font-size: 10px; min-height: 28px; }
-            .controls { gap: 3px; padding: 4px 6px; }
-            .controls .logo-link img { height: 22px; max-width: 80px; }
-            .info-panel { font-size: 11px; padding: 6px 10px; bottom: 60px; max-width: 95%; width: 92%; }
-            .info-panel .drag-area { font-size: 8px; }
-            .location-marker { font-size: 24px; }
-            #statusText { font-size: 10px; }
-            #routeDropdownContainer { min-width: 300px; width: 95%; max-height: 80vh; padding: 10px 12px; }
-            #routeDropdownContainer .routes-header span { font-size: 12px; }
-            #routeDropdownContainer .routes-header .header-buttons button { font-size: 9px; padding: 3px 8px; }
-            #routesList .route-item { padding: 6px 8px; flex-wrap: wrap; }
-            #routesList .route-item .info .name { font-size: 11px; }
-            #routesList .route-item .info .details { font-size: 9px; }
-            #routesList .route-item .actions button { font-size: 9px; padding: 3px 8px; }
-            #routesList { max-height: 200px; }
-            #savedRoutesList { min-width: 280px; width: 95%; padding: 12px 14px; max-height: 80vh; }
-            #savedRoutesList .route-item { padding: 6px 8px; flex-wrap: wrap; }
-            #savedRoutesList .route-item .route-name { font-size: 12px; }
-            #savedRoutesList .route-item .route-details { font-size: 9px; }
-            #waypointsPanel { bottom: 120px; max-height: 300px; min-width: 280px; width: 95%; max-width: 400px; padding: 8px 10px; }
-            #waypointsPanel .panel-header span { font-size: 12px; }
-            #waypointsPanel .panel-header button { font-size: 10px; padding: 2px 8px; }
-            #waypointsList li { padding: 6px 4px; }
-            .waypoint-name { font-size: 11px; }
-            .waypoint-coords { font-size: 9px; }
-            .waypoint-actions input { font-size: 9px; padding: 2px 4px; min-width: 60px; }
-            .waypoint-actions button { font-size: 9px; padding: 2px 6px; }
-            .waypoint-type-icon { font-size: 14px; }
-            .waypoint-photo-thumb { width: 24px; height: 24px; }
-            #sosContainer { padding: 12px 14px; max-width: 95%; max-height: 85vh; }
-            #sosContainer .sos-header span { font-size: 16px; }
-            #sosContainer .sos-fields input, #sosContainer .sos-fields select, #sosContainer .sos-fields textarea { font-size: 12px; padding: 6px 8px; }
-            #sosContainer .sos-buttons button { font-size: 12px; padding: 8px; }
-            #tileProgress { bottom: 100px; padding: 10px 16px; font-size: 12px; min-width: 150px; }
-            .panel-drag-handle { font-size: 8px; padding: 1px 5px; }
-            .panel-drag-handle .dots { font-size: 10px; }
-            button[title]:hover::after, input[title]:hover::after, select[title]:hover::after {
-                font-size: 8px; padding: 3px 6px; white-space: normal; max-width: 150px;
-            }
-        }
-        @media (min-width: 768px) {
-            .controls { max-width: 95%; }
-            .controls .logo-link img { height: 34px; max-width: 140px; }
-            .bottom-bar { display: none; }
-            #routeDropdownContainer { max-width: 550px; min-width: 400px; }
-            #waypointsPanel { max-width: 500px; min-width: 380px; }
-            .info-panel { max-width: 400px; width: 70%; }
-            #sosContainer { max-width: 420px; }
-            #savedRoutesList { max-width: 500px; min-width: 400px; }
-        }
         
         .compass-indicator {
             position: fixed;
@@ -656,6 +650,21 @@
         
         .leaflet-control-zoom { z-index: 800 !important; }
         .leaflet-control-attribution { display: none; }
+        
+        @media (max-width: 480px) {
+            .info-panel { font-size: 10px; padding: 4px 8px; bottom: 55px; width: 92%; }
+            .info-panel .drag-area { font-size: 7px; padding: 1px 0 2px 0; }
+            #statusText { font-size: 9px; }
+            .compass-indicator { width: 36px; height: 36px; font-size: 18px; bottom: 110px; right: 10px; }
+            #waypointsPanel { bottom: 110px; max-height: 250px; min-width: 250px; padding: 6px 10px; }
+            #savedRoutesList { min-width: 260px; padding: 10px 12px; }
+            #routeDropdownContainer { min-width: 280px; padding: 8px 10px; }
+            .photo-marker { width: 30px; height: 30px; }
+            .blue-dot { width: 18px; height: 18px; }
+            .blue-dot-glow { width: 36px; height: 36px; top: -9px; left: -9px; }
+            #sosContainer { padding: 10px 12px; }
+            .controls .logo-link img { height: 16px; max-width: 50px; }
+        }
     </style>
 </head>
 <body>
@@ -669,35 +678,36 @@
 
     <div id="tileProgress"><div>📥 Κατέβασμα χάρτη...</div><div class="bar"><div class="fill" id="tileFill"></div></div><div id="tilePercent" style="font-size:11px; margin-top:4px;">0%</div></div>
 
-    <div class="controls">
-        <button id="locateBtn" title="Εντοπισμός θέσης (GPS/IP)">📍</button>
-        <button id="sosBtn" title="Αποστολή θέσης SOS" style="background:#e74c3c;">🆘 SOS</button>
+    <!-- ΠΑΝΩ ΠΑΝΕΛ - ΒΕΛΤΙΣΤΟΠΟΙΗΜΕΝΟ ΓΙΑ ΚΙΝΗΤΑ -->
+    <div class="controls" id="mainControls">
+        <button id="locateBtn" title="Εντοπισμός θέσης">📍</button>
+        <button id="sosBtn" title="SOS" style="background:#e74c3c;">🆘</button>
         <button id="photoBtn" title="Λήψη φωτογραφίας">📸</button>
-        <button id="helpBtn" title="Βοήθεια και οδηγίες">❓</button>
-        <button id="clearBtn" title="Καθαρισμός όλων των σημείων και διαδρομών">🗑️</button>
-        <button id="showRoutesBtn" title="Εμφάνιση αποθηκευμένων διαδρομών">🗺️</button>
-        <button id="toggleWaypointsBtn" title="Εμφάνιση/Απόκρυψη σημείων διαδρομής">📍 Σημεία</button>
-        <button id="downloadTilesBtn" title="Λήψη χάρτη για offline χρήση">📥 Κατέβασμα</button>
-        <input type="file" id="fileInput" accept=".gpx,.kml,.xml" title="Φόρτωση αρχείου GPX ή KML">
-        <button id="saveRouteBtn" title="Αποθήκευση τρέχουσας διαδρομής">💾</button>
-        <button id="exportGpxBtn" title="Εξαγωγή διαδρομής σε GPX">📤</button>
-        <select id="speedSelect" title="Ταχύτητα περπατήματος για υπολογισμό χρόνου">
-            <option value="3">Αργό</option>
-            <option value="4" selected>Μέτριο</option>
-            <option value="5">Γρήγορο</option>
+        <button id="showRoutesBtn" title="Διαδρομές"><span>🗺️</span></button>
+        <button id="toggleWaypointsBtn" title="Σημεία"><span>📍</span></button>
+        <button id="saveRouteBtn" title="Αποθήκευση"><span>💾</span></button>
+        <button id="exportGpxBtn" title="Εξαγωγή GPX"><span>📤</span></button>
+        <button id="clearBtn" title="Καθαρισμός">🗑️</button>
+        <button id="downloadTilesBtn" title="Λήψη χάρτη">📥</button>
+        <input type="file" id="fileInput" accept=".gpx,.kml,.xml" title="Φόρτωση GPX/KML">
+        <select id="speedSelect" title="Ταχύτητα">
+            <option value="3">🐢</option>
+            <option value="4" selected>🚶</option>
+            <option value="5">🐇</option>
         </select>
-        <a href="https://agionorosroutes.blogspot.com/" target="_blank" class="logo-link" title="Άγιον Όρος διαδρομές - agionorosroutes.blogspot.com">
-            <img src="https://lh3.googleusercontent.com/pw/AP1GczPPmMNFQHezTEW7KFjFuPm3nFmS-waV6gjwBA7x_IyoPvA1bUUI3PlfEJuCfs3IXhaNP_eM-UvlNVywDfU6GCoVESm5WRTuCuq8VxSbVQ8wo88AA3rghIlvzjVnHUsvN5ct-JvkBV4p_qT9LYLQ3Bva=w300-h75-s-no-gm?authuser=2" alt="Άγιον Όρος διαδρομές" loading="lazy">
+        <button id="helpBtn" title="Βοήθεια">❓</button>
+        <a href="https://agionorosroutes.blogspot.com/" target="_blank" class="logo-link" title="Άγιον Όρος διαδρομές">
+            <img src="https://lh3.googleusercontent.com/pw/AP1GczPPmMNFQHezTEW7KFjFuPm3nFmS-waV6gjwBA7x_IyoPvA1bUUI3PlfEJuCfs3IXhaNP_eM-UvlNVywDfU6GCoVESm5WRTuCuq8VxSbVQ8wo88AA3rghIlvzjVnHUsvN5ct-JvkBV4p_qT9LYLQ3Bva=w300-h75-s-no-gm?authuser=2" alt="Άγιον Όρος" loading="lazy">
         </a>
     </div>
 
     <div id="routeDropdownContainer">
-        <div class="routes-header"><span>🗺️ Διαδρομές</span><div class="header-buttons"><button id="saveRouteFromListBtn" title="Αποθήκευση τρέχουσας διαδρομής στη λίστα" style="background:#2c5f2d;color:white;">💾 Αποθήκευση</button><button id="hideRoutesBtn" title="Κλείσιμο λίστας διαδρομών" style="background:#888;color:white;">✕ Κλείσιμο</button></div></div>
+        <div class="routes-header"><span>🗺️ Διαδρομές</span><div class="header-buttons"><button id="saveRouteFromListBtn" title="Αποθήκευση τρέχουσας διαδρομής" style="background:#2c5f2d;color:white;">💾 Αποθήκευση</button><button id="hideRoutesBtn" title="Κλείσιμο" style="background:#888;color:white;">✕ Κλείσιμο</button></div></div>
         <div id="routesList"></div><div id="routeStatus"></div>
     </div>
 
     <div id="waypointsPanel">
-        <div class="panel-header"><span>📍 Σημεία (<span id="waypointCount">0</span>)</span><div class="header-actions"><button id="closeWaypointsBtn" title="Κλείσιμο πάνελ σημείων">✕</button></div></div>
+        <div class="panel-header"><span>📍 Σημεία (<span id="waypointCount">0</span>)</span><div class="header-actions"><button id="closeWaypointsBtn" title="Κλείσιμο">✕</button></div></div>
         <ul id="waypointsList"></ul>
     </div>
 
@@ -705,10 +715,10 @@
         <div class="sos-header"><span>🆘 SOS - Αποστολή Θέσης</span><button id="closeSosBtn">✕</button></div>
         <div class="sos-coords">📍 <span id="sosCoords">Φόρτωση θέσης...</span></div>
         <div class="sos-fields">
-            <input type="text" id="sosName" placeholder="Ονοματεπώνυμο (π.χ. Παπαδόπουλος Γιώργος)">
+            <input type="text" id="sosName" placeholder="Ονοματεπώνυμο">
             <select id="sosType"><option value="Χάθηκα">🧭 Χάθηκα</option><option value="Χτύπησα">🩹 Χτύπησα</option><option value="Πρόβλημα υγείας">🏥 Πρόβλημα υγείας</option><option value="Έκτακτη ανάγκη">🚨 Έκτακτη ανάγκη</option><option value="Άλλο">📝 Άλλο</option></select>
-            <input type="tel" id="sosPhone" placeholder="Τηλέφωνο επικοινωνίας (π.χ. 6988321619)">
-            <textarea id="sosHistory" placeholder="Ιστορικό διαδρομής (π.χ. Ξεκίνησα από την Μονή Παντοκράτορος με κατεύθυνση την Μονή Σταυρονικήτα)"></textarea>
+            <input type="tel" id="sosPhone" placeholder="Τηλέφωνο (π.χ. 6988321619)">
+            <textarea id="sosHistory" placeholder="Ιστορικό διαδρομής"></textarea>
         </div>
         <div class="sos-buttons"><button class="sms-btn" id="sosSendSms">📱 SMS</button><button class="email-btn" id="sosSendEmail">✉️ Email</button><button class="call-btn" id="sosCall112">📞 112</button></div>
         <div class="sos-footer">Το μήνυμα θα σταλεί με τις συντεταγμένες σας</div>
@@ -717,24 +727,24 @@
     <div id="savedRoutesList"></div>
 
     <div class="info-panel" id="routeInfo">
-        <div class="drag-area"><span class="dots">⠿</span><span style="font-size:8px;color:#999;">μετακίνηση</span></div>
+        <div class="drag-area"><span class="dots">⠿</span><span style="font-size:7px;color:#999;">μετακίνηση</span></div>
         <div><span>🥾</span> <span id="dist1">-</span> km · <span id="time1">-</span></div><hr>
-        <div style="font-size:10px; color:#555;">Δυσκολία: <span id="difficultyRating">-</span> · 📸 <span id="photoCount">0</span></div>
-        <div style="font-size:10px; color:#555; margin-top:2px;">📍 <span id="statusText">Πατήστε "Θέση μου"</span></div>
+        <div style="font-size:9px; color:#555;">Δυσκολία: <span id="difficultyRating">-</span> · 📸 <span id="photoCount">0</span></div>
+        <div style="font-size:9px; color:#555; margin-top:1px;">📍 <span id="statusText">Πατήστε "Θέση μου"</span></div>
         <small><a id="osmLink" href="#" target="_blank">🌍 OSM</a></small>
     </div>
 
     <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
     <input type="file" id="galleryInput" accept="image/*" style="display:none">
 
-    <div class="bottom-bar"><button id="bottomLocateBtn" title="Εντοπισμός θέσης (GPS/IP)">📍</button><button id="bottomPhotoBtn" title="Λήψη φωτογραφίας">📸</button><button id="bottomClearBtn" title="Καθαρισμός όλων των σημείων και διαδρομών">🗑️</button></div>
+    <div class="bottom-bar"><button id="bottomLocateBtn" title="Εντοπισμός θέσης">📍</button><button id="bottomPhotoBtn" title="Λήψη φωτογραφίας">📸</button><button id="bottomClearBtn" title="Καθαρισμός">🗑️</button></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mapbox/togeojson@0.16.0/togeojson.min.js"></script>
     
     <script>
         // ============================================================
-        //  ΠΛΗΡΗΣ ΕΚΔΟΣΗ - ΜΕ ΞΕΧΩΡΙΣΤΗ ΦΩΤΟΓΡΑΦΙΑ + ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΩΝ
+        //  ΠΛΗΡΗΣ ΛΕΙΤΟΥΡΓΙΑ - ΟΛΑ ΟΣΑ ΕΙΧΑΜΕ ΠΡΙΝ
         // ============================================================
         
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
@@ -766,7 +776,7 @@
         var mapContainer = null;
         
         // ============================================================
-        //  API KEYS & ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ
+        //  API KEYS & ΒΟΗΘΗΤΙΚΕΣ
         // ============================================================
         function generateRouteId() {
             return 'route_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -827,9 +837,7 @@
             
             map.on('click', function(e) {
                 isMapInteracting = true;
-                if (isLocationTracking) { 
-                    stopLocationTracking(); 
-                }
+                if (isLocationTracking) { stopLocationTracking(); }
                 showClickPopup(e);
             });
             
@@ -840,15 +848,13 @@
                     window._dragTimeout = setTimeout(function() {
                         if (isLocationTracking) {
                             stopLocationTracking();
-                            showToast('📍 Παρακολούθηση σταμάτησε (μετακίνηση χάρτη)', '#888');
+                            showToast('📍 Παρακολούθηση σταμάτησε', '#888');
                         }
                     }, 2000);
                 }
             });
             
-            map.on('zoomstart', function() { 
-                isMapInteracting = true;
-            });
+            map.on('zoomstart', function() { isMapInteracting = true; });
             
             setTimeout(function() {
                 var hasLastRoute = loadLastRouteState();
@@ -1002,7 +1008,7 @@
             
             if (navigator.geolocation) {
                 if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; }
-                document.getElementById('locateBtn').innerHTML = '⏹️ Διακοπή';
+                document.getElementById('locateBtn').innerHTML = '⏹️';
                 document.getElementById('bottomLocateBtn').innerHTML = '⏹️';
                 isLocationTracking = true;
                 isMapInteracting = false;
@@ -1021,7 +1027,7 @@
                         
                         var statusEl = document.getElementById('statusText');
                         if (statusEl) {
-                            var accText = acc < 50 ? ' (υψηλή ακρίβεια)' : acc < 200 ? ' (καλή ακρίβεια)' : '';
+                            var accText = acc < 50 ? ' (υψηλή)' : acc < 200 ? ' (καλή)' : '';
                             statusEl.innerHTML = '📍 GPS: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + accText;
                         }
                         
@@ -1111,7 +1117,7 @@
         }
 
         // ============================================================
-        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ - ΜΕ ΦΩΤΟΓΡΑΦΙΕΣ ΚΑΙ ΔΙΟΡΘΩΣΗ
+        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ
         // ============================================================
         function showClickPopup(e) {
             var lat = e.latlng.lat, lng = e.latlng.lng;
@@ -1184,7 +1190,6 @@
             saveLastRouteState();
         }
         
-        // Ενημέρωση popup του waypoint με τα κουμπιά
         function updateWaypointPopup(marker, idx) {
             var name = waypointNames[idx] || 'Σημείο ' + (idx + 1);
             var photoHtml = waypointPhotos[idx] ? '<img src="' + waypointPhotos[idx] + '" style="width:30px;height:30px;border-radius:50%;border:2px solid #8e44ad;display:block;margin:4px auto;">' : '';
@@ -1199,7 +1204,6 @@
             );
         }
         
-        // Συναρτήσεις μετονομασίας και φωτογραφίας για waypoints
         window.renameWaypoint = function(idx) {
             if (idx < 0 || idx >= waypoints.length) return;
             var newName = prompt('Νέο όνομα για το σημείο:', waypointNames[idx]);
@@ -1326,7 +1330,7 @@
         }
 
         // ============================================================
-        //  ΞΕΧΩΡΙΣΤΗ ΛΗΨΗ ΦΩΤΟΓΡΑΦΙΑΣ (ανεξάρτητη από σημεία)
+        //  ΞΕΧΩΡΙΣΤΗ ΛΗΨΗ ΦΩΤΟΓΡΑΦΙΑΣ
         // ============================================================
         var pendingPhotoPosition = null;
 
@@ -1447,7 +1451,7 @@
                 saveLastRouteState();
             } catch (err) {
                 console.error('Route error:', err);
-                try { await calculateRouteGraphHopper(allPoints); } catch (e) { alert('Αποτυχία υπολογισμού διαδρομής. Ελέγξτε τη σύνδεσή σας.'); }
+                try { await calculateRouteGraphHopper(allPoints); } catch (e) { alert('Αποτυχία υπολογισμού διαδρομής.'); }
             }
         }
 
@@ -1496,7 +1500,7 @@
         }
 
         // ============================================================
-        //  ΚΑΘΑΡΙΣΜΟΣ - ΔΙΑΓΡΑΦΗ ΟΛΩΝ ΤΩΝ ΔΕΔΟΜΕΝΩΝ
+        //  ΚΑΘΑΡΙΣΜΟΣ
         // ============================================================
         function clearAll() {
             if (isLocationTracking) stopLocationTracking();
@@ -1521,13 +1525,12 @@
             updateWaypointsPanel();
             resetRotation();
             localStorage.removeItem('athos_last_route_state');
-            // ΔΕΝ διαγράφουμε τις αποθηκευμένες διαδρομές - μόνο την τρέχουσα
             isMapInteracting = false;
-            showToast('🗑️ Καθαρίστηκαν όλα τα σημεία και η διαδρομή', '#e74c3c');
+            showToast('🗑️ Καθαρίστηκαν όλα', '#e74c3c');
         }
 
         // ============================================================
-        //  ΠΑΝΕΛ ΣΗΜΕΙΩΝ - ΜΕ ΦΩΤΟΓΡΑΦΙΕΣ ΚΑΙ ΔΙΟΡΘΩΣΗ
+        //  ΠΑΝΕΛ ΣΗΜΕΙΩΝ
         // ============================================================
         function updateWaypointsPanel() {
             var list = document.getElementById('waypointsList');
@@ -1607,7 +1610,7 @@
             var phone = document.getElementById('sosPhone').value || '6988321619';
             var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             if (isMobile) { window.location.href = 'sms:' + phone + '?body=' + encodeURIComponent(msg); } else {
-                navigator.clipboard.writeText(msg).then(function() { showToast('✅ Το μήνυμα αντιγράφηκε στο πρόχειρο - στείλτε το στο ' + phone, '#27ae60'); }).catch(function() { alert('📱 Αντιγράψτε αυτό το μήνυμα και στείλτε το στο ' + phone + ':\n\n' + msg); });
+                navigator.clipboard.writeText(msg).then(function() { showToast('✅ Το μήνυμα αντιγράφηκε στο πρόχειρο', '#27ae60'); }).catch(function() { alert('📱 Αντιγράψτε αυτό το μήνυμα:\n\n' + msg); });
             }
             try { var name = document.getElementById('sosName').value; if (name) { localStorage.setItem('sos_user_name', name); } } catch(e) {}
             closeSosDialog();
@@ -1622,7 +1625,7 @@
             closeSosDialog();
         }
 
-        function call112() { if (confirm('📞 Θα πραγματοποιηθεί κλήση στο 112 (Ευρωπαϊκός αριθμός έκτακτης ανάγκης). Συνεχίζετε;')) { window.location.href = 'tel:112'; } }
+        function call112() { if (confirm('📞 Κλήση στο 112;')) { window.location.href = 'tel:112'; } }
 
         document.getElementById('sosBtn')?.addEventListener('click', openSosDialog);
         document.getElementById('closeSosBtn')?.addEventListener('click', closeSosDialog);
@@ -1636,7 +1639,7 @@
         });
 
         // ============================================================
-        //  GPX ΕΞΑΓΩΓΗ & ΕΙΣΑΓΩΓΗ
+        //  GPX
         // ============================================================
         document.getElementById('exportGpxBtn').addEventListener('click', function() {
             if (!lastMainGeometry || lastMainGeometry.length < 2) { alert('Δεν υπάρχει διαδρομή.'); return; }
@@ -1793,7 +1796,7 @@
         }
 
         // ============================================================
-        //  ΑΠΟΘΗΚΕΥΣΗ ΔΙΑΔΡΟΜΗΣ ΣΤΗ ΛΙΣΤΑ - ΜΕ ΣΩΣΤΗ ΔΙΑΓΡΑΦΗ
+        //  ΑΠΟΘΗΚΕΥΣΗ ΔΙΑΔΡΟΜΩΝ
         // ============================================================
         function getSavedRoutes() { 
             try { 
@@ -1878,7 +1881,7 @@
 
         function saveRoute() {
             if (!lastMainGeometry || lastMainGeometry.length < 2) { 
-                alert('Δεν υπάρχει διαδρομή για αποθήκευση. Δημιουργήστε πρώτα μια διαδρομή (Start → End).'); 
+                alert('Δεν υπάρχει διαδρομή για αποθήκευση.'); 
                 return; 
             }
             var name = prompt('Όνομα διαδρομής:', 'Διαδρομή ' + new Date().toLocaleDateString('el'));
@@ -1902,7 +1905,6 @@
             };
             
             var saved = getSavedRoutes();
-            // Έλεγχος για διπλότυπα
             var exists = saved.some(function(r) { return r.id === routeId; });
             if (!exists) {
                 saved.push(routeData);
@@ -2055,9 +2057,125 @@
         document.getElementById('speedSelect')?.addEventListener('change', updateInfo);
         document.getElementById('photoBtn')?.addEventListener('click', function() { takePhoto(); });
         document.getElementById('bottomPhotoBtn')?.addEventListener('click', function() { takePhoto(); });
+        
+        // Download tiles
+        var isDownloading = false;
+        document.getElementById('downloadTilesBtn')?.addEventListener('click', function() {
+            if (isDownloading) return;
+            var bounds = map.getBounds();
+            var zoom = map.getZoom();
+            var downloadZoom = Math.min(zoom + 1, 16);
+            var tiles = [];
+            
+            function latLngToTile(lat, lng, z) {
+                var latRad = lat * Math.PI / 180;
+                var n = Math.pow(2, z);
+                var x = Math.floor((lng + 180) / 360 * n);
+                var y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+                return { x: x, y: y };
+            }
+            
+            var nw = latLngToTile(bounds.getNorth(), bounds.getWest(), downloadZoom);
+            var se = latLngToTile(bounds.getSouth(), bounds.getEast(), downloadZoom);
+            var minX = Math.min(nw.x, se.x), maxX = Math.max(nw.x, se.x);
+            var minY = Math.min(nw.y, se.y), maxY = Math.max(nw.y, se.y);
+            
+            for (var x = minX; x <= maxX; x++) {
+                for (var y = minY; y <= maxY; y++) {
+                    tiles.push({ x: x, y: y, z: downloadZoom });
+                }
+            }
+            
+            if (tiles.length === 0) { alert('Δεν βρέθηκαν tiles.'); return; }
+            if (tiles.length > 200) {
+                if (!confirm('📥 Λήψη ' + tiles.length + ' tiles για zoom ' + downloadZoom + ';\nΜπορεί να διαρκέσει λίγο. Συνεχίζετε;')) return;
+            }
+            
+            isDownloading = true;
+            var progressDiv = document.getElementById('tileProgress');
+            var fill = document.getElementById('tileFill');
+            var percent = document.getElementById('tilePercent');
+            progressDiv.style.display = 'block';
+            fill.style.width = '0%';
+            percent.innerText = '0%';
+            
+            var downloaded = 0;
+            var failed = 0;
+            var tileCache = {};
+            
+            try { var data = localStorage.getItem('athos_tile_cache'); if (data) { tileCache = JSON.parse(data); } } catch(e) {}
+            
+            tiles.forEach(function(tile, i) {
+                var key = tile.z + '/' + tile.x + '/' + tile.y;
+                if (tileCache[key]) {
+                    downloaded++;
+                    updateProgress();
+                    return;
+                }
+                
+                var subdomains = ['a', 'b', 'c'];
+                var url = 'https://' + subdomains[i % 3] + '.tile.openstreetmap.org/' + key + '.png';
+                
+                fetch(url)
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        return response.blob();
+                    })
+                    .then(function(blob) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            tileCache[key] = { data: e.target.result, timestamp: Date.now() };
+                            downloaded++;
+                            updateProgress();
+                            if (downloaded + failed === tiles.length) {
+                                finishDownload();
+                            }
+                        };
+                        reader.readAsDataURL(blob);
+                    })
+                    .catch(function(err) {
+                        failed++;
+                        updateProgress();
+                        if (downloaded + failed === tiles.length) {
+                            finishDownload();
+                        }
+                    });
+            });
+            
+            function updateProgress() {
+                var total = tiles.length;
+                var pct = Math.round(((downloaded + failed) / total) * 100);
+                fill.style.width = Math.min(100, pct) + '%';
+                percent.innerText = Math.min(100, pct) + '% (' + downloaded + '/' + total + ')';
+            }
+            
+            function finishDownload() {
+                try {
+                    var keys = Object.keys(tileCache);
+                    if (keys.length > 500) {
+                        var sorted = keys.sort(function(a, b) { return tileCache[a].timestamp - tileCache[b].timestamp; });
+                        var toRemove = sorted.slice(0, keys.length - 500);
+                        for (var i = 0; i < toRemove.length; i++) { delete tileCache[toRemove[i]]; }
+                    }
+                    localStorage.setItem('athos_tile_cache', JSON.stringify(tileCache));
+                } catch(e) {}
+                
+                progressDiv.style.display = 'none';
+                isDownloading = false;
+                alert('✅ Λήψη ολοκληρώθηκε!\n📥 Αποθηκεύτηκαν: ' + downloaded + ' tiles\n❌ Απέτυχαν: ' + failed + ' tiles');
+                document.getElementById('downloadTilesBtn').classList.add('active');
+            }
+            
+            // Αν δεν υπάρχουν tiles, ολοκλήρωση
+            if (tiles.length === 0) {
+                progressDiv.style.display = 'none';
+                isDownloading = false;
+                alert('✅ Λήψη ολοκληρώθηκε!\n📥 Αποθηκεύτηκαν: 0 tiles');
+            }
+        });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Μπλε κουκίδα = το στίγμα σας\n📸 ΞΕΧΩΡΙΣΤΗ λήψη φωτογραφίας (πατήστε 📸)\n📸 Φωτογραφίες σε Αφετηρία, Προορισμό και Ενδιάμεσα\n✏️ ΔΙΟΡΘΩΣΗ ονόματος σε κάθε σημεία (πατήστε ✏️)\n🗺️ Δημιουργήστε ή φορτώστε μια διαδρομή\n🔵 Η μπλε κουκίδα σας ακολουθεί σε πραγματικό χρόνο\n🧭 Ο χάρτης περιστρέφεται αυτόματα\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n🆘 SOS → Αποστολή θέσης με SMS/Email/112\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n🗑️ Οι διαγραμμένες διαδρομές ΔΕΝ επανεμφανίζονται\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n📍 Μπλε κουκίδα = το στίγμα σας\n📸 ΞΕΧΩΡΙΣΤΗ λήψη φωτογραφίας\n📸 Φωτογραφίες σε Αφετηρία, Προορισμό και Ενδιάμεσα\n✏️ ΔΙΟΡΘΩΣΗ ονόματος σε κάθε σημείο\n🗺️ Δημιουργήστε ή φορτώστε μια διαδρομή\n🔵 Η μπλε κουκίδα σας ακολουθεί σε πραγματικό χρόνο\n🧭 Ο χάρτης περιστρέφεται αυτόματα\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n🆘 SOS → Αποστολή θέσης με SMS/Email/112\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n🗑️ Οι διαγραμμένες διαδρομές ΔΕΝ επανεμφανίζονται\n📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -2089,6 +2207,7 @@
         console.log('📸 ΞΕΧΩΡΙΣΤΗ λήψη φωτογραφίας');
         console.log('✏️ ΔΙΟΡΘΩΣΗ ονόματος σε κάθε σημείο');
         console.log('🗑️ Οι διαγραμμένες διαδρομές ΔΕΝ επανεμφανίζονται');
+        console.log('📱 Πάνω πάνελ βελτιστοποιημένο για κινητά (οριζόντια κύλιση)');
     </script>
 </body>
 </html>
