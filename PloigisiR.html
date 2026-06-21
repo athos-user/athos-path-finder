@@ -1136,6 +1136,7 @@
         var navStopBtn = document.getElementById('navStopBtn');
         var pois = [], poiNames = [], poiDescs = [], poiColors = [], poiElevs = [], poiImages = [], poiMarkers = [];
         var currentGpxGeometry = null, currentGpxStartName = 'Αφετηρία GPX', currentGpxEndName = 'Προορισμός GPX', currentGpxLayer = null, currentGpxDistance = null;
+        var initialLocateDone = false;
 
         // ============================================================
         //  ΧΑΡΤΗΣ - ΣΥΝΕΧΕΙΑ
@@ -1217,7 +1218,7 @@
         }
 
         // ============================================================
-        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ - ΜΕ ΑΥΤΟΜΑΤΟ ZOOM
+        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ - ΧΩΡΙΣ ΣΥΝΕΧΗ ΕΠΑΝΑΦΟΡΑ
         // ============================================================
         var gpsAttempts = 0, maxGpsAttempts = 3, isLocating = false;
 
@@ -1234,7 +1235,9 @@
                 document.getElementById('bottomLocateBtn').innerHTML = '⏹️';
                 isLocationTracking = true;
                 userInteracted = false;
-                locationWatchId = navigator.geolocation.watchPosition(
+                
+                // Μία μόνο κλήση getCurrentPosition αντί για watchPosition
+                navigator.geolocation.getCurrentPosition(
                     function(pos) {
                         var lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
                         if (currentLocationMarker) {
@@ -1243,12 +1246,10 @@
                             var icon = L.divIcon({ html: '📍', className: 'location-marker', iconSize: [30, 30], iconAnchor: [15, 15] });
                             currentLocationMarker = L.marker([lat, lng], { icon: icon }).addTo(map).bindPopup('📍 Θέση σας<br><small>GPS</small>');
                         }
-                        // ΑΥΤΟΜΑΤΟ ZOUM ΣΤΗ ΘΕΣΗ
+                        // ZOOM ΜΟΝΟ ΣΤΗΝ ΑΡΧΙΚΗ ΕΝΤΟΠΙΣΗ
                         if (zoomToLocation !== false) {
                             var zoomLevel = acc < 50 ? 17 : acc < 200 ? 15 : 13;
                             map.flyTo([lat, lng], zoomLevel, { duration: 1.0 });
-                        } else if (!userInteracted) {
-                            map.panTo([lat, lng]);
                         }
                         var statusEl = document.getElementById('statusText');
                         if (statusEl) {
@@ -1256,11 +1257,17 @@
                             statusEl.innerHTML = '📍 GPS: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + accText;
                         }
                         isLocating = false;
+                        isLocationTracking = false;
+                        document.getElementById('locateBtn').innerHTML = '📍';
+                        document.getElementById('bottomLocateBtn').innerHTML = '📍';
+                        initialLocateDone = true;
                         try { localStorage.setItem('athos_last_location', JSON.stringify({ lat: lat, lng: lng, source: 'GPS' })); } catch(e) {}
                     },
                     function(err) {
-                        console.warn('GPS watch error:', err.code, err.message);
-                        stopLocationTracking();
+                        console.warn('GPS error:', err.code, err.message);
+                        isLocationTracking = false;
+                        document.getElementById('locateBtn').innerHTML = '📍';
+                        document.getElementById('bottomLocateBtn').innerHTML = '📍';
                         locateByIP(zoomToLocation);
                     },
                     { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
@@ -1297,12 +1304,10 @@
                         }
                         if (zoomToLocation !== false) {
                             map.flyTo([lat, lng], 13, { duration: 1.0 });
-                        } else {
-                            map.panTo([lat, lng]);
                         }
                         statusEl.innerHTML = '📍 IP: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + ' (' + city + ')';
                         showToast('📍 Θέση από IP', '#3498db');
-                        stopLocationTracking();
+                        initialLocateDone = true;
                     } else { throw new Error('No location from IP'); }
                 })
                 .catch(function() {
@@ -1322,12 +1327,12 @@
                         }
                         statusEl.innerHTML = '💾 Αποθηκευμένη: ' + savedLocation.lat.toFixed(5) + ', ' + savedLocation.lng.toFixed(5);
                         showToast('💾 Φόρτωση αποθηκευμένης θέσης', '#f39c12');
-                        stopLocationTracking();
+                        initialLocateDone = true;
                     } else {
                         showLocation(38.0, 23.7, 'Default (Ελλάδα)');
                         statusEl.innerHTML = '⚠️ Default θέση (Ελλάδα)';
                         showToast('⚠️ Default θέση', '#e74c3c');
-                        stopLocationTracking();
+                        initialLocateDone = true;
                     }
                 });
         }
@@ -1347,12 +1352,6 @@
 
         map.on('dragstart', function() { userInteracted = true; });
         map.on('zoomstart', function() { userInteracted = true; });
-        map.on('dragend', function() {
-            if (isLocationTracking) {
-                userInteracted = true;
-                setTimeout(function() { if (isLocationTracking && userInteracted) { stopLocationTracking(); showToast('📍 Παρακολούθηση σταμάτησε (χειρισμός χάρτη)', '#888'); } }, 30000);
-            }
-        });
 
         function showToast(message, color) {
             var toast = document.createElement('div');
@@ -1818,8 +1817,7 @@
             } else {
                 if (navigator.geolocation) {
                     navigationWatchId = navigator.geolocation.watchPosition(
-                        function(pos) { if (isPaused) return; var lat = pos.coords.latitude, lng = pos.coords.longitude; if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } // ΑΥΤΟΜΑΤΟ ZOUM ΣΤΗ ΘΕΣΗ ΚΑΤΑ ΤΗΝ ΠΛΟΗΓΗΣΗ
-                        map.flyTo([lat, lng], 16, { duration: 0.8 }); updateNavigationPosition({ latlng: L.latLng(lat, lng) }); },
+                        function(pos) { if (isPaused) return; var lat = pos.coords.latitude, lng = pos.coords.longitude; if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } map.flyTo([lat, lng], 16, { duration: 0.8 }); updateNavigationPosition({ latlng: L.latLng(lat, lng) }); },
                         function(err) { console.warn('Navigation watch error:', err.message); },
                         { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
                     );
@@ -2341,7 +2339,7 @@
         }
 
         // ============================================================
-        //  ΕΚΚΙΝΗΣΗ - ΜΕ ΑΥΤΟΜΑΤΟ ΕΝΤΟΠΙΣΜΟ ΚΑΙ ZOOM
+        //  ΕΚΚΙΝΗΣΗ - ΜΕ ΑΥΤΟΜΑΤΟ ΕΝΤΟΠΙΣΜΟ (ΜΟΝΟ ΜΙΑ ΦΟΡΑ)
         // ============================================================
         resetInfo();
         updatePhotoList();
@@ -2353,32 +2351,20 @@
         }, 200);
         
         console.log('🚀 Athos Path Finder έτοιμο!');
-        console.log('📍 Αυτόματος εντοπισμός θέσης με zoom...');
+        console.log('📍 Αυτόματος εντοπισμός θέσης (μία φορά)...');
         
-        // 1. Άμεσος εντοπισμός ΜΕ zoom
+        // 1. Άμεσος εντοπισμός ΜΕ zoom (ΜΟΝΟ ΜΙΑ ΦΟΡΑ)
         setTimeout(function() { locateUser(true); }, 800);
         
-        // 2. Επαναφορά όταν η σελίδα γίνεται ορατή ξανά
+        // 2. Επαναφορά όταν η σελίδα γίνεται ορατή ξανά - ΜΟΝΟ ΑΝ ΔΕΝ ΕΧΕΙ ΓΙΝΕΙ ΗΔΗ
         document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
+            if (!document.hidden && !initialLocateDone && !currentLocationMarker) {
                 console.log('📱 Σελίδα ορατή - έλεγχος θέσης...');
-                if (!isLocationTracking && !currentLocationMarker) {
-                    setTimeout(function() { locateUser(true); }, 500);
-                }
+                setTimeout(function() { locateUser(true); }, 500);
             }
         });
         
-        // 3. Περιοδικός έλεγχος για απώλεια GPS
-        setInterval(function() {
-            if (!isLocationTracking && !currentLocationMarker) {
-                var statusEl = document.getElementById('statusText');
-                if (statusEl && statusEl.innerHTML.indexOf('Πατήστε "Θέση μου"') !== -1) {
-                    locateUser(true);
-                }
-            }
-        }, 30000);
-        
-        // 4. Φόρτωση αποθηκευμένης θέσης
+        // 3. Φόρτωση αποθηκευμένης θέσης
         try {
             var savedLocation = JSON.parse(localStorage.getItem('athos_last_location'));
             if (savedLocation && savedLocation.lat && savedLocation.lng && !currentLocationMarker) {
@@ -2387,21 +2373,12 @@
                 map.flyTo([savedLocation.lat, savedLocation.lng], 14, { duration: 1.0 });
                 var statusEl = document.getElementById('statusText');
                 if (statusEl) { statusEl.innerHTML = '💾 Αποθηκευμένη θέση'; }
+                initialLocateDone = true;
             }
         } catch(e) {}
         
-        // 5. Επιπλέον προσπάθεια για κινητά
-        var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (isMobile) {
-            setTimeout(function() {
-                if (!currentLocationMarker) {
-                    console.log('📱 Δεύτερη προσπάθεια εντοπισμού για κινητό...');
-                    locateUser(true);
-                }
-            }, 3000);
-        }
-        
-        console.log('📍 Η εφαρμογή εντοπίζει αυτόματα τη θέση σας και κάνει zoom σε αυτήν');
+        console.log('📍 Η εφαρμογή εντοπίζει τη θέση σας ΜΙΑ ΦΟΡΑ και μετά ΜΠΟΡΕΙΤΕ να πλοηγηθείτε ελεύθερα στον χάρτη');
+        console.log('🔄 Πατήστε "Θέση μου" για νέο εντοπισμό με zoom');
     </script>
 </body>
 </html>
