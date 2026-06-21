@@ -1137,6 +1137,8 @@
         var pois = [], poiNames = [], poiDescs = [], poiColors = [], poiElevs = [], poiImages = [], poiMarkers = [];
         var currentGpxGeometry = null, currentGpxStartName = 'Αφετηρία GPX', currentGpxEndName = 'Προορισμός GPX', currentGpxLayer = null, currentGpxDistance = null;
         var initialLocateDone = false;
+        var lastKnownPosition = null;
+        var userZoomed = false;
 
         // ============================================================
         //  ΧΑΡΤΗΣ - ΣΥΝΕΧΕΙΑ
@@ -1236,17 +1238,16 @@
                 isLocationTracking = true;
                 userInteracted = false;
                 
-                // Μία μόνο κλήση getCurrentPosition αντί για watchPosition
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
                         var lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
+                        lastKnownPosition = { lat: lat, lng: lng };
                         if (currentLocationMarker) {
                             currentLocationMarker.setLatLng([lat, lng]);
                         } else {
                             var icon = L.divIcon({ html: '📍', className: 'location-marker', iconSize: [30, 30], iconAnchor: [15, 15] });
                             currentLocationMarker = L.marker([lat, lng], { icon: icon }).addTo(map).bindPopup('📍 Θέση σας<br><small>GPS</small>');
                         }
-                        // ZOOM ΜΟΝΟ ΣΤΗΝ ΑΡΧΙΚΗ ΕΝΤΟΠΙΣΗ
                         if (zoomToLocation !== false) {
                             var zoomLevel = acc < 50 ? 17 : acc < 200 ? 15 : 13;
                             map.flyTo([lat, lng], zoomLevel, { duration: 1.0 });
@@ -1294,6 +1295,7 @@
                     if (data.latitude && data.longitude) {
                         var lat = data.latitude, lng = data.longitude, city = data.city || '', country = data.country_name || '';
                         isLocating = false;
+                        lastKnownPosition = { lat: lat, lng: lng };
                         try { localStorage.setItem('athos_last_location', JSON.stringify({ lat: lat, lng: lng, source: 'IP' })); } catch(e) {}
                         if (currentLocationMarker) {
                             currentLocationMarker.setLatLng([lat, lng]);
@@ -1315,6 +1317,7 @@
                     var savedLocation = null;
                     try { savedLocation = JSON.parse(localStorage.getItem('athos_last_location')); } catch(e) {}
                     if (savedLocation && savedLocation.lat && savedLocation.lng) {
+                        lastKnownPosition = { lat: savedLocation.lat, lng: savedLocation.lng };
                         if (currentLocationMarker) {
                             currentLocationMarker.setLatLng([savedLocation.lat, savedLocation.lng]);
                             currentLocationMarker.setPopupContent('📍 Αποθηκευμένη θέση');
@@ -1351,7 +1354,7 @@
         }
 
         map.on('dragstart', function() { userInteracted = true; });
-        map.on('zoomstart', function() { userInteracted = true; });
+        map.on('zoomstart', function() { userZoomed = true; });
 
         function showToast(message, color) {
             var toast = document.createElement('div');
@@ -1788,8 +1791,11 @@
         }
 
         // ============================================================
-        //  ΠΛΟΗΓΗΣΗ - ΜΕ ΑΥΤΟΜΑΤΟ ZOUM ΣΤΗ ΘΕΣΗ
+        //  ΠΛΟΗΓΗΣΗ - ΜΕ ΑΥΤΟΜΑΤΟ ZOUM ΜΟΝΟ ΟΤΑΝ ΧΡΕΙΑΖΕΤΑΙ
         // ============================================================
+        var lastNavZoomTime = 0;
+        var navZoomCooldown = 3000; // 3 δευτερόλεπτα μεταξύ zoom
+
         function updateNavStatus(status, dotClass) {
             if (!navStatusEl) return;
             var dot = navStatusEl.querySelector('.dot');
@@ -1817,7 +1823,25 @@
             } else {
                 if (navigator.geolocation) {
                     navigationWatchId = navigator.geolocation.watchPosition(
-                        function(pos) { if (isPaused) return; var lat = pos.coords.latitude, lng = pos.coords.longitude; if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } map.flyTo([lat, lng], 16, { duration: 0.8 }); updateNavigationPosition({ latlng: L.latLng(lat, lng) }); },
+                        function(pos) { 
+                            if (isPaused) return; 
+                            var lat = pos.coords.latitude, lng = pos.coords.longitude; 
+                            if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } 
+                            // Zoom ΜΟΝΟ αν ο χρήστης είναι μακριά από την τελευταία γνωστή θέση
+                            var now = Date.now();
+                            if (lastKnownPosition && now - lastNavZoomTime > navZoomCooldown) {
+                                var dist = L.latLng(lat, lng).distanceTo(L.latLng(lastKnownPosition.lat, lastKnownPosition.lng));
+                                if (dist > 50) { // Αν έχει μετακινηθεί >50 μέτρα
+                                    map.flyTo([lat, lng], map.getZoom(), { duration: 0.8 });
+                                    lastNavZoomTime = now;
+                                }
+                            } else if (!lastKnownPosition) {
+                                map.flyTo([lat, lng], map.getZoom(), { duration: 0.8 });
+                                lastNavZoomTime = now;
+                            }
+                            lastKnownPosition = { lat: lat, lng: lng };
+                            updateNavigationPosition({ latlng: L.latLng(lat, lng) }); 
+                        },
                         function(err) { console.warn('Navigation watch error:', err.message); },
                         { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
                     );
@@ -1872,7 +1896,25 @@
             if (navigator.geolocation) {
                 if (navigationWatchId) { navigator.geolocation.clearWatch(navigationWatchId); navigationWatchId = null; }
                 navigationWatchId = navigator.geolocation.watchPosition(
-                    function(pos) { if (isPaused) return; var lat = pos.coords.latitude, lng = pos.coords.longitude; if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } map.flyTo([lat, lng], 16, { duration: 0.8 }); updateNavigationPosition({ latlng: L.latLng(lat, lng) }); },
+                    function(pos) { 
+                        if (isPaused) return; 
+                        var lat = pos.coords.latitude, lng = pos.coords.longitude; 
+                        if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } 
+                        // Zoom ΜΟΝΟ αν ο χρήστης είναι μακριά από την τελευταία γνωστή θέση
+                        var now = Date.now();
+                        if (lastKnownPosition && now - lastNavZoomTime > navZoomCooldown) {
+                            var dist = L.latLng(lat, lng).distanceTo(L.latLng(lastKnownPosition.lat, lastKnownPosition.lng));
+                            if (dist > 50) { // Αν έχει μετακινηθεί >50 μέτρα
+                                map.flyTo([lat, lng], map.getZoom(), { duration: 0.8 });
+                                lastNavZoomTime = now;
+                            }
+                        } else if (!lastKnownPosition) {
+                            map.flyTo([lat, lng], map.getZoom(), { duration: 0.8 });
+                            lastNavZoomTime = now;
+                        }
+                        lastKnownPosition = { lat: lat, lng: lng };
+                        updateNavigationPosition({ latlng: L.latLng(lat, lng) }); 
+                    },
                     function(err) { console.warn('Navigation watch error:', err.message); },
                     { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
                 );
@@ -2379,6 +2421,7 @@
         
         console.log('📍 Η εφαρμογή εντοπίζει τη θέση σας ΜΙΑ ΦΟΡΑ και μετά ΜΠΟΡΕΙΤΕ να πλοηγηθείτε ελεύθερα στον χάρτη');
         console.log('🔄 Πατήστε "Θέση μου" για νέο εντοπισμό με zoom');
+        console.log('🧭 Στην πλοήγηση, το zoom γίνεται ΜΟΝΟ όταν μετακινηθείτε >50 μέτρα');
     </script>
 </body>
 </html>
