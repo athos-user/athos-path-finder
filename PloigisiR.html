@@ -13,6 +13,10 @@
         body { font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background: #f0f2f5; touch-action: manipulation; overflow: hidden; }
         #map { flex: 1; width: 100%; height: 100vh; }
         
+        /* Leaflet rotation support */
+        .leaflet-control-zoom { z-index: 800 !important; }
+        .leaflet-control-attribution { display: none; }
+        
         .controls {
             position: absolute;
             top: 10px;
@@ -59,6 +63,7 @@
         #downloadTilesBtn.active::after { content: ' ✅'; }
         #toggleWaypointsBtn { background: #2980b9; }
         #sosBtn { background: #e74c3c; }
+        #rotateBtn { background: #8e44ad; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
         .controls .logo-link {
@@ -440,6 +445,28 @@
             border-top: 10px solid #2196F3;
         }
         
+        /* Direction arrow for user marker */
+        .user-marker-with-direction {
+            background: #2196F3;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            border: 3px solid white;
+            box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3), 0 2px 10px rgba(0,0,0,0.3);
+            display: block;
+            position: relative;
+        }
+        .user-marker-with-direction::after {
+            content: '▲';
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #2196F3;
+            font-size: 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
         #statusText { font-weight: 600; color: #2c5f2d; font-size: 11px; }
         
         #miniNavBar {
@@ -818,6 +845,32 @@
         .off-route-warning .close-warning:hover {
             background: rgba(255,255,255,0.3);
         }
+        
+        /* Compass / Rotation indicator */
+        .compass-indicator {
+            position: fixed;
+            bottom: 130px;
+            right: 15px;
+            z-index: 2000;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border: 2px solid #2196F3;
+            cursor: pointer;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        .compass-indicator:active { transform: scale(0.9); }
+        .compass-indicator .arrow {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -828,6 +881,11 @@
         ⚠️ ΕΧΕΤΕ ΑΠΟΜΑΚΡΥΝΘΕΙ ΑΠΟ ΤΗ ΔΙΑΔΡΟΜΗ<br>
         <span class="sub" id="offRouteDistance">0 μέτρα</span>
         <button class="close-warning" id="closeOffRouteWarning">✕ Κατάλαβα</button>
+    </div>
+
+    <!-- Compass indicator -->
+    <div class="compass-indicator" id="compassIndicator" title="Περιστροφή χάρτη προς κατεύθυνση">
+        <span class="arrow" id="compassArrow">🧭</span>
     </div>
 
     <div id="tileProgress"><div>📥 Κατέβασμα χάρτη...</div><div class="bar"><div class="fill" id="tileFill"></div></div><div id="tilePercent" style="font-size:11px; margin-top:4px;">0%</div></div>
@@ -914,10 +972,14 @@
         var GRAPHHOPPER_API_KEY = '5fece833-cd75-4373-a6ba-a4137d3f5132';
 
         // ============================================================
-        //  ΠΑΙΧΤΗΣ ΗΧΟΥ ΓΙΑ ΕΙΔΟΠΟΙΗΣΕΙΣ
+        //  ΠΑΙΧΤΗΣ ΗΧΟΥ ΓΙΑ ΕΙΔΟΠΟΙΗΣΕΙΣ (με δόνηση για σβηστή οθόνη)
         // ============================================================
         var audioContext = null;
+        var lastVibrationTime = 0;
+        var vibrationCooldown = 3000;
+
         function playBeep() {
+            // Ηχητικό beep
             try {
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -931,7 +993,6 @@
                 gainNode.gain.value = 0.3;
                 oscillator.start();
                 setTimeout(function() { oscillator.stop(); }, 300);
-                // Δεύτερο beep μετά από 200ms
                 setTimeout(function() {
                     var osc2 = audioContext.createOscillator();
                     var gain2 = audioContext.createGain();
@@ -944,9 +1005,13 @@
                     setTimeout(function() { osc2.stop(); }, 300);
                 }, 200);
             } catch(e) { console.warn('Sound error:', e); }
+            
+            // Δόνηση για σβηστή οθόνη (λειτουργεί και όταν η οθόνη είναι σβηστή)
+            vibrateDevice(200);
         }
 
         function playWarningSound() {
+            // Ηχητική προειδοποίηση
             try {
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -967,6 +1032,21 @@
                     })(i);
                 }
             } catch(e) { console.warn('Sound error:', e); }
+            
+            // Δόνηση για σβηστή οθόνη (3 παλμοί)
+            vibrateDevice([100, 200, 100, 200, 100]);
+        }
+
+        function vibrateDevice(pattern) {
+            try {
+                var now = Date.now();
+                if (now - lastVibrationTime < vibrationCooldown) return;
+                lastVibrationTime = now;
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate(pattern);
+                }
+            } catch(e) { /* ignore */ }
         }
 
         // ============================================================
@@ -1218,18 +1298,108 @@
         document.getElementById('hideRoutesBtn')?.addEventListener('click', hideRouteDropdown);
 
         // ============================================================
-        //  ΧΑΡΤΗΣ
+        //  ΧΑΡΤΗΣ - ΜΕ ΥΠΟΣΤΗΡΙΞΗ ROTATION
         // ============================================================
         var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 });
         var map = L.map('map', { 
             layers: [osm], 
             zoomControl: true,
-            // Ενεργοποίηση rotation για κινητά
             tap: true,
-            tapTolerance: 15
+            tapTolerance: 15,
+            // Αυτόματη περιστροφή με compass
+            trackResize: true
         }).setView([40.16, 24.32], 10);
 
-        // ΔΟΜΕΣ
+        // ============================================================
+        //  ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ - ROTATION
+        // ============================================================
+        var mapRotation = 0;
+        var isRotating = false;
+        var rotationInterval = null;
+        var lastHeading = null;
+        var headingHistory = [];
+        var maxHistory = 5;
+
+        // Λειτουργία περιστροφής χάρτη
+        function rotateMap(angle) {
+            if (!map || isNaN(angle)) return;
+            try {
+                // Το Leaflet δεν έχει native rotation, χρησιμοποιούμε CSS transform
+                var container = map.getContainer();
+                if (container) {
+                    var center = map.getCenter();
+                    var currentZoom = map.getZoom();
+                    
+                    // Εφαρμογή rotation στο container
+                    container.style.transform = 'rotate(' + angle + 'deg)';
+                    container.style.transformOrigin = 'center center';
+                    
+                    // Αντιστάθμιση για να παραμείνει το κέντρο
+                    // Αυτό είναι μια προσέγγιση - για πλήρη υποστήριξη χρειάζεται leaflet-rotate plugin
+                    mapRotation = angle;
+                    
+                    // Ενημέρωση compass
+                    updateCompassIndicator(angle);
+                }
+            } catch(e) { console.warn('Rotation error:', e); }
+        }
+
+        function updateCompassIndicator(angle) {
+            var arrow = document.getElementById('compassArrow');
+            if (arrow) {
+                arrow.style.transform = 'rotate(' + (-angle) + 'deg)';
+            }
+        }
+
+        // Reset rotation
+        function resetRotation() {
+            var container = map.getContainer();
+            if (container) {
+                container.style.transform = 'rotate(0deg)';
+                mapRotation = 0;
+                updateCompassIndicator(0);
+            }
+        }
+
+        // Compass click - reset rotation
+        document.getElementById('compassIndicator')?.addEventListener('click', function() {
+            resetRotation();
+            showToast('🧭 Περιστροφή επαναφορά', '#8e44ad');
+        });
+
+        // ============================================================
+        //  ΥΠΟΛΟΓΙΣΜΟΣ ΚΑΤΕΥΘΥΝΣΗΣ ΑΠΟ GPS
+        // ============================================================
+        function calculateHeading(pos1, pos2) {
+            if (!pos1 || !pos2) return null;
+            var lat1 = pos1.lat * Math.PI / 180;
+            var lat2 = pos2.lat * Math.PI / 180;
+            var dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
+            var y = Math.sin(dLng) * Math.cos(lat2);
+            var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+            var heading = Math.atan2(y, x) * 180 / Math.PI;
+            return (heading + 360) % 360;
+        }
+
+        function smoothHeading(newHeading) {
+            if (newHeading === null) return null;
+            headingHistory.push(newHeading);
+            if (headingHistory.length > maxHistory) {
+                headingHistory.shift();
+            }
+            // Μέσος όρος με αφαίρεση ακραίων τιμών
+            if (headingHistory.length < 2) return newHeading;
+            var sorted = headingHistory.slice().sort((a, b) => a - b);
+            // Αφαίρεση του 20% μικρότερων και μεγαλύτερων
+            var trimCount = Math.floor(sorted.length * 0.2);
+            var trimmed = sorted.slice(trimCount, sorted.length - trimCount);
+            var avg = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
+            return avg;
+        }
+
+        // ============================================================
+        //  ΔΟΜΕΣ
+        // ============================================================
         var startPoint = null, startName = 'Αφετηρία', startMarker = null;
         var endPoint = null, endName = 'Προορισμός', endMarker = null;
         var waypoints = [], waypointNames = [], waypointDescs = [], waypointColors = [], waypointElevs = [], waypointImages = [], waypointStops = [], markers = [];
@@ -1251,6 +1421,8 @@
         var offRouteWarningShown = false;
         var lastOffRouteCheck = 0;
         var offRouteCheckInterval = 2000;
+        var positionHistory = [];
+        var maxPositionHistory = 3;
 
         // ============================================================
         //  ΧΑΡΤΗΣ - ΣΥΝΕΧΕΙΑ
@@ -1321,6 +1493,7 @@
             document.getElementById('miniNavBar').classList.remove('active');
             document.getElementById('offRouteWarning').style.display = 'none';
             offRouteWarningShown = false;
+            resetRotation();
         }
 
         function computeDistanceFromCoords(coords) {
@@ -1905,7 +2078,7 @@
         }
 
         // ============================================================
-        //  ΠΛΟΗΓΗΣΗ - ΜΕ ΑΥΤΟΜΑΤΟ ZOUM, ROTATION KAI SNAP ΣΤΗ ΔΙΑΔΡΟΜΗ
+        //  ΠΛΟΗΓΗΣΗ - ΜΕ ROTATION ΚΑΙ SNAP
         // ============================================================
         var lastNavZoomTime = 0;
         var navZoomCooldown = 2000;
@@ -1913,6 +2086,7 @@
         var wasOffRoute = false;
         var lastRouteSnapTime = 0;
         var routeSnapCooldown = 3000;
+        var lastPositions = [];
 
         function updateNavStatus(status, dotClass) {
             if (!navStatusEl) return;
@@ -1921,7 +2095,6 @@
             navStatusEl.innerHTML = (dot ? dot.outerHTML : '<span class="dot ' + (dotClass || 'inactive') + '"></span>') + ' ' + status;
         }
 
-        // Εύρεση του κοντινότερου σημείου στη διαδρομή
         function findClosestPointOnRoute(latlng, geometry) {
             if (!geometry || geometry.length < 2) return null;
             var minDist = Infinity, closestPoint = null, closestIndex = 0;
@@ -1964,51 +2137,48 @@
                             var userPos = L.latLng(lat, lng);
                             if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); }
                             
-                            // Εύρεση κοντινότερου σημείου στη διαδρομή
+                            // Υπολογισμός κατεύθυνσης από ιστορικό θέσεων
+                            var heading = calculateHeadingFromHistory(lat, lng);
+                            if (heading !== null) {
+                                // Περιστροφή χάρτη προς την κατεύθυνση κίνησης
+                                rotateMap(-heading);
+                            }
+                            
                             var closest = findClosestPointOnRoute(userPos, lastMainGeometry);
                             if (closest) {
                                 offRouteDistance = closest.distance;
                                 var now = Date.now();
                                 
-                                // SNAP ΣΤΗ ΔΙΑΔΡΟΜΗ αν απομακρυνθεί >50 μέτρα
                                 if (closest.distance > 50 && now - lastRouteSnapTime > routeSnapCooldown) {
-                                    // Ειδοποίηση
-                                    if (!offRouteWarningShown) {
-                                        playWarningSound();
-                                        document.getElementById('offRouteDistance').textContent = Math.round(closest.distance) + ' μέτρα';
-                                        document.getElementById('offRouteWarning').style.display = 'block';
-                                        offRouteWarningShown = true;
-                                        wasOffRoute = true;
-                                        setTimeout(function() {
-                                            document.getElementById('offRouteWarning').style.display = 'none';
-                                            offRouteWarningShown = false;
-                                        }, 5000);
-                                    }
+                                    playWarningSound();
+                                    document.getElementById('offRouteDistance').textContent = Math.round(closest.distance) + ' μέτρα';
+                                    document.getElementById('offRouteWarning').style.display = 'block';
+                                    offRouteWarningShown = true;
+                                    wasOffRoute = true;
+                                    setTimeout(function() {
+                                        document.getElementById('offRouteWarning').style.display = 'none';
+                                        offRouteWarningShown = false;
+                                    }, 5000);
                                     
-                                    // Snap στη διαδρομή (μετακίνηση του χάρτη στο κοντινότερο σημείο)
                                     map.flyTo(closest.point, map.getZoom(), { duration: 0.8 });
                                     lastRouteSnapTime = now;
                                     lastNavZoomTime = now;
                                     lastKnownPosition = { lat: closest.point.lat, lng: closest.point.lng };
-                                    
-                                    // Ενημέρωση marker
                                     if (userPositionMarker) {
                                         userPositionMarker.setLatLng(closest.point);
                                     }
                                     showToast('📍 Επαναφορά στη διαδρομή', '#e67e22');
                                 } else if (closest.distance > 30 && closest.distance <= 50) {
-                                    // Προειδοποίηση χωρίς snap
                                     if (offRouteWarningShown) {
                                         document.getElementById('offRouteDistance').textContent = Math.round(closest.distance) + ' μέτρα';
                                     }
+                                    playBeep(); // Ηχητική προειδοποίηση + δόνηση
                                 } else {
-                                    // Είναι κοντά στη διαδρομή - κρύψε την προειδοποίηση
                                     document.getElementById('offRouteWarning').style.display = 'none';
                                     offRouteWarningShown = false;
                                     wasOffRoute = false;
                                 }
                                 
-                                // Ενημέρωση status text
                                 var statusEl = document.getElementById('statusText');
                                 if (statusEl) {
                                     if (closest.distance < 15) {
@@ -2020,10 +2190,8 @@
                                     }
                                 }
                                 
-                                // Έλεγχος αν το στίγμα είναι εντός ορατής περιοχής
                                 var bounds = map.getBounds();
                                 if (!bounds.contains(userPos)) {
-                                    // Αν το στίγμα βγήκε από την οθόνη, μετακίνηση στο κοντινότερο σημείο της διαδρομής
                                     map.flyTo(closest.point, map.getZoom(), { duration: 0.6 });
                                     lastNavZoomTime = now;
                                     if (userPositionMarker) {
@@ -2045,36 +2213,38 @@
             }
         }
 
+        function calculateHeadingFromHistory(lat, lng) {
+            var pos = { lat: lat, lng: lng };
+            lastPositions.push(pos);
+            if (lastPositions.length > 10) {
+                lastPositions.shift();
+            }
+            if (lastPositions.length < 2) return null;
+            // Χρησιμοποιούμε τις 2 τελευταίες θέσεις για την κατεύθυνση
+            var p1 = lastPositions[lastPositions.length - 2];
+            var p2 = lastPositions[lastPositions.length - 1];
+            return calculateHeading(p1, p2);
+        }
+
+        function calculateHeading(pos1, pos2) {
+            if (!pos1 || !pos2) return null;
+            var lat1 = pos1.lat * Math.PI / 180;
+            var lat2 = pos2.lat * Math.PI / 180;
+            var dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
+            var y = Math.sin(dLng) * Math.cos(lat2);
+            var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+            var heading = Math.atan2(y, x) * 180 / Math.PI;
+            return (heading + 360) % 360;
+        }
+
         function startNavigation() {
             isNavigating = true; isPaused = false; isMinimized = false;
             offRouteWarningShown = false;
             wasOffRoute = false;
+            lastPositions = [];
             
             var navPanel = document.getElementById('navigationPanel');
-            navPanel.style.position = ''; navPanel.style.left = ''; navPanel.style.top = ''; navPanel.style.bottom = ''; navPanel.style.right = '';
-            navPanel.style.transform = ''; navPanel.style.width = ''; navPanel.style.maxWidth = ''; navPanel.style.maxHeight = '';
-            navPanel.style.borderRadius = ''; navPanel.style.boxShadow = ''; navPanel.style.border = ''; navPanel.style.overflowY = '';
             navPanel.classList.add('active');
-            setTimeout(function() {
-                var isMobile = window.innerWidth < 600;
-                var panelWidth = isMobile ? '95%' : '500px';
-                var maxWidth = isMobile ? '95%' : '500px';
-                var topPos = isMobile ? '10px' : '50px';
-                navPanel.style.position = 'fixed';
-                navPanel.style.left = '50%';
-                navPanel.style.top = topPos;
-                navPanel.style.transform = 'translateX(-50%)';
-                navPanel.style.bottom = 'auto';
-                navPanel.style.right = 'auto';
-                navPanel.style.width = panelWidth;
-                navPanel.style.maxWidth = maxWidth;
-                navPanel.style.maxHeight = '80vh';
-                navPanel.style.borderRadius = '16px';
-                navPanel.style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)';
-                navPanel.style.border = '1px solid #ddd';
-                navPanel.style.overflowY = 'auto';
-                try { var rect = navPanel.getBoundingClientRect(); localStorage.setItem('nav_panel_position', JSON.stringify({ left: rect.left, top: rect.top, width: rect.width })); } catch(e) {}
-            }, 100);
             document.getElementById('floatingPhotoBtn').classList.add('active');
             document.getElementById('miniNavBar').classList.remove('active');
             document.getElementById('navBtn').innerHTML = '🧭';
@@ -2098,15 +2268,18 @@
                         var userPos = L.latLng(lat, lng);
                         if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); }
                         
-                        // Εύρεση κοντινότερου σημείου στη διαδρομή
+                        // Υπολογισμός κατεύθυνσης
+                        var heading = calculateHeadingFromHistory(lat, lng);
+                        if (heading !== null && heading !== undefined) {
+                            rotateMap(-heading);
+                        }
+                        
                         var closest = findClosestPointOnRoute(userPos, lastMainGeometry);
                         if (closest) {
                             offRouteDistance = closest.distance;
                             var now = Date.now();
                             
-                            // SNAP ΣΤΗ ΔΙΑΔΡΟΜΗ αν απομακρυνθεί >50 μέτρα
                             if (closest.distance > 50 && now - lastRouteSnapTime > routeSnapCooldown) {
-                                // Ηχητική ειδοποίηση
                                 playWarningSound();
                                 document.getElementById('offRouteDistance').textContent = Math.round(closest.distance) + ' μέτρα';
                                 document.getElementById('offRouteWarning').style.display = 'block';
@@ -2117,7 +2290,6 @@
                                     offRouteWarningShown = false;
                                 }, 5000);
                                 
-                                // Snap στη διαδρομή
                                 map.flyTo(closest.point, map.getZoom(), { duration: 0.8 });
                                 lastRouteSnapTime = now;
                                 lastNavZoomTime = now;
@@ -2130,13 +2302,13 @@
                                 if (offRouteWarningShown) {
                                     document.getElementById('offRouteDistance').textContent = Math.round(closest.distance) + ' μέτρα';
                                 }
+                                playBeep();
                             } else {
                                 document.getElementById('offRouteWarning').style.display = 'none';
                                 offRouteWarningShown = false;
                                 wasOffRoute = false;
                             }
                             
-                            // Ενημέρωση status
                             var statusEl = document.getElementById('statusText');
                             if (statusEl) {
                                 if (closest.distance < 15) {
@@ -2148,7 +2320,6 @@
                                 }
                             }
                             
-                            // Έλεγχος αν το στίγμα είναι εντός ορατής περιοχής
                             var bounds = map.getBounds();
                             if (!bounds.contains(userPos)) {
                                 map.flyTo(closest.point, map.getZoom(), { duration: 0.6 });
@@ -2173,9 +2344,6 @@
             isNavigating = false; isPaused = false;
             var navPanel = document.getElementById('navigationPanel');
             navPanel.classList.remove('active');
-            navPanel.style.position = ''; navPanel.style.left = ''; navPanel.style.top = ''; navPanel.style.transform = '';
-            navPanel.style.width = ''; navPanel.style.maxWidth = ''; navPanel.style.maxHeight = '';
-            navPanel.style.borderRadius = ''; navPanel.style.boxShadow = ''; navPanel.style.border = ''; navPanel.style.overflowY = '';
             document.getElementById('floatingPhotoBtn').classList.remove('active');
             document.getElementById('miniNavBar').classList.remove('active');
             document.getElementById('navBtn').innerHTML = '🧭';
@@ -2187,6 +2355,7 @@
             if (userPositionMarker) { map.removeLayer(userPositionMarker); userPositionMarker = null; }
             document.getElementById('offRouteWarning').style.display = 'none';
             offRouteWarningShown = false;
+            resetRotation();
             var statusEl = document.getElementById('statusText');
             if (statusEl) { statusEl.innerHTML = 'Πλοήγηση τερματίστηκε'; setTimeout(function() { statusEl.innerHTML = 'Πατήστε "Θέση μου"'; }, 2000); }
             showToast('⏹️ Πλοήγηση τερματίστηκε', '#e74c3c');
@@ -2197,7 +2366,6 @@
             isMinimized = true;
             var navPanel = document.getElementById('navigationPanel');
             navPanel.classList.remove('active');
-            navPanel.style.position = ''; navPanel.style.left = ''; navPanel.style.top = ''; navPanel.style.transform = ''; navPanel.style.width = '';
             document.getElementById('miniNavBar').classList.add('active');
             updateMiniBar();
         }
@@ -2208,25 +2376,6 @@
             var navPanel = document.getElementById('navigationPanel');
             navPanel.classList.add('active');
             document.getElementById('miniNavBar').classList.remove('active');
-            setTimeout(function() {
-                var isMobile = window.innerWidth < 600;
-                var panelWidth = isMobile ? '95%' : '500px';
-                var maxWidth = isMobile ? '95%' : '500px';
-                var topPos = isMobile ? '10px' : '50px';
-                navPanel.style.position = 'fixed';
-                navPanel.style.left = '50%';
-                navPanel.style.top = topPos;
-                navPanel.style.transform = 'translateX(-50%)';
-                navPanel.style.bottom = 'auto';
-                navPanel.style.right = 'auto';
-                navPanel.style.width = panelWidth;
-                navPanel.style.maxWidth = maxWidth;
-                navPanel.style.maxHeight = '80vh';
-                navPanel.style.borderRadius = '16px';
-                navPanel.style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)';
-                navPanel.style.border = '1px solid #ddd';
-                navPanel.style.overflowY = 'auto';
-            }, 50);
         }
 
         function updateMiniBar() {
@@ -2456,7 +2605,7 @@
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🆘 SOS → Αποστολή θέσης με SMS/Email/112\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με:\n   • Αυτόματο SNAP στη διαδρομή (>50μ απόκλιση)\n   • Ηχητική ειδοποίηση για απόκλιση\n   • Επαναφορά όταν το στίγμα φεύγει από την οθόνη\n   • Διατήρηση του zoom επιπέδου σας\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών\n📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n🔊 Ηχητικές ειδοποιήσεις για απομάκρυνση από τη διαδρομή\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🆘 SOS → Αποστολή θέσης με SMS/Email/112\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με:\n   • Αυτόματο SNAP στη διαδρομή (>50μ απόκλιση)\n   • Ηχητική ειδοποίηση + ΔΟΝΗΣΗ (λειτουργεί και με σβηστή οθόνη)\n   • Επαναφορά όταν το στίγμα φεύγει από την οθόνη\n   • ΠΕΡΙΣΤΡΟΦΗ χάρτη προς την κατεύθυνση κίνησης\n   • Διατήρηση του zoom επιπέδου σας\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών\n📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n🔊 Ηχητικές ειδοποιήσεις + ΔΟΝΗΣΗ για απομάκρυνση\n🧭 ΠΕΡΙΣΤΡΟΦΗ χάρτη με βάση την κατεύθυνση σας\n📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -2664,8 +2813,10 @@
         } catch(e) {}
         
         console.log('📍 Η πλοήγηση κάνει SNAP στη διαδρομή αν απομακρυνθείτε >50μ');
-        console.log('🔊 Ηχητική ειδοποίηση για απομάκρυνση από τη διαδρομή');
+        console.log('🔊 Ηχητική ειδοποίηση + ΔΟΝΗΣΗ για απομάκρυνση (λειτουργεί και με σβηστή οθόνη)');
         console.log('🔄 Αυτόματη επαναφορά όταν το στίγμα φεύγει από την οθόνη');
+        console.log('🧭 ΠΕΡΙΣΤΡΟΦΗ χάρτη προς την κατεύθυνση κίνησης');
+        console.log('📍 Πατήστε το κουμπί 🧭 για επαναφορά περιστροφής');
     </script>
 </body>
 </html>
