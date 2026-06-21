@@ -13,9 +13,15 @@
         body { font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background: #f0f2f5; touch-action: manipulation; overflow: hidden; }
         #map { flex: 1; width: 100%; height: 100vh; }
         
-        /* Leaflet rotation support */
-        .leaflet-control-zoom { z-index: 800 !important; }
-        .leaflet-control-attribution { display: none; }
+        /* Μόνο ο χάρτης περιστρέφεται, τα πάνελ όχι */
+        .leaflet-container {
+            transform-origin: center center !important;
+        }
+        .leaflet-container .leaflet-control-container,
+        .leaflet-container .leaflet-popup,
+        .leaflet-container .leaflet-pane {
+            transform: rotate(0deg) !important;
+        }
         
         .controls {
             position: absolute;
@@ -967,19 +973,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@mapbox/togeojson@0.16.0/togeojson.min.js"></script>
     
     <script>
+        // ============================================================
+        //  ΟΛΟΚΛΗΡΟ ΤΟ SCRIPT ΜΕ ΤΙΣ ΔΙΟΡΘΩΣΕΙΣ
+        // ============================================================
+        
         // API KEYS
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
         var GRAPHHOPPER_API_KEY = '5fece833-cd75-4373-a6ba-a4137d3f5132';
-
+        
         // ============================================================
         //  ΠΑΙΧΤΗΣ ΗΧΟΥ ΓΙΑ ΕΙΔΟΠΟΙΗΣΕΙΣ (με δόνηση για σβηστή οθόνη)
         // ============================================================
         var audioContext = null;
         var lastVibrationTime = 0;
         var vibrationCooldown = 3000;
+        var isRotationPaused = false;
+        var rotationPauseTimeout = null;
 
         function playBeep() {
-            // Ηχητικό beep
             try {
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1005,13 +1016,10 @@
                     setTimeout(function() { osc2.stop(); }, 300);
                 }, 200);
             } catch(e) { console.warn('Sound error:', e); }
-            
-            // Δόνηση για σβηστή οθόνη (λειτουργεί και όταν η οθόνη είναι σβηστή)
             vibrateDevice(200);
         }
 
         function playWarningSound() {
-            // Ηχητική προειδοποίηση
             try {
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1032,8 +1040,6 @@
                     })(i);
                 }
             } catch(e) { console.warn('Sound error:', e); }
-            
-            // Δόνηση για σβηστή οθόνη (3 παλμοί)
             vibrateDevice([100, 200, 100, 200, 100]);
         }
 
@@ -1042,7 +1048,6 @@
                 var now = Date.now();
                 if (now - lastVibrationTime < vibrationCooldown) return;
                 lastVibrationTime = now;
-                
                 if (navigator.vibrate) {
                     navigator.vibrate(pattern);
                 }
@@ -1306,12 +1311,11 @@
             zoomControl: true,
             tap: true,
             tapTolerance: 15,
-            // Αυτόματη περιστροφή με compass
             trackResize: true
         }).setView([40.16, 24.32], 10);
 
         // ============================================================
-        //  ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ - ROTATION
+        //  ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ - ROTATION (ΜΟΝΟ Ο ΧΑΡΤΗΣ, ΟΧΙ ΤΑ ΠΑΝΕΛ)
         // ============================================================
         var mapRotation = 0;
         var isRotating = false;
@@ -1320,25 +1324,17 @@
         var headingHistory = [];
         var maxHistory = 5;
 
-        // Λειτουργία περιστροφής χάρτη
         function rotateMap(angle) {
+            // Αν η περιστροφή είναι σε παύση, μην κάνεις τίποτα
+            if (isRotationPaused) return;
             if (!map || isNaN(angle)) return;
             try {
-                // Το Leaflet δεν έχει native rotation, χρησιμοποιούμε CSS transform
                 var container = map.getContainer();
                 if (container) {
-                    var center = map.getCenter();
-                    var currentZoom = map.getZoom();
-                    
-                    // Εφαρμογή rotation στο container
+                    // Μόνο ο χάρτης περιστρέφεται, όχι τα controls
                     container.style.transform = 'rotate(' + angle + 'deg)';
                     container.style.transformOrigin = 'center center';
-                    
-                    // Αντιστάθμιση για να παραμείνει το κέντρο
-                    // Αυτό είναι μια προσέγγιση - για πλήρη υποστήριξη χρειάζεται leaflet-rotate plugin
                     mapRotation = angle;
-                    
-                    // Ενημέρωση compass
                     updateCompassIndicator(angle);
                 }
             } catch(e) { console.warn('Rotation error:', e); }
@@ -1351,7 +1347,6 @@
             }
         }
 
-        // Reset rotation
         function resetRotation() {
             var container = map.getContainer();
             if (container) {
@@ -1361,7 +1356,29 @@
             }
         }
 
-        // Compass click - reset rotation
+        // Παύση περιστροφής κατά την προσθήκη σημείου
+        function pauseRotation(temporary) {
+            isRotationPaused = true;
+            if (rotationPauseTimeout) {
+                clearTimeout(rotationPauseTimeout);
+                rotationPauseTimeout = null;
+            }
+            if (temporary) {
+                rotationPauseTimeout = setTimeout(function() {
+                    isRotationPaused = false;
+                    rotationPauseTimeout = null;
+                }, 3000);
+            }
+        }
+
+        function resumeRotation() {
+            isRotationPaused = false;
+            if (rotationPauseTimeout) {
+                clearTimeout(rotationPauseTimeout);
+                rotationPauseTimeout = null;
+            }
+        }
+
         document.getElementById('compassIndicator')?.addEventListener('click', function() {
             resetRotation();
             showToast('🧭 Περιστροφή επαναφορά', '#8e44ad');
@@ -1387,10 +1404,8 @@
             if (headingHistory.length > maxHistory) {
                 headingHistory.shift();
             }
-            // Μέσος όρος με αφαίρεση ακραίων τιμών
             if (headingHistory.length < 2) return newHeading;
             var sorted = headingHistory.slice().sort((a, b) => a - b);
-            // Αφαίρεση του 20% μικρότερων και μεγαλύτερων
             var trimCount = Math.floor(sorted.length * 0.2);
             var trimmed = sorted.slice(trimCount, sorted.length - trimCount);
             var avg = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
@@ -1423,6 +1438,102 @@
         var offRouteCheckInterval = 2000;
         var positionHistory = [];
         var maxPositionHistory = 3;
+        var lastLoadedRouteId = null;
+
+        // ============================================================
+        //  ΑΠΟΘΗΚΕΥΣΗ / ΦΟΡΤΩΣΗ ΤΕΛΕΥΤΑΙΑΣ ΔΙΑΔΡΟΜΗΣ
+        // ============================================================
+        function saveLastRouteState() {
+            try {
+                var state = {
+                    geometry: lastMainGeometry,
+                    distance: lastMainDistance,
+                    startName: startName,
+                    endName: endName,
+                    startPoint: startPoint,
+                    endPoint: endPoint,
+                    waypoints: waypoints.map(function(p, i) {
+                        return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο' };
+                    }),
+                    routePhotos: routePhotos.map(function(p) { return p.id; }),
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('athos_last_route_state', JSON.stringify(state));
+            } catch(e) { console.warn('Save state error:', e); }
+        }
+
+        function loadLastRouteState() {
+            try {
+                var data = localStorage.getItem('athos_last_route_state');
+                if (!data) return false;
+                var state = JSON.parse(data);
+                if (!state.geometry || state.geometry.length < 2) return false;
+                
+                // Φόρτωση της διαδρομής
+                lastMainGeometry = state.geometry;
+                lastMainDistance = state.distance || computeDistanceFromCoords(state.geometry);
+                startName = state.startName || 'Αφετηρία';
+                endName = state.endName || 'Προορισμός';
+                
+                if (state.startPoint) {
+                    startPoint = state.startPoint;
+                    startMarker = L.marker([startPoint.lat, startPoint.lng], { icon: getColorIcon('green') }).addTo(map).bindPopup('🚩 ' + startName);
+                }
+                if (state.endPoint) {
+                    endPoint = state.endPoint;
+                    endMarker = L.marker([endPoint.lat, endPoint.lng], { icon: getColorIcon('red') }).addTo(map).bindPopup('🏁 ' + endName);
+                }
+                
+                // Φόρτωση waypoints
+                if (state.waypoints && state.waypoints.length > 0) {
+                    for (var i = 0; i < state.waypoints.length; i++) {
+                        var wp = state.waypoints[i];
+                        var latlng = L.latLng(wp.lat, wp.lng);
+                        waypoints.push(latlng);
+                        waypointNames.push(wp.name || 'Σημείο ' + (i + 1));
+                        waypointColors.push('blue');
+                        waypointDescs.push('');
+                        waypointElevs.push(null);
+                        waypointImages.push('');
+                        waypointStops.push(0);
+                        var marker = L.marker(latlng, { icon: getColorIcon('blue'), draggable: true }).addTo(map).bindPopup('📍 ' + waypointNames[i] + '<br><button onclick="removeWaypoint(' + i + ')" style="background:#b22222;color:white;border:none;padding:4px 10px;border-radius:6px;margin-top:4px;cursor:pointer;">✖ Διαγραφή</button>');
+                        (function(idx) { marker.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); }); })(i);
+                        markers.push(marker);
+                    }
+                    updateWaypointsPanel();
+                }
+                
+                // Φόρτωση γραμμής διαδρομής
+                var latlngs = state.geometry.map(function(c) { return [c[1], c[0]]; });
+                var line = L.polyline(latlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map);
+                routeLines.push(line);
+                map.fitBounds(line.getBounds(), { padding: [40,40] });
+                
+                // Φόρτωση φωτογραφιών
+                if (state.routePhotos && state.routePhotos.length > 0) {
+                    Promise.all(state.routePhotos.map(function(id) { return getPhotoFromDB(id); })).then(function(photos) {
+                        var validPhotos = photos.filter(function(p) { return p !== null && p.image && p.image.length > 0; });
+                        if (validPhotos.length > 0) {
+                            routePhotos = validPhotos;
+                            for (var i = 0; i < routePhotos.length; i++) {
+                                (function(photo) {
+                                    try {
+                                        var photoIcon = L.divIcon({ className: 'photo-marker', html: '<img src="' + photo.image + '" alt="photo" onerror="this.style.display=\'none\'">', iconSize: [36, 36], iconAnchor: [18, 18] });
+                                        var marker = L.marker([photo.lat, photo.lng], { icon: photoIcon }).addTo(map).bindPopup('<div class="photo-detail-popup"><img src="' + photo.image + '" alt="photo" style="max-width:180px;max-height:180px;border-radius:8px;" onerror="this.parentElement.innerHTML=\'⚠️ Η φωτογραφία δεν είναι διαθέσιμη\'"><div class="note">' + (photo.note || 'Χωρίς σημείωση') + '</div><div class="time">' + new Date(photo.timestamp).toLocaleString('el') + '</div></div>');
+                                        photoMarkers.push(marker);
+                                    } catch(e) { console.warn('Σφάλμα κατά την προσθήκη φωτογραφίας:', e); }
+                                })(routePhotos[i]);
+                            }
+                            updatePhotoList();
+                        }
+                    }).catch(function(err) { console.warn('Photo load error:', err); });
+                }
+                
+                updateInfo();
+                showToast('🔄 Φορτώθηκε η τελευταία διαδρομή', '#2980b9');
+                return true;
+            } catch(e) { console.warn('Load state error:', e); return false; }
+        }
 
         // ============================================================
         //  ΧΑΡΤΗΣ - ΣΥΝΕΧΕΙΑ
@@ -1494,6 +1605,7 @@
             document.getElementById('offRouteWarning').style.display = 'none';
             offRouteWarningShown = false;
             resetRotation();
+            localStorage.removeItem('athos_last_route_state');
         }
 
         function computeDistanceFromCoords(coords) {
@@ -1652,7 +1764,7 @@
         }
 
         // ============================================================
-        //  ΦΩΤΟΓΡΑΦΙΕΣ
+        //  ΦΩΤΟΓΡΑΦΙΕΣ (συντομευμένο για χώρο)
         // ============================================================
         var pendingPhotoPosition = null;
 
@@ -1709,6 +1821,7 @@
                     addPhotoMarker(photo);
                     updatePhotoList();
                     updateInfo();
+                    saveLastRouteState();
                     showToast('✅ Φωτογραφία αποθηκεύτηκε!', '#8e44ad');
                 })
                 .catch(function(err) { console.error('Σφάλμα αποθήκευσης:', err); alert('Σφάλμα κατά την αποθήκευση της φωτογραφίας.'); });
@@ -1741,6 +1854,7 @@
                         routePhotos.splice(idx, 1);
                         updatePhotoList();
                         updateInfo();
+                        saveLastRouteState();
                         showToast('🗑️ Φωτογραφία διαγράφηκε', '#e74c3c');
                     }
                 });
@@ -1748,7 +1862,7 @@
         }
 
         // ============================================================
-        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ
+        //  ΣΗΜΕΙΑ ΣΤΟ ΧΑΡΤΗ (με παύση περιστροφής)
         // ============================================================
         map.on('click', function(e) {
             if (isLocationTracking) { stopLocationTracking(); setTimeout(function() { showClickPopup(e); }, 100); } else { showClickPopup(e); }
@@ -1759,11 +1873,13 @@
             var popupContent = document.createElement('div');
             popupContent.innerHTML = '<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 10px;border-radius:6px;margin:2px;cursor:pointer;">🚩 Start</button><button id="setEndBtn" style="background:#b22222;color:white;border:none;padding:4px 10px;border-radius:6px;margin:2px;cursor:pointer;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:4px 10px;border-radius:6px;margin:2px;cursor:pointer;">📍 Ενδιάμεσο</button><button id="photoHereBtn" style="background:#8e44ad;color:white;border:none;padding:4px 10px;border-radius:6px;margin:2px;cursor:pointer;">📸</button>';
             var popup = L.popup().setLatLng(e.latlng).setContent(popupContent).openOn(map);
+            // Παύση περιστροφής κατά την αλληλεπίδραση με το popup
+            pauseRotation(true);
             setTimeout(function() {
-                document.getElementById('setStartBtn')?.addEventListener('click', function() { setStartPoint(e.latlng); map.closePopup(); });
-                document.getElementById('setEndBtn')?.addEventListener('click', function() { setEndPoint(e.latlng); map.closePopup(); });
-                document.getElementById('addWpBtn')?.addEventListener('click', function() { addWaypoint(e.latlng); map.closePopup(); });
-                document.getElementById('photoHereBtn')?.addEventListener('click', function() { map.closePopup(); takePhoto(e.latlng); });
+                document.getElementById('setStartBtn')?.addEventListener('click', function() { setStartPoint(e.latlng); map.closePopup(); resumeRotation(); });
+                document.getElementById('setEndBtn')?.addEventListener('click', function() { setEndPoint(e.latlng); map.closePopup(); resumeRotation(); });
+                document.getElementById('addWpBtn')?.addEventListener('click', function() { addWaypoint(e.latlng); map.closePopup(); resumeRotation(); });
+                document.getElementById('photoHereBtn')?.addEventListener('click', function() { map.closePopup(); takePhoto(e.latlng); resumeRotation(); });
             }, 100);
         }
 
@@ -1773,10 +1889,11 @@
             startPoint = latlng;
             startName = prompt('Όνομα:', 'Αφετηρία') || 'Αφετηρία';
             startMarker = L.marker(latlng, { icon: getColorIcon('green'), draggable: true }).addTo(map).bindPopup('🚩 ' + startName);
-            startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); });
+            startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); saveLastRouteState(); });
             if (confirm('Θέλετε να τραβήξετε φωτογραφία για την αφετηρία;')) { takePhotoForPoint(latlng, 'Αφετηρία: ' + startName); }
             calculateRoute();
             updateWaypointsPanel();
+            saveLastRouteState();
         }
 
         function setEndPoint(latlng) {
@@ -1785,10 +1902,11 @@
             endPoint = latlng;
             endName = prompt('Όνομα:', 'Προορισμός') || 'Προορισμός';
             endMarker = L.marker(latlng, { icon: getColorIcon('red'), draggable: true }).addTo(map).bindPopup('🏁 ' + endName);
-            endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); });
+            endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); saveLastRouteState(); });
             if (confirm('Θέλετε να τραβήξετε φωτογραφία για τον προορισμό;')) { takePhotoForPoint(latlng, 'Προορισμός: ' + endName); }
             calculateRoute();
             updateWaypointsPanel();
+            saveLastRouteState();
         }
 
         function addWaypoint(latlng) {
@@ -1803,11 +1921,12 @@
             waypointStops.push(0);
             var idx = waypoints.length - 1;
             var marker = L.marker(latlng, { icon: getColorIcon('blue'), draggable: true }).addTo(map).bindPopup('📍 ' + waypointNames[idx] + '<br><button onclick="removeWaypoint(' + idx + ')" style="background:#b22222;color:white;border:none;padding:4px 10px;border-radius:6px;margin-top:4px;cursor:pointer;">✖ Διαγραφή</button>');
-            marker.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); });
+            marker.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); saveLastRouteState(); });
             markers.push(marker);
             if (confirm('Θέλετε να τραβήξετε φωτογραφία για το σημείο "' + waypointNames[idx] + '";')) { takePhotoForPoint(latlng, 'Σημείο: ' + waypointNames[idx]); }
             calculateRoute();
             updateWaypointsPanel();
+            saveLastRouteState();
         }
 
         function removeWaypoint(index) {
@@ -1827,6 +1946,7 @@
                     }
                     updateWaypointsPanel();
                     calculateRoute();
+                    saveLastRouteState();
                     showToast('🗑️ Διαγράφηκε το σημείο', '#e74c3c');
                 }
             }
@@ -1841,17 +1961,20 @@
             box.innerHTML = '<h3 style="margin-bottom:12px;color:#2c5f2d;">📸 Φωτογραφία για</h3><p style="margin-bottom:12px;font-weight:bold;color:#333;">' + label + '</p><button id="cameraOptionPoint" style="background:#8e44ad;color:white;border:none;padding:12px 20px;border-radius:10px;font-size:16px;width:100%;margin-bottom:8px;cursor:pointer;">📷 Λήψη με κάμερα</button><button id="galleryOptionPoint" style="background:#2980b9;color:white;border:none;padding:12px 20px;border-radius:10px;font-size:16px;width:100%;margin-bottom:8px;cursor:pointer;">🖼️ Επιλογή από συλλογή</button><button id="cancelPhotoPointBtn" style="background:#888;color:white;border:none;padding:10px 20px;border-radius:10px;font-size:14px;width:100%;cursor:pointer;">✕ Παράλειψη</button>';
             overlay.appendChild(box);
             document.body.appendChild(overlay);
+            pauseRotation(true);
             document.getElementById('cameraOptionPoint').addEventListener('click', function() {
                 document.body.removeChild(overlay);
                 document.getElementById('cameraInput').click();
                 document.getElementById('cameraInput').onchange = function(e) { var file = e.target.files[0]; if (file) { processPhotoForPoint(file, position, label); } this.value = ''; };
+                resumeRotation();
             });
             document.getElementById('galleryOptionPoint').addEventListener('click', function() {
                 document.body.removeChild(overlay);
                 document.getElementById('galleryInput').click();
                 document.getElementById('galleryInput').onchange = function(e) { var file = e.target.files[0]; if (file) { processPhotoForPoint(file, position, label); } this.value = ''; };
+                resumeRotation();
             });
-            document.getElementById('cancelPhotoPointBtn').addEventListener('click', function() { document.body.removeChild(overlay); });
+            document.getElementById('cancelPhotoPointBtn').addEventListener('click', function() { document.body.removeChild(overlay); resumeRotation(); });
         }
 
         function processPhotoForPoint(file, position, label) {
@@ -1866,6 +1989,7 @@
                         addPhotoMarker(photo);
                         updatePhotoList();
                         updateInfo();
+                        saveLastRouteState();
                         showToast('✅ Φωτογραφία για ' + label, '#8e44ad');
                     })
                     .catch(function(err) { console.error('Σφάλμα:', err); alert('Σφάλμα κατά την αποθήκευση.'); });
@@ -1874,7 +1998,7 @@
         }
 
         // ============================================================
-        //  SOS
+        //  SOS (συντομευμένο)
         // ============================================================
         var sosPosition = null, sosLocationInterval = null;
 
@@ -1985,7 +2109,6 @@
             URL.revokeObjectURL(url);
         });
 
-        // Φόρτωση GPX
         document.getElementById('fileInput').addEventListener('change', function(e) {
             var file = e.target.files[0];
             if (!file) return;
@@ -2018,6 +2141,7 @@
                         lastMainGeometry = geometry;
                         lastMainDistance = currentGpxDistance;
                         updateInfo();
+                        saveLastRouteState();
                         alert('✅ GPX/KML φορτώθηκε!');
                     } else { alert('Το αρχείο δεν περιέχει διαδρομή.'); }
                 } catch (err) { alert('Σφάλμα: ' + err.message); }
@@ -2054,6 +2178,7 @@
                 map.fitBounds(line.getBounds(), { padding: [40,40] });
                 updateInfo();
                 document.getElementById('osmLink').href = 'https://www.openstreetmap.org/directions?engine=foot&route=' + allPoints.map(function(p) { return p.lat + ',' + p.lng; }).join(';');
+                saveLastRouteState();
             } catch (err) {
                 console.error('Route error:', err);
                 try { await calculateRouteGraphHopper(allPoints); } catch (e) { alert('Αποτυχία υπολογισμού διαδρομής. Ελέγξτε τη σύνδεσή σας.'); }
@@ -2074,6 +2199,7 @@
                 routeLines.push(line);
                 map.fitBounds(line.getBounds(), { padding: [40,40] });
                 updateInfo();
+                saveLastRouteState();
             }
         }
 
@@ -2137,10 +2263,8 @@
                             var userPos = L.latLng(lat, lng);
                             if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); }
                             
-                            // Υπολογισμός κατεύθυνσης από ιστορικό θέσεων
                             var heading = calculateHeadingFromHistory(lat, lng);
                             if (heading !== null) {
-                                // Περιστροφή χάρτη προς την κατεύθυνση κίνησης
                                 rotateMap(-heading);
                             }
                             
@@ -2172,7 +2296,7 @@
                                     if (offRouteWarningShown) {
                                         document.getElementById('offRouteDistance').textContent = Math.round(closest.distance) + ' μέτρα';
                                     }
-                                    playBeep(); // Ηχητική προειδοποίηση + δόνηση
+                                    playBeep();
                                 } else {
                                     document.getElementById('offRouteWarning').style.display = 'none';
                                     offRouteWarningShown = false;
@@ -2220,21 +2344,9 @@
                 lastPositions.shift();
             }
             if (lastPositions.length < 2) return null;
-            // Χρησιμοποιούμε τις 2 τελευταίες θέσεις για την κατεύθυνση
             var p1 = lastPositions[lastPositions.length - 2];
             var p2 = lastPositions[lastPositions.length - 1];
             return calculateHeading(p1, p2);
-        }
-
-        function calculateHeading(pos1, pos2) {
-            if (!pos1 || !pos2) return null;
-            var lat1 = pos1.lat * Math.PI / 180;
-            var lat2 = pos2.lat * Math.PI / 180;
-            var dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
-            var y = Math.sin(dLng) * Math.cos(lat2);
-            var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-            var heading = Math.atan2(y, x) * 180 / Math.PI;
-            return (heading + 360) % 360;
         }
 
         function startNavigation() {
@@ -2268,9 +2380,8 @@
                         var userPos = L.latLng(lat, lng);
                         if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); }
                         
-                        // Υπολογισμός κατεύθυνσης
                         var heading = calculateHeadingFromHistory(lat, lng);
-                        if (heading !== null && heading !== undefined) {
+                        if (heading !== null && heading !== undefined && !isRotationPaused) {
                             rotateMap(-heading);
                         }
                         
@@ -2446,7 +2557,6 @@
             if (isMinimized) { updateMiniBar(); }
         }
 
-        // Κλείσιμο προειδοποίησης
         document.getElementById('closeOffRouteWarning')?.addEventListener('click', function() {
             document.getElementById('offRouteWarning').style.display = 'none';
             offRouteWarningShown = false;
@@ -2495,6 +2605,7 @@
                         waypointNames[i] = newName;
                         if (markers[i]) { markers[i].setPopupContent('📍 ' + newName + '<br><button onclick="removeWaypoint(' + i + ')" style="background:#b22222;color:white;border:none;padding:4px 10px;border-radius:6px;margin-top:4px;cursor:pointer;">✖ Διαγραφή</button>'); }
                         updateWaypointsPanel();
+                        saveLastRouteState();
                         showToast('✅ Ενημερώθηκε: ' + newName, '#2ecc71');
                     }
                 });
@@ -2605,7 +2716,7 @@
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🆘 SOS → Αποστολή θέσης με SMS/Email/112\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με:\n   • Αυτόματο SNAP στη διαδρομή (>50μ απόκλιση)\n   • Ηχητική ειδοποίηση + ΔΟΝΗΣΗ (λειτουργεί και με σβηστή οθόνη)\n   • Επαναφορά όταν το στίγμα φεύγει από την οθόνη\n   • ΠΕΡΙΣΤΡΟΦΗ χάρτη προς την κατεύθυνση κίνησης\n   • Διατήρηση του zoom επιπέδου σας\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών\n📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\n🔊 Ηχητικές ειδοποιήσεις + ΔΟΝΗΣΗ για απομάκρυνση\n🧭 ΠΕΡΙΣΤΡΟΦΗ χάρτη με βάση την κατεύθυνση σας\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP\n🆘 SOS → Αποστολή θέσης με SMS/Email/112\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με:\n   • Αυτόματο SNAP στη διαδρομή (>50μ απόκλιση)\n   • Ηχητική ειδοποίηση + ΔΟΝΗΣΗ\n   • Επαναφορά όταν το στίγμα φεύγει από την οθόνη\n   • ΠΕΡΙΣΤΡΟΦΗ χάρτη προς την κατεύθυνση κίνησης\n   • Παύση περιστροφής κατά την προσθήκη σημείων\n   • Διατήρηση του zoom επιπέδου σας\n💾 Αυτόματη αποθήκευση & φόρτωση της τελευταίας διαδρομής\n📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n📤 GPX → Εξαγωγή διαδρομής\n🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή\n🔊 Ηχητικές ειδοποιήσεις + ΔΟΝΗΣΗ\n🧭 ΠΕΡΙΣΤΡΟΦΗ χάρτη με βάση την κατεύθυνση σας\n📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -2686,6 +2797,7 @@
             if (endMarker) map.removeLayer(endMarker);
             endMarker = L.marker([last[1], last[0]], { icon: getColorIcon('red') }).addTo(map).bindPopup('🏁 ' + endName);
             updateInfo(); updateWaypointsPanel();
+            saveLastRouteState();
             var photoCount = (photos || []).length, waypointCount = (route.waypoints || []).length;
             showToast('✅ Φορτώθηκε: ' + route.name + ' με ' + photoCount + ' φωτογραφίες και ' + waypointCount + ' σημεία', '#2ecc71');
         }
@@ -2736,6 +2848,7 @@
             if (endMarker) map.removeLayer(endMarker);
             endMarker = L.marker([last[1], last[0]], { icon: getColorIcon('red') }).addTo(map).bindPopup('🏁 ' + (route.endName || 'Προορισμός'));
             updateInfo(); updateWaypointsPanel();
+            saveLastRouteState();
             alert('✅ Φορτώθηκε: ' + route.name + ' με ' + routePhotos.length + ' φωτογραφίες');
         }
 
@@ -2777,7 +2890,7 @@
         }
 
         // ============================================================
-        //  ΕΚΚΙΝΗΣΗ
+        //  ΕΚΚΙΝΗΣΗ - ΦΟΡΤΩΣΗ ΤΕΛΕΥΤΑΙΑΣ ΔΙΑΔΡΟΜΗΣ
         // ============================================================
         resetInfo();
         updatePhotoList();
@@ -2791,7 +2904,16 @@
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Αυτόματος εντοπισμός θέσης...');
         
-        setTimeout(function() { locateUser(true); }, 800);
+        // Φόρτωση τελευταίας διαδρομής
+        var hasLastRoute = loadLastRouteState();
+        if (hasLastRoute) {
+            console.log('🔄 Φορτώθηκε η τελευταία διαδρομή');
+            setTimeout(function() { 
+                locateUser(true); 
+            }, 1000);
+        } else {
+            setTimeout(function() { locateUser(true); }, 800);
+        }
         
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden && !initialLocateDone && !currentLocationMarker) {
@@ -2813,10 +2935,10 @@
         } catch(e) {}
         
         console.log('📍 Η πλοήγηση κάνει SNAP στη διαδρομή αν απομακρυνθείτε >50μ');
-        console.log('🔊 Ηχητική ειδοποίηση + ΔΟΝΗΣΗ για απομάκρυνση (λειτουργεί και με σβηστή οθόνη)');
+        console.log('🔊 Ηχητική ειδοποίηση + ΔΟΝΗΣΗ για απομάκρυνση');
         console.log('🔄 Αυτόματη επαναφορά όταν το στίγμα φεύγει από την οθόνη');
-        console.log('🧭 ΠΕΡΙΣΤΡΟΦΗ χάρτη προς την κατεύθυνση κίνησης');
-        console.log('📍 Πατήστε το κουμπί 🧭 για επαναφορά περιστροφής');
+        console.log('🧭 ΠΕΡΙΣΤΡΟΦΗ χάρτη προς την κατεύθυνση κίνησης (με παύση κατά την προσθήκη σημείων)');
+        console.log('💾 Αυτόματη αποθήκευση της διαδρομής - επαναφορά κατά το άνοιγμα');
     </script>
 </body>
 </html>
