@@ -710,6 +710,31 @@
             margin-bottom: -5px;
         }
         
+        /* Στυλ για το κουμπί περιστροφής πυξίδας */
+        .compass-btn {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+        .compass-btn.active {
+            background: #e67e22;
+            color: white;
+            border-color: #e67e22;
+        }
+        
         @media (max-width: 600px) {
             .controls button, .controls select, .controls input { padding: 4px 6px; font-size: 10px; min-height: 28px; }
             .controls { gap: 3px; padding: 4px 6px; }
@@ -761,6 +786,7 @@
             button[title]:hover::after, input[title]:hover::after, select[title]:hover::after {
                 font-size: 8px; padding: 3px 6px; white-space: normal; max-width: 150px;
             }
+            .compass-btn { top: 70px; right: 5px; width: 32px; height: 32px; font-size: 16px; }
         }
         @media (min-width: 768px) {
             .controls { max-width: 95%; left: 50%; transform: translateX(-50%); }
@@ -781,6 +807,9 @@
 </head>
 <body>
     <div id="map"></div>
+
+    <!-- Κουμπί πυξίδας για γρήγορη επαναφορά προσανατολισμού -->
+    <button class="compass-btn" id="compassBtn" title="Προσανατολισμός χάρτη στον Βορρά / Περιστροφή">🧭</button>
 
     <div id="tileProgress"><div>📥 Κατέβασμα χάρτη...</div><div class="bar"><div class="fill" id="tileFill"></div></div><div id="tilePercent" style="font-size:11px; margin-top:4px;">0%</div></div>
 
@@ -1101,6 +1130,25 @@
             });
         }
 
+        function deleteRouteFromList(id) {
+            if (confirm('Θέλετε να διαγράψετε αυτή τη διαδρομή;')) {
+                var savedRoutes = getSavedRoutes();
+                var idx = savedRoutes.findIndex(function(r) { return r.id === id; });
+                if (idx !== -1) {
+                    savedRoutes.splice(idx, 1);
+                    saveRoutesToStorage(savedRoutes);
+                }
+                var routes = JSON.parse(localStorage.getItem('athos_routes') || '[]');
+                var idx2 = routes.findIndex(function(r) { return r.id === id; });
+                if (idx2 !== -1) {
+                    routes.splice(idx2, 1);
+                    localStorage.setItem('athos_routes', JSON.stringify(routes));
+                }
+                showRoutesList();
+                showToast('🗑️ Διαδρομή διαγράφηκε', '#e74c3c');
+            }
+        }
+
         function showRouteDropdown() {
             showRoutesList();
             document.getElementById('routeDropdownContainer').classList.add('active');
@@ -1135,6 +1183,86 @@
         var navStopBtn = document.getElementById('navStopBtn');
         var pois = [], poiNames = [], poiDescs = [], poiColors = [], poiElevs = [], poiImages = [], poiMarkers = [];
         var currentGpxGeometry = null, currentGpxStartName = 'Αφετηρία GPX', currentGpxEndName = 'Προορισμός GPX', currentGpxLayer = null, currentGpxDistance = null;
+        
+        // ============================================================
+        //  ΠΥΞΙΔΑ & ΠΡΟΣΑΝΑΤΟΛΙΣΜΟΣ ΧΑΡΤΗ
+        // ============================================================
+        var currentHeading = null;           // Τρέχουσα κατεύθυνση συσκευής σε μοίρες
+        var autoRotateMap = false;           // Αν είναι ενεργή η αυτόματη περιστροφή
+        var compassBtn = document.getElementById('compassBtn');
+        
+        // Ενεργοποίηση/Απενεργοποίηση αυτόματης περιστροφής
+        compassBtn.addEventListener('click', function() {
+            autoRotateMap = !autoRotateMap;
+            if (autoRotateMap) {
+                compassBtn.classList.add('active');
+                compassBtn.title = 'Κλείδωμα προσανατολισμού στον Βορρά';
+                requestOrientationPermission();
+                showToast('🧭 Αυτόματη περιστροφή χάρτη ΕΝΕΡΓΗ', '#e67e22');
+            } else {
+                compassBtn.classList.remove('active');
+                compassBtn.title = 'Προσανατολισμός χάρτη στην πυξίδα';
+                map.setBearing(0); // Επαναφορά στον Βορρά
+                showToast('🧭 Ο χάρτης επέστρεψε στον Βορρά', '#888');
+            }
+        });
+        
+        // Ζήτηση άδειας για προσανατολισμό (iOS 13+)
+        function requestOrientationPermission() {
+            if (window.DeviceOrientationEvent) {
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(function(permissionState) {
+                            if (permissionState === 'granted') {
+                                window.addEventListener('deviceorientation', handleOrientation, true);
+                            }
+                        })
+                        .catch(console.error);
+                } else {
+                    // Android και παλαιότερα iOS
+                    window.addEventListener('deviceorientation', handleOrientation, true);
+                }
+            }
+        }
+        
+        // Χειρισμός δεδομένων προσανατολισμού
+        function handleOrientation(event) {
+            var heading;
+            
+            // Για iOS χρησιμοποιούμε το webkitCompassHeading
+            if (event.webkitCompassHeading !== undefined) {
+                heading = event.webkitCompassHeading;
+            } 
+            // Για Android χρησιμοποιούμε το alpha (είναι η πυξίδα)
+            else if (event.alpha !== null && event.alpha !== undefined) {
+                heading = 360 - event.alpha; // Μετατροπή σε μοίρες πυξίδας
+            } else {
+                return; // Δεν έχουμε δεδομένα πυξίδας
+            }
+            
+            // Φιλτράρισμα θορύβου - μικρές αλλαγές αγνοούνται
+            if (currentHeading !== null && Math.abs(heading - currentHeading) < 2) {
+                return;
+            }
+            
+            currentHeading = heading;
+            
+            // Ενημέρωση περιστροφής χάρτη αν είναι ενεργή η αυτόματη περιστροφή
+            if (autoRotateMap && isNavigating) {
+                map.setBearing(currentHeading);
+            }
+            
+            // Περιστροφή του marker θέσης χρήστη
+            if (currentLocationMarker && currentLocationMarker.setRotationAngle) {
+                currentLocationMarker.setRotationAngle(currentHeading);
+            }
+            if (userPositionMarker && userPositionMarker.setRotationAngle) {
+                userPositionMarker.setRotationAngle(currentHeading);
+            }
+        }
+        
+        // Ενεργοποίηση προσανατολισμού κατά την έναρξη
+        requestOrientationPermission();
 
         // ============================================================
         //  ΧΑΡΤΗΣ - ΣΥΝΕΧΕΙΑ
@@ -1203,6 +1331,8 @@
             if (userPositionMarker) { map.removeLayer(userPositionMarker); userPositionMarker = null; }
             if (navigationWatchId) { navigator.geolocation.clearWatch(navigationWatchId); navigationWatchId = null; }
             document.getElementById('miniNavBar').classList.remove('active');
+            // Επαναφορά προσανατολισμού χάρτη
+            map.setBearing(0);
         }
 
         function computeDistanceFromCoords(coords) {
@@ -1236,13 +1366,33 @@
                 locationWatchId = navigator.geolocation.watchPosition(
                     function(pos) {
                         var lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
+                        // Χρήση heading από το geolocation API αν είναι διαθέσιμο
+                        if (pos.coords.heading !== null && pos.coords.heading !== undefined && !isNaN(pos.coords.heading)) {
+                            currentHeading = pos.coords.heading;
+                            if (autoRotateMap) {
+                                map.setBearing(currentHeading);
+                            }
+                        }
+                        
                         if (currentLocationMarker) {
                             currentLocationMarker.setLatLng([lat, lng]);
+                            if (currentHeading !== null && currentLocationMarker.setRotationAngle) {
+                                currentLocationMarker.setRotationAngle(currentHeading);
+                            }
                         } else {
                             var icon = L.divIcon({ html: '📍', className: 'location-marker', iconSize: [30, 30], iconAnchor: [15, 15] });
                             currentLocationMarker = L.marker([lat, lng], { icon: icon }).addTo(map).bindPopup('📍 Θέση σας<br><small>GPS</small>');
+                            if (currentHeading !== null && currentLocationMarker.setRotationAngle) {
+                                currentLocationMarker.setRotationAngle(currentHeading);
+                            }
                         }
-                        if (!userInteracted) { map.panTo([lat, lng]); }
+                        if (!userInteracted) { 
+                            if (autoRotateMap) {
+                                map.setView([lat, lng], map.getZoom(), { animate: true });
+                            } else {
+                                map.panTo([lat, lng]); 
+                            }
+                        }
                         var statusEl = document.getElementById('statusText');
                         if (statusEl) {
                             var accText = acc < 50 ? ' (υψηλή ακρίβεια)' : acc < 200 ? ' (καλή ακρίβεια)' : '';
@@ -1799,7 +1949,19 @@
             } else {
                 if (navigator.geolocation) {
                     navigationWatchId = navigator.geolocation.watchPosition(
-                        function(pos) { if (isPaused) return; var lat = pos.coords.latitude, lng = pos.coords.longitude; if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } map.panTo([lat, lng]); updateNavigationPosition({ latlng: L.latLng(lat, lng) }); },
+                        function(pos) { if (isPaused) return; var lat = pos.coords.latitude, lng = pos.coords.longitude; if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } 
+                            // Χρήση heading από GPS αν είναι διαθέσιμο
+                            if (pos.coords.heading !== null && pos.coords.heading !== undefined && !isNaN(pos.coords.heading)) {
+                                currentHeading = pos.coords.heading;
+                            }
+                            if (autoRotateMap) {
+                                map.setView([lat, lng], map.getZoom(), { animate: true });
+                                if (currentHeading !== null) map.setBearing(currentHeading);
+                            } else {
+                                map.panTo([lat, lng]);
+                            }
+                            updateNavigationPosition({ latlng: L.latLng(lat, lng) }); 
+                        },
                         function(err) { console.warn('Navigation watch error:', err.message); },
                         { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
                     );
@@ -1812,6 +1974,14 @@
 
         function startNavigation() {
             isNavigating = true; isPaused = false; isMinimized = false;
+            // Ενεργοποίηση αυτόματης περιστροφής κατά την πλοήγηση
+            if (!autoRotateMap) {
+                autoRotateMap = true;
+                compassBtn.classList.add('active');
+                compassBtn.title = 'Κλείδωμα προσανατολισμού στον Βορρά';
+                requestOrientationPermission();
+            }
+            
             var navPanel = document.getElementById('navigationPanel');
             navPanel.style.position = ''; navPanel.style.left = ''; navPanel.style.top = ''; navPanel.style.bottom = ''; navPanel.style.right = '';
             navPanel.style.transform = ''; navPanel.style.width = ''; navPanel.style.maxWidth = ''; navPanel.style.maxHeight = '';
@@ -1854,12 +2024,35 @@
             if (navigator.geolocation) {
                 if (navigationWatchId) { navigator.geolocation.clearWatch(navigationWatchId); navigationWatchId = null; }
                 navigationWatchId = navigator.geolocation.watchPosition(
-                    function(pos) { if (isPaused) return; var lat = pos.coords.latitude, lng = pos.coords.longitude; if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } map.panTo([lat, lng]); updateNavigationPosition({ latlng: L.latLng(lat, lng) }); },
+                    function(pos) { 
+                        if (isPaused) return; 
+                        var lat = pos.coords.latitude, lng = pos.coords.longitude; 
+                        // Χρήση heading από GPS αν είναι διαθέσιμο
+                        if (pos.coords.heading !== null && pos.coords.heading !== undefined && !isNaN(pos.coords.heading)) {
+                            currentHeading = pos.coords.heading;
+                        }
+                        if (userPositionMarker) { 
+                            userPositionMarker.setLatLng([lat, lng]); 
+                            if (currentHeading !== null && userPositionMarker.setRotationAngle) {
+                                userPositionMarker.setRotationAngle(currentHeading);
+                            }
+                        }
+                        // Περιστροφή χάρτη αν είναι ενεργή
+                        if (autoRotateMap) {
+                            map.setView([lat, lng], map.getZoom(), { animate: true });
+                            if (currentHeading !== null) {
+                                map.setBearing(currentHeading);
+                            }
+                        } else {
+                            map.panTo([lat, lng]); 
+                        }
+                        updateNavigationPosition({ latlng: L.latLng(lat, lng) }); 
+                    },
                     function(err) { console.warn('Navigation watch error:', err.message); },
                     { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
                 );
             }
-            showToast('🧭 Πλοήγηση ξεκίνησε', '#2ecc71');
+            showToast('🧭 Πλοήγηση ξεκίνησε (αυτόματη περιστροφή χάρτη)', '#2ecc71');
         }
 
         function closeNavigation() {
@@ -1878,6 +2071,13 @@
             updateNavStatus('Αναμονή', 'inactive');
             if (navigationWatchId) { navigator.geolocation.clearWatch(navigationWatchId); navigationWatchId = null; }
             if (userPositionMarker) { map.removeLayer(userPositionMarker); userPositionMarker = null; }
+            
+            // Επαναφορά προσανατολισμού χάρτη στον Βορρά
+            map.setBearing(0);
+            autoRotateMap = false;
+            compassBtn.classList.remove('active');
+            compassBtn.title = 'Προσανατολισμός χάρτη στην πυξίδα';
+            
             var statusEl = document.getElementById('statusText');
             if (statusEl) { statusEl.innerHTML = 'Πλοήγηση τερματίστηκε'; setTimeout(function() { statusEl.innerHTML = 'Πατήστε "Θέση μου"'; }, 2000); }
             showToast('⏹️ Πλοήγηση τερματίστηκε', '#e74c3c');
@@ -2149,7 +2349,7 @@
         });
 
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP (συνεχής παρακολούθηση)\n📍 Η παρακολούθηση σταματά ΑΥΤΟΜΑΤΑ όταν κάνετε κλικ για σχεδίαση\n📍 Πατήστε ξανά "Θέση μου" για διακοπή παρακολούθησης\n🆘 SOS → Αποστολή θέσης με SMS/Email/112\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών (αλφαβητικά)\n📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ ή από το popup του marker\n📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\nℹ️ Το πάνελ πληροφοριών είναι ΜΕΤΑΚΙΝΗΣΙΜΟ (σύρτε το από την ένδειξη ⠿)\n🖱️ ΟΛΑ τα πάνελ είναι ΜΕΤΑΚΙΝΗΣΙΜΑ (σύρτε τα από την ένδειξη ⠿)\n📍 Το στίγμα σας παρακολουθείται χωρίς να παρεμβαίνει στη σχεδίαση!\n📱 Βελτιστοποιημένο για κινητά');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS ή IP (συνεχής παρακολούθηση)\n🧭 Πυξίδα (πάνω δεξιά) → Ενεργοποίηση αυτόματης περιστροφής χάρτη\n   • Ο χάρτης περιστρέφεται αυτόματα στην κατεύθυνση που κοιτάτε\n   • Πατήστε ξανά για επαναφορά στον Βορρά\n   • Ενεργοποιείται αυτόματα κατά την πλοήγηση\n📍 Η παρακολούθηση σταματά ΑΥΤΟΜΑΤΑ όταν κάνετε κλικ για σχεδίαση\n📍 Πατήστε ξανά "Θέση μου" για διακοπή παρακολούθησης\n🆘 SOS → Αποστολή θέσης με SMS/Email/112\n🧭 Πλοήγηση → Οδηγίες βήμα-βήμα με παρακολούθηση θέσης\n⬇ Ελαχιστοποίηση → Μικρή μπάρα με απόσταση\n📸 Φωτογραφία → Λήψη με κάμερα ή επιλογή από συλλογή\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n📤 GPX → Εξαγωγή διαδρομής\n📂 GPX/KML → Φόρτωση αρχείου\n🗺️ Διαδρομές → Αποθήκευση, φόρτωση και διαγραφή διαδρομών (αλφαβητικά)\n📍 Σημεία → Δείτε και διαγράψτε ενδιάμεσα σημεία\n✖ Διαγραφή ενδιάμεσων σημείων από το πάνελ ή από το popup του marker\n📥 Κατέβασμα → Λήψη χάρτη για offline χρήση\nℹ️ Το πάνελ πληροφοριών είναι ΜΕΤΑΚΙΝΗΣΙΜΟ (σύρτε το από την ένδειξη ⠿)\n🖱️ ΟΛΑ τα πάνελ είναι ΜΕΤΑΚΙΝΗΣΙΜΑ (σύρτε τα από την ένδειξη ⠿)\n📍 Το στίγμα σας παρακολουθείται χωρίς να παρεμβαίνει στη σχεδίαση!\n📱 Βελτιστοποιημένο για κινητά');
         });
 
         // ============================================================
@@ -2334,6 +2534,7 @@
         
         console.log('🚀 Athos Path Finder έτοιμο!');
         console.log('📍 Αυτόματος εντοπισμός θέσης...');
+        console.log('🧭 Αυτόματος προσανατολισμός χάρτη διαθέσιμος');
         
         // 1. Άμεσος εντοπισμός
         setTimeout(function() { locateUser(); }, 800);
