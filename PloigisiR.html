@@ -21,7 +21,6 @@
             top: 0;
             left: 0;
             z-index: 1;
-            /* ΧΩΡΙΣ ΠΕΡΙΣΤΡΟΦΗ - ΜΟΝΟ Η ΚΟΥΚΙΔΑ ΠΕΡΙΣΤΡΕΦΕΤΑΙ */
         }
         
         /* ΠΑΝΩ ΠΑΝΕΛ */
@@ -72,6 +71,8 @@
         .controls button#showRoutesBtn { background: #8e44ad; }
         .controls button#toggleWaypointsBtn { background: #2980b9; }
         .controls button#sosBtn { background: #e74c3c; }
+        .controls button#wakeLockBtn { background: #f39c12; }
+        .controls button#wakeLockBtn.active { background: #27ae60; }
         .controls #speedSelect { padding: 2px 3px; font-size: 8px; min-height: 22px; max-width: 45px; }
         .controls #fileInput { max-width: 50px; padding: 2px 3px; font-size: 8px; }
         .controls .logo-link {
@@ -129,10 +130,12 @@
             #speedSelect { font-size: 7px; padding: 2px 2px; min-height: 20px; max-width: 35px; }
             .controls button#showRoutesBtn span,
             .controls button#toggleWaypointsBtn span,
-            .controls button#saveRouteBtn span { display: none; }
+            .controls button#saveRouteBtn span,
+            .controls button#wakeLockBtn span { display: none; }
             .controls button#showRoutesBtn::after { content: '🗺️'; }
             .controls button#toggleWaypointsBtn::after { content: '📍'; }
             .controls button#saveRouteBtn::after { content: '💾'; }
+            .controls button#wakeLockBtn::after { content: '☀️'; }
         }
         
         .info-panel {
@@ -298,7 +301,7 @@
         #sosContainer .sos-buttons .call-btn { background: #e74c3c; color: white; font-size: 16px; }
         #sosContainer .sos-footer { margin-top: 8px; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #eee; padding-top: 6px; }
         
-        /* ΜΠΛΕ ΚΟΥΚΙΔΑ - ΠΕΡΙΣΤΡΕΦΕΤΑΙ ΜΟΝΗ ΤΗΣ */
+        /* ΜΠΛΕ ΚΟΥΚΙΔΑ */
         .blue-dot {
             background: #2196F3;
             border-radius: 50%;
@@ -323,7 +326,6 @@
             border-top: 14px solid #2196F3;
             transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        /* Το βέλος δείχνει την κατεύθυνση */
         .blue-dot .direction-arrow {
             position: absolute;
             top: -18px;
@@ -366,7 +368,6 @@
             object-fit: cover;
         }
         
-        /* COMPASS - ΔΕΝ ΠΕΡΙΣΤΡΕΦΕΙ ΤΟΝ ΧΑΡΤΗ, ΜΟΝΟ ΔΕΙΧΝΕΙ */
         .compass-indicator {
             position: fixed;
             bottom: 130px;
@@ -392,6 +393,27 @@
             transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
+        /* Wake Lock status indicator */
+        .wake-status {
+            position: fixed;
+            top: 78px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            display: none;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .wake-status.active { 
+            display: block; 
+            background: rgba(39, 174, 96, 0.8);
+        }
+        
         .leaflet-control-zoom { z-index: 800 !important; }
         .leaflet-control-attribution { display: none; }
         
@@ -402,11 +424,14 @@
             #waypointsPanel { min-width: 260px; max-height: 50vh; }
             #routeDropdownContainer { min-width: 280px; }
             #sosContainer { padding: 10px 12px; }
+            .wake-status { top: 70px; font-size: 8px; padding: 1px 8px; }
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
+
+    <div class="wake-status" id="wakeStatus">☀️ Οθόνη ενεργή</div>
 
     <div class="compass-indicator" id="compassIndicator" title="Δείκτης κατεύθυνσης">
         <span class="arrow" id="compassArrow">🧭</span>
@@ -427,6 +452,7 @@
             <option value="4" selected>🚶</option>
             <option value="5">🐇</option>
         </select>
+        <button id="wakeLockBtn" title="Κράτημα οθόνης αναμμένης">☀️</button>
         <button id="helpBtn" title="Βοήθεια">❓</button>
         <a href="https://agionorosroutes.blogspot.com/" target="_blank" class="logo-link">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPPmMNFQHezTEW7KFjFuPm3nFmS-waV6gjwBA7x_IyoPvA1bUUI3PlfEJuCfs3IXhaNP_eM-UvlNVywDfU6GCoVESm5WRTuCuq8VxSbVQ8wo88AA3rghIlvzjVnHUsvN5ct-JvkBV4p_qT9LYLQ3Bva=w300-h75-s-no-gm?authuser=2" alt="Άγιον Όρος">
@@ -484,7 +510,105 @@
     
     <script>
         // ============================================================
-        //  ΕΚΔΟΣΗ ΧΩΡΙΣ ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ - ΜΟΝΟ Η ΚΟΥΚΙΔΑ ΠΕΡΙΣΤΡΕΦΕΤΑΙ
+        //  WAKE LOCK - ΚΡΑΤΑΕΙ ΤΗΝ ΟΘΟΝΗ ΑΝΑΜΜΕΝΗ
+        // ============================================================
+        var wakeLock = null;
+        var wakeLockActive = false;
+        var wakeLockSupported = false;
+        
+        // Έλεγχος υποστήριξης
+        if ('wakeLock' in navigator) {
+            wakeLockSupported = true;
+            console.log('✅ Wake Lock API υποστηρίζεται');
+        } else {
+            console.log('⚠️ Wake Lock API ΔΕΝ υποστηρίζεται');
+        }
+        
+        async function requestWakeLock() {
+            if (!wakeLockSupported) {
+                showToast('⚠️ Η συσκευή σας δεν υποστηρίζει κράτημα οθόνης', '#e74c3c');
+                return false;
+            }
+            
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLockActive = true;
+                
+                // Ενημέρωση UI
+                document.getElementById('wakeLockBtn').classList.add('active');
+                document.getElementById('wakeLockBtn').innerHTML = '☀️';
+                document.getElementById('wakeStatus').classList.add('active');
+                document.getElementById('wakeStatus').textContent = '☀️ Οθόνη ενεργή';
+                
+                // Ακρόαση για απελευθέρωση
+                wakeLock.addEventListener('release', function() {
+                    wakeLockActive = false;
+                    document.getElementById('wakeLockBtn').classList.remove('active');
+                    document.getElementById('wakeStatus').classList.remove('active');
+                    document.getElementById('wakeStatus').textContent = '';
+                    console.log('🔓 Wake Lock απελευθερώθηκε');
+                });
+                
+                console.log('🔒 Wake Lock ενεργοποιήθηκε');
+                showToast('☀️ Η οθόνη θα παραμείνει αναμμένη', '#27ae60');
+                return true;
+            } catch(err) {
+                console.warn('Wake Lock error:', err);
+                showToast('⚠️ Δεν ήταν δυνατή η ενεργοποίηση κρατήματος οθόνης', '#e74c3c');
+                return false;
+            }
+        }
+        
+        async function releaseWakeLock() {
+            if (wakeLock && wakeLockActive) {
+                try {
+                    await wakeLock.release();
+                    wakeLock = null;
+                    wakeLockActive = false;
+                    document.getElementById('wakeLockBtn').classList.remove('active');
+                    document.getElementById('wakeLockBtn').innerHTML = '☀️';
+                    document.getElementById('wakeStatus').classList.remove('active');
+                    document.getElementById('wakeStatus').textContent = '';
+                    console.log('🔓 Wake Lock απελευθερώθηκε');
+                    showToast('🌙 Η οθόνη μπορεί να σβήσει', '#888');
+                } catch(err) {
+                    console.warn('Release error:', err);
+                }
+            } else {
+                showToast('ℹ️ Η οθόνη δεν ήταν κλειδωμένη', '#888');
+            }
+        }
+        
+        function toggleWakeLock() {
+            if (wakeLockActive) {
+                releaseWakeLock();
+            } else {
+                requestWakeLock();
+            }
+        }
+        
+        // Αυτόματη ενεργοποίηση όταν ξεκινά η παρακολούθηση GPS
+        var originalLocateUser = null;
+        var originalStopLocation = null;
+        
+        // Ενσωμάτωση με την παρακολούθηση θέσης
+        document.addEventListener('DOMContentLoaded', function() {
+            // Το κουμπί Wake Lock
+            document.getElementById('wakeLockBtn')?.addEventListener('click', toggleWakeLock);
+            
+            // Επαναφορά wake lock όταν η σελίδα γίνεται ορατή
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && wakeLockActive) {
+                    // Αν η σελίδα είναι ορατή αλλά το wake lock χάθηκε, το ξαναζητάμε
+                    if (!wakeLock || !wakeLockActive) {
+                        requestWakeLock();
+                    }
+                }
+            });
+        });
+        
+        // ============================================================
+        //  ΚΥΡΙΑ ΕΦΑΡΜΟΓΗ
         // ============================================================
         
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
@@ -500,7 +624,7 @@
         var routeLines = [];
         var lastMainDistance = null, lastMainGeometry = null;
         var userBlueDot = null;
-        var userHeading = 0; // Τρέχουσα κατεύθυνση
+        var userHeading = 0;
         var routePhotos = [], photoMarkers = [];
         var locationWatchId = null, isLocationTracking = false;
         var currentGpxGeometry = null, currentGpxLayer = null;
@@ -595,11 +719,11 @@
                 setTimeout(function() { locateUser(); }, 500);
             }, 500);
             
-            console.log('🚀 Athos Path Finder έτοιμο! (Χωρίς περιστροφή χάρτη)');
+            console.log('🚀 Athos Path Finder έτοιμο!');
         }
         
         // ============================================================
-        //  ΜΠΛΕ ΚΟΥΚΙΔΑ - ΜΟΝΟ ΑΥΤΗ ΠΕΡΙΣΤΡΕΦΕΤΑΙ
+        //  ΜΠΛΕ ΚΟΥΚΙΔΑ
         // ============================================================
         function createBlueDot(lat, lng) {
             if (userBlueDot) { map.removeLayer(userBlueDot); userBlueDot = null; }
@@ -627,7 +751,6 @@
                 userBlueDot.setLatLng([lat, lng]);
             }
             
-            // Ενημέρωση κατεύθυνσης ΜΟΝΟ της κουκίδας
             if (heading !== null && heading !== undefined) {
                 userHeading = heading;
                 var el = userBlueDot.getElement();
@@ -636,13 +759,11 @@
                     if (dot) {
                         dot.style.transform = 'rotate(' + heading + 'deg)';
                     }
-                    // Το βέλος δείχνει την κατεύθυνση
                     var arrow = el.querySelector('.direction-arrow');
                     if (arrow) {
                         arrow.style.transform = 'rotate(' + heading + 'deg)';
                     }
                 }
-                // Ενημέρωση compass (μόνο ένδειξη, όχι περιστροφή χάρτη)
                 updateCompass(heading);
             }
             
@@ -653,7 +774,7 @@
         }
         
         // ============================================================
-        //  COMPASS - ΜΟΝΟ ΕΝΔΕΙΞΗ, ΟΧΙ ΠΕΡΙΣΤΡΟΦΗ
+        //  COMPASS
         // ============================================================
         function updateCompass(heading) {
             var arrow = document.getElementById('compassArrow');
@@ -667,18 +788,13 @@
             if (arrow) {
                 arrow.style.transform = 'rotate(0deg)';
             }
-            // Επαναφορά και της κουκίδας
             if (userBlueDot) {
                 var el = userBlueDot.getElement();
                 if (el) {
                     var dot = el.querySelector('.blue-dot');
-                    if (dot) {
-                        dot.style.transform = 'rotate(0deg)';
-                    }
+                    if (dot) { dot.style.transform = 'rotate(0deg)'; }
                     var arrowEl = el.querySelector('.direction-arrow');
-                    if (arrowEl) {
-                        arrowEl.style.transform = 'rotate(0deg)';
-                    }
+                    if (arrowEl) { arrowEl.style.transform = 'rotate(0deg)'; }
                 }
             }
             userHeading = 0;
@@ -688,13 +804,18 @@
         document.getElementById('compassIndicator')?.addEventListener('click', resetCompass);
         
         // ============================================================
-        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ
+        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ - ΜΕ ΑΥΤΟΜΑΤΟ WAKE LOCK
         // ============================================================
         function locateUser() {
             if (isLocationTracking) { stopLocationTracking(); return; }
             
             var statusEl = document.getElementById('statusText');
             statusEl.innerHTML = '⏳ Ενεργοποίηση GPS...';
+            
+            // ΑΥΤΟΜΑΤΗ ΕΝΕΡΓΟΠΟΙΗΣΗ WAKE LOCK
+            if (!wakeLockActive && wakeLockSupported) {
+                requestWakeLock();
+            }
             
             if (navigator.geolocation) {
                 if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; }
@@ -709,7 +830,6 @@
                             createBlueDot(lat, lng);
                         }
                         
-                        // Υπολογισμός κατεύθυνσης από ιστορικό
                         var h = calcHeadingFromHistory(lat, lng);
                         if (h !== null) {
                             updateBlueDot(lat, lng, h);
@@ -729,6 +849,8 @@
                         console.warn('GPS error:', err);
                         document.getElementById('locateBtn').innerHTML = '📍';
                         isLocationTracking = false;
+                        // ΑΠΕΝΕΡΓΟΠΟΙΗΣΗ WAKE LOCK όταν σταματά το GPS
+                        if (wakeLockActive) { releaseWakeLock(); }
                         locateByIP();
                     },
                     { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
@@ -744,6 +866,10 @@
             document.getElementById('locateBtn').innerHTML = '📍';
             var statusEl = document.getElementById('statusText');
             if (statusEl) { statusEl.innerHTML = 'Πατήστε "Θέση μου"'; }
+            
+            // ΑΠΕΝΕΡΓΟΠΟΙΗΣΗ WAKE LOCK
+            if (wakeLockActive) { releaseWakeLock(); }
+            
             showToast('📍 Παρακολούθηση σταμάτησε', '#888');
         }
         
@@ -761,6 +887,7 @@
                         showToast('📍 Θέση από IP', '#3498db');
                         document.getElementById('locateBtn').innerHTML = '📍';
                         isLocationTracking = false;
+                        if (wakeLockActive) { releaseWakeLock(); }
                     } else { throw new Error('No location'); }
                 })
                 .catch(function() {
@@ -778,6 +905,7 @@
                     }
                     document.getElementById('locateBtn').innerHTML = '📍';
                     isLocationTracking = false;
+                    if (wakeLockActive) { releaseWakeLock(); }
                 });
         }
         
@@ -793,7 +921,6 @@
             if (h === null) return null;
             
             var smoothed = smoothHeading(h);
-            // Ελάχιστη αλλαγή για αποφυγή μικρο-κινήσεων
             if (Math.abs(smoothed - userHeading) < 2) {
                 return userHeading;
             }
@@ -1178,7 +1305,10 @@
         //  ΚΑΘΑΡΙΣΜΟΣ
         // ============================================================
         function clearAll() {
-            if (isLocationTracking) stopLocationTracking();
+            if (isLocationTracking) { 
+                stopLocationTracking(); 
+                if (wakeLockActive) { releaseWakeLock(); }
+            }
             if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
             if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
             for (var i = 0; i < markers.length; i++) { map.removeLayer(markers[i]); }
@@ -1629,7 +1759,7 @@
         document.getElementById('speedSelect')?.addEventListener('change', updateInfo);
         document.getElementById('photoBtn')?.addEventListener('click', function() { takePhoto(); });
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS\n🆘 SOS → Αποστολή θέσης\n📸 Φωτογραφία → Λήψη με κάμερα ή συλλογή\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n🗺️ Διαδρομές → Φόρτωση / Διαγραφή\n🗑️ Καθαρισμός → Διαγράφει όλα\n🧭 Η μπλε κουκίδα δείχνει την κατεύθυνση (Ο ΧΑΡΤΗΣ ΔΕΝ ΠΕΡΙΣΤΡΕΦΕΤΑΙ)');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS\n🆘 SOS → Αποστολή θέσης\n📸 Φωτογραφία → Λήψη με κάμερα ή συλλογή\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n🗺️ Διαδρομές → Φόρτωση / Διαγραφή\n🗑️ Καθαρισμός → Διαγράφει όλα\n☀️ Κράτημα οθόνης αναμμένης (πατήστε ☀️)\n🧭 Η μπλε κουκίδα δείχνει την κατεύθυνση');
         });
         
         // ============================================================
@@ -1640,10 +1770,10 @@
         updateWaypointsPanel();
         initMap();
         
-        console.log('📱 Athos Path Finder - ΧΩΡΙΣ ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ');
+        console.log('📱 Athos Path Finder');
         console.log('📍 Κλικ στον χάρτη για προσθήκη σημείων');
-        console.log('🧭 ΜΟΝΟ η μπλε κουκίδα περιστρέφεται');
-        console.log('🗺️ Ο χάρτης παραμένει σταθερός (Βορράς προς τα πάνω)');
+        console.log('☀️ Κράτημα οθόνης αναμμένης (αυτόματα με GPS)');
+        console.log('🧭 Η μπλε κουκίδα δείχνει την κατεύθυνση');
     </script>
 </body>
 </html>
