@@ -972,7 +972,7 @@
         }
         
         // ============================================================
-        //  GPX ΦΟΡΤΩΣΗ - ΜΕ ΑΝΑΓΝΩΡΙΣΗ ΣΗΜΕΙΩΝ (Waypoints)
+        //  GPX ΦΟΡΤΩΣΗ
         // ============================================================
         function loadGpxFile(file) {
             var reader = new FileReader();
@@ -992,7 +992,6 @@
                     var startWpt = null;
                     var endWpt = null;
                     
-                    // 1. Εύρεση της γραμμής (track)
                     if (geojson.features) {
                         for (var i = 0; i < geojson.features.length; i++) {
                             var feat = geojson.features[i];
@@ -1006,7 +1005,6 @@
                         }
                     }
                     
-                    // 2. Εύρεση σημείων (waypoints) από το XML
                     var wptNodes = doc.getElementsByTagName('wpt');
                     for (var i = 0; i < wptNodes.length; i++) {
                         var node = wptNodes[i];
@@ -1041,14 +1039,13 @@
                         });
                     }
                     
-                    // 3. Ταξινόμηση σημείων: Start, End, Waypoints
                     var startCandidates = [];
                     var endCandidates = [];
                     var waypointCandidates = [];
                     
                     for (var i = 0; i < waypointsData.length; i++) {
                         var w = waypointsData[i];
-                        if (w.sym === 'Start' || w.type === 'Αφετηρία' || w.name.toLowerCase().includes('start')) {
+                        if (w.sym === 'Start' || w.type === 'Αφετηρία' || w.name.toLowerCase().includes('start') || w.name.toLowerCase().includes('αφετηρία')) {
                             startCandidates.push(w);
                         } else if (w.sym === 'End' || w.type === 'Προορισμός' || w.name.toLowerCase().includes('end') || w.name.toLowerCase().includes('προορισμός')) {
                             endCandidates.push(w);
@@ -1057,7 +1054,6 @@
                         }
                     }
                     
-                    // Αν δεν βρήκαμε με sym, δοκιμάζουμε με τη σειρά
                     if (startCandidates.length === 0 && waypointsData.length > 0) {
                         startCandidates.push(waypointsData[0]);
                     }
@@ -1065,7 +1061,6 @@
                         endCandidates.push(waypointsData[waypointsData.length - 1]);
                     }
                     
-                    // 4. Φόρτωση της διαδρομής
                     if (geometry && geometry.length > 0) {
                         currentGpxGeometry = geometry;
                         var latlngs = geometry.map(function(c) { return [c[1], c[0]]; });
@@ -1078,7 +1073,6 @@
                         updateInfo();
                     }
                     
-                    // 5. Φόρτωση Start
                     if (startCandidates.length > 0) {
                         var s = startCandidates[0];
                         startPoint = { lat: s.lat, lng: s.lng };
@@ -1092,7 +1086,6 @@
                         });
                     }
                     
-                    // 6. Φόρτωση End
                     if (endCandidates.length > 0) {
                         var e = endCandidates[0];
                         endPoint = { lat: e.lat, lng: e.lng };
@@ -1106,10 +1099,8 @@
                         });
                     }
                     
-                    // 7. Φόρτωση Ενδιάμεσων σημείων
                     for (var i = 0; i < waypointCandidates.length; i++) {
                         var w = waypointCandidates[i];
-                        // Αποφυγή διπλότυπων με Start/End
                         var isDuplicate = false;
                         if (startPoint && Math.abs(w.lat - startPoint.lat) < 0.0001 && Math.abs(w.lng - startPoint.lng) < 0.0001) isDuplicate = true;
                         if (endPoint && Math.abs(w.lat - endPoint.lat) < 0.0001 && Math.abs(w.lng - endPoint.lng) < 0.0001) isDuplicate = true;
@@ -1132,7 +1123,6 @@
                     
                     updateWaypointsPanel();
                     
-                    // 8. Υπολογισμός διαδρομής αν υπάρχουν Start και End
                     if (startPoint && endPoint) {
                         calcRoute();
                     }
@@ -1733,29 +1723,57 @@
         }
         
         // ============================================================
-        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ
+        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - ΜΕ FALLBACK ΣΕ GRAPHHOPPER
         // ============================================================
         async function calcRoute() {
-            if (!startPoint || !endPoint) { return; }
+            if (!startPoint || !endPoint) { 
+                showToast('⚠️ Χρειάζονται Start και End', '#e67e22');
+                return; 
+            }
+            
+            // Έλεγχος αν τα σημεία είναι πολύ κοντά
+            var dist = L.latLng(startPoint.lat, startPoint.lng).distanceTo(L.latLng(endPoint.lat, endPoint.lng));
+            if (dist < 10) {
+                showToast('⚠️ Η απόσταση είναι πολύ μικρή (<10 μέτρα)', '#e67e22');
+                return;
+            }
+            
             var allPoints = [];
             allPoints.push([startPoint.lat, startPoint.lng]);
             for (var i = 0; i < waypoints.length; i++) {
                 allPoints.push([waypoints[i].lat, waypoints[i].lng]);
             }
             allPoints.push([endPoint.lat, endPoint.lng]);
+            
             for (var i = 0; i < routeLines.length; i++) { map.removeLayer(routeLines[i]); }
             routeLines = [];
+            
+            // ΠΡΩΤΗ ΠΡΟΣΠΑΘΕΙΑ: ORS
             try {
                 var coords = allPoints.map(function(p) { return [p[1], p[0]]; });
                 var response = await fetch('https://api.openrouteservice.org/v2/directions/foot-hiking', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': ORS_API_KEY },
-                    body: JSON.stringify({ coordinates: coords, preference: 'recommended', units: 'km', geometry: true, geometry_format: 'geojson' })
+                    body: JSON.stringify({ 
+                        coordinates: coords, 
+                        preference: 'recommended', 
+                        units: 'km', 
+                        geometry: true, 
+                        geometry_format: 'geojson',
+                        instructions: false
+                    })
                 });
-                if (!response.ok) throw new Error('ORS error');
+                
+                if (!response.ok) {
+                    var errorText = await response.text();
+                    console.warn('ORS error:', response.status, errorText);
+                    throw new Error('ORS error: ' + response.status);
+                }
+                
                 var data = await response.json();
                 var feature = data.features?.[0];
-                if (!feature) throw new Error('No route');
+                if (!feature) throw new Error('No route from ORS');
+                
                 var geom = feature.geometry.coordinates;
                 lastMainGeometry = geom;
                 lastMainDistance = (feature.properties?.summary?.distance || 0) / 1000;
@@ -1766,29 +1784,49 @@
                 updateInfo();
                 document.getElementById('osmLink').href = 'https://www.openstreetmap.org/directions?engine=foot&route=' + allPoints.map(function(p) { return p[0] + ',' + p[1]; }).join(';');
                 saveLastRoute();
-                showToast('✅ Διαδρομή υπολογίστηκε!', '#2ecc71');
-            } catch(err) {
-                console.error('Route error:', err);
-                try { await calcRouteGraphHopper(allPoints); } catch(e) { alert('Αποτυχία υπολογισμού διαδρομής.'); }
+                showToast('✅ Διαδρομή υπολογίστηκε (ORS)', '#2ecc71');
+                return;
+                
+            } catch(orsError) {
+                console.warn('ORS failed, trying GraphHopper:', orsError.message);
+                showToast('🔄 Δοκιμή GraphHopper...', '#f39c12');
             }
-        }
-        
-        async function calcRouteGraphHopper(allPoints) {
-            var url = 'https://graphhopper.com/api/1/route?key=' + GRAPHHOPPER_API_KEY + '&profile=foot&points_encoded=false&calc_points=true';
-            allPoints.forEach(function(p) { url += '&point=' + p[0] + ',' + p[1]; });
-            var response = await fetch(url);
-            var data = await response.json();
-            if (data.paths && data.paths[0]) {
-                var geom = data.paths[0].points.coordinates;
-                lastMainGeometry = geom;
-                lastMainDistance = data.paths[0].distance / 1000;
-                var latlngs = geom.map(function(c) { return [c[1], c[0]]; });
-                var line = L.polyline(latlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map);
-                routeLines.push(line);
-                map.fitBounds(line.getBounds(), { padding: [40,40] });
+            
+            // ΔΕΥΤΕΡΗ ΠΡΟΣΠΑΘΕΙΑ: GraphHopper
+            try {
+                var ghUrl = 'https://graphhopper.com/api/1/route?key=' + GRAPHHOPPER_API_KEY + '&profile=foot&points_encoded=false&calc_points=true&elevation=false';
+                for (var i = 0; i < allPoints.length; i++) {
+                    ghUrl += '&point=' + allPoints[i][0] + ',' + allPoints[i][1];
+                }
+                
+                var ghResponse = await fetch(ghUrl);
+                if (!ghResponse.ok) {
+                    var ghError = await ghResponse.text();
+                    console.warn('GraphHopper error:', ghResponse.status, ghError);
+                    throw new Error('GraphHopper error: ' + ghResponse.status);
+                }
+                
+                var ghData = await ghResponse.json();
+                if (!ghData.paths || !ghData.paths[0]) {
+                    throw new Error('No route from GraphHopper');
+                }
+                
+                var ghCoords = ghData.paths[0].points.coordinates;
+                lastMainGeometry = ghCoords;
+                lastMainDistance = ghData.paths[0].distance / 1000;
+                var ghLatlngs = ghCoords.map(function(c) { return [c[1], c[0]]; });
+                var ghLine = L.polyline(ghLatlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map);
+                routeLines.push(ghLine);
+                map.fitBounds(ghLine.getBounds(), { padding: [40,40] });
                 updateInfo();
+                document.getElementById('osmLink').href = 'https://www.openstreetmap.org/directions?engine=foot&route=' + allPoints.map(function(p) { return p[0] + ',' + p[1]; }).join(';');
                 saveLastRoute();
-                showToast('✅ Διαδρομή υπολογίστηκε!', '#2ecc71');
+                showToast('✅ Διαδρομή υπολογίστηκε (GraphHopper)', '#2ecc71');
+                
+            } catch(ghError) {
+                console.error('Both services failed:', ghError);
+                showToast('❌ Αποτυχία υπολογισμού διαδρομής - Ελέγξτε τη σύνδεσή σας', '#e74c3c');
+                alert('Αποτυχία υπολογισμού διαδρομής.\n\nΕλέγξτε τη σύνδεσή σας στο διαδίκτυο.\nΟι αποστάσεις μεταξύ των σημείων μπορεί να είναι πολύ μικρές ή να υπάρχει πρόβλημα με τα APIs.');
             }
         }
         
@@ -1887,7 +1925,7 @@
         }
         
         // ============================================================
-        //  SOS (συντομευμένο)
+        //  SOS
         // ============================================================
         var sosPos = null;
         
@@ -1956,7 +1994,7 @@
         });
         
         // ============================================================
-        //  GPX ΦΟΡΤΩΣΗ - ΧΡΗΣΗ ΤΗΣ ΝΕΑΣ ΣΥΝΑΡΤΗΣΗΣ
+        //  GPX ΦΟΡΤΩΣΗ
         // ============================================================
         document.getElementById('fileInput').addEventListener('change', function(e) {
             var file = e.target.files[0];
@@ -2279,7 +2317,7 @@
         initMap();
         
         console.log('📱 Athos Path Finder - ΠΛΗΡΗΣ ΕΚΔΟΣΗ');
-        console.log('📍 Φόρτωση GPX με όλα τα σημεία (Start, End, Waypoints)');
+        console.log('📍 Υπολογισμός διαδρομής με ORS + GraphHopper fallback');
         console.log('✏️ Μετονομασία σε όλα τα σημεία');
         console.log('📤 GPX με δημιουργό "Athos Maps"');
         console.log('❓ Πλήρης βοήθεια');
