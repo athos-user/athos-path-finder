@@ -21,6 +21,7 @@
             top: 0;
             left: 0;
             z-index: 1;
+            transition: transform 0.5s ease-out;
         }
         
         /* ΠΑΝΩ ΠΑΝΕΛ */
@@ -371,7 +372,7 @@
             user-select: none;
         }
         .compass-indicator:active { transform: scale(0.9); }
-        .compass-indicator .arrow { display: inline-block; transition: transform 0.3s ease; }
+        .compass-indicator .arrow { display: inline-block; transition: transform 0.5s ease-out; }
         
         .leaflet-control-zoom { z-index: 800 !important; }
         .leaflet-control-attribution { display: none; }
@@ -465,7 +466,7 @@
     
     <script>
         // ============================================================
-        //  ΑΠΛΗ, ΛΕΙΤΟΥΡΓΙΚΗ ΕΚΔΟΣΗ
+        //  ΑΠΛΗ, ΛΕΙΤΟΥΡΓΙΚΗ ΕΚΔΟΣΗ - ΜΕ ΟΜΑΛΗ ΠΕΡΙΣΤΡΟΦΗ
         // ============================================================
         
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
@@ -484,9 +485,124 @@
         var routePhotos = [], photoMarkers = [];
         var locationWatchId = null, isLocationTracking = false;
         var currentGpxGeometry = null, currentGpxLayer = null;
-        var isInitialLoad = true;
         var positionHistory = [];
         var mapContainer = document.getElementById('map');
+        
+        // ============================================================
+        //  ΠΕΡΙΣΤΡΟΦΗ - ΟΜΑΛΗ ΜΕ COOLDOWN
+        // ============================================================
+        var currentAngle = 0;
+        var targetAngle = 0;
+        var isRotating = false;
+        var rotationCooldown = false;
+        var rotationTimeout = null;
+        var headingHistory = [];
+        var maxHistory = 3;
+        var MIN_HEADING_CHANGE = 3; // μοίρες - ελάχιστη αλλαγή για περιστροφή
+        var ROTATION_COOLDOWN_MS = 1000; // 1 δευτερόλεπτο μεταξύ περιστροφών
+        
+        // Εξομάλυνση heading
+        function smoothHeading(newHeading) {
+            if (newHeading === null || newHeading === undefined) return null;
+            headingHistory.push(newHeading);
+            if (headingHistory.length > maxHistory) {
+                headingHistory.shift();
+            }
+            if (headingHistory.length < 2) return newHeading;
+            
+            // Μέσος όρος
+            var sum = 0;
+            for (var i = 0; i < headingHistory.length; i++) {
+                sum += headingHistory[i];
+            }
+            return sum / headingHistory.length;
+        }
+        
+        // Ομαλή περιστροφή
+        function smoothRotate(angle) {
+            if (isRotating) return;
+            if (rotationCooldown) return;
+            
+            targetAngle = angle;
+            
+            // Ελάχιστη αλλαγή για αποφυγή μικρο-περιστροφών
+            var diff = Math.abs(targetAngle - currentAngle);
+            if (diff < MIN_HEADING_CHANGE) return;
+            
+            isRotating = true;
+            rotationCooldown = true;
+            
+            // Αναστολή cooldown
+            if (rotationTimeout) {
+                clearTimeout(rotationTimeout);
+            }
+            rotationTimeout = setTimeout(function() {
+                rotationCooldown = false;
+                rotationTimeout = null;
+            }, ROTATION_COOLDOWN_MS);
+            
+            // Εφαρμογή περιστροφής με CSS transition για ομαλότητα
+            try {
+                mapContainer.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                mapContainer.style.transform = 'rotate(' + angle + 'deg)';
+                mapContainer.style.transformOrigin = 'center center';
+                currentAngle = angle;
+                updateCompass(angle);
+            } catch(e) {}
+            
+            // Επαναφορά flag μετά το transition
+            setTimeout(function() {
+                isRotating = false;
+            }, 700);
+        }
+        
+        function updateCompass(angle) {
+            var arrow = document.getElementById('compassArrow');
+            if (arrow) {
+                arrow.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                arrow.style.transform = 'rotate(' + (-angle) + 'deg)';
+            }
+        }
+        
+        function resetRotation() {
+            if (mapContainer) {
+                mapContainer.style.transition = 'transform 0.5s ease-out';
+                mapContainer.style.transform = 'rotate(0deg)';
+                currentAngle = 0;
+                targetAngle = 0;
+                updateCompass(0);
+            }
+            headingHistory = [];
+            showToast('🧭 Περιστροφή επαναφορά', '#8e44ad');
+        }
+        
+        document.getElementById('compassIndicator')?.addEventListener('click', resetRotation);
+        
+        function calcHeading(p1, p2) {
+            if (!p1 || !p2) return null;
+            var lat1 = p1.lat * Math.PI / 180;
+            var lat2 = p2.lat * Math.PI / 180;
+            var dLng = (p2.lng - p1.lng) * Math.PI / 180;
+            var y = Math.sin(dLng) * Math.cos(lat2);
+            var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+            var h = Math.atan2(y, x) * 180 / Math.PI;
+            return (h + 360) % 360;
+        }
+        
+        function calcHeadingFromHistory(lat, lng) {
+            var pos = { lat: lat, lng: lng };
+            positionHistory.push(pos);
+            if (positionHistory.length > 10) { positionHistory.shift(); }
+            if (positionHistory.length < 3) return null; // Χρειαζόμαστε τουλάχιστον 3 θέσεις
+            
+            var p1 = positionHistory[positionHistory.length - 3];
+            var p2 = positionHistory[positionHistory.length - 1];
+            var h = calcHeading(p1, p2);
+            if (h === null) return null;
+            
+            var smoothed = smoothHeading(h);
+            return smoothed;
+        }
         
         // ============================================================
         //  ΒΟΗΘΗΤΙΚΕΣ
@@ -556,53 +672,6 @@
         }
         
         // ============================================================
-        //  ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ
-        // ============================================================
-        var isRotating = false;
-        var rotationTimeout = null;
-        
-        function rotateMap(angle) {
-            if (isInitialLoad) return;
-            if (isRotating) return;
-            if (!mapContainer) return;
-            try {
-                mapContainer.style.transform = 'rotate(' + angle + 'deg)';
-                mapContainer.style.transformOrigin = 'center center';
-                updateCompass(angle);
-            } catch(e) {}
-        }
-        
-        function updateCompass(angle) {
-            var arrow = document.getElementById('compassArrow');
-            if (arrow) {
-                arrow.style.transform = 'rotate(' + (-angle) + 'deg)';
-            }
-        }
-        
-        function resetRotation() {
-            if (mapContainer) {
-                mapContainer.style.transform = 'rotate(0deg)';
-                updateCompass(0);
-            }
-        }
-        
-        document.getElementById('compassIndicator')?.addEventListener('click', function() {
-            resetRotation();
-            showToast('🧭 Επαναφορά περιστροφής', '#8e44ad');
-        });
-        
-        function calcHeading(p1, p2) {
-            if (!p1 || !p2) return null;
-            var lat1 = p1.lat * Math.PI / 180;
-            var lat2 = p2.lat * Math.PI / 180;
-            var dLng = (p2.lng - p1.lng) * Math.PI / 180;
-            var y = Math.sin(dLng) * Math.cos(lat2);
-            var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-            var h = Math.atan2(y, x) * 180 / Math.PI;
-            return (h + 360) % 360;
-        }
-        
-        // ============================================================
         //  ΜΠΛΕ ΚΟΥΚΙΔΑ
         // ============================================================
         function createBlueDot(lat, lng) {
@@ -617,11 +686,15 @@
             if (!userBlueDot) { createBlueDot(lat, lng); }
             else { userBlueDot.setLatLng([lat, lng]); }
             
-            if (heading !== null && heading !== undefined && !isInitialLoad) {
+            // Περιστροφή της κουκίδας μόνο αν υπάρχει heading και δεν είναι αρχική φόρτωση
+            if (heading !== null && heading !== undefined) {
                 var el = userBlueDot.getElement();
                 if (el) {
                     var dot = el.querySelector('.blue-dot');
-                    if (dot) { dot.style.transform = 'rotate(' + heading + 'deg)'; }
+                    if (dot) {
+                        dot.style.transition = 'transform 0.5s ease-out';
+                        dot.style.transform = 'rotate(' + heading + 'deg)';
+                    }
                 }
             }
             
@@ -649,15 +722,19 @@
                     function(pos) {
                         var lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
                         
-                        if (isInitialLoad) {
+                        // Αρχική εμφάνιση χωρίς περιστροφή
+                        if (!userBlueDot) {
                             createBlueDot(lat, lng);
                         } else {
-                            updateBlueDot(lat, lng);
-                        }
-                        
-                        if (!isInitialLoad) {
+                            // Υπολογισμός κατεύθυνσης ΜΟΝΟ αφού έχουμε αρκετές θέσεις
                             var h = calcHeadingFromHistory(lat, lng);
-                            if (h !== null) { rotateMap(-h); }
+                            if (h !== null) {
+                                // Ομαλή περιστροφή
+                                smoothRotate(-h);
+                                updateBlueDot(lat, lng, h);
+                            } else {
+                                updateBlueDot(lat, lng, null);
+                            }
                         }
                         
                         var statusEl = document.getElementById('statusText');
@@ -666,7 +743,6 @@
                             statusEl.innerHTML = '📍 GPS: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + accText;
                         }
                         
-                        if (isInitialLoad) { isInitialLoad = false; }
                         try { localStorage.setItem('athos_last_location', JSON.stringify({ lat: lat, lng: lng })); } catch(e) {}
                     },
                     function(err) {
@@ -703,7 +779,6 @@
                         map.flyTo([lat, lng], 13, { duration: 1 });
                         statusEl.innerHTML = '📍 IP: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
                         showToast('📍 Θέση από IP', '#3498db');
-                        isInitialLoad = false;
                         document.getElementById('locateBtn').innerHTML = '📍';
                         isLocationTracking = false;
                     } else { throw new Error('No location'); }
@@ -716,26 +791,14 @@
                         map.flyTo([saved.lat, saved.lng], 13, { duration: 1 });
                         statusEl.innerHTML = '💾 Αποθηκευμένη: ' + saved.lat.toFixed(5) + ', ' + saved.lng.toFixed(5);
                         showToast('💾 Φόρτωση αποθηκευμένης θέσης', '#f39c12');
-                        isInitialLoad = false;
                     } else {
                         createBlueDot(38.0, 23.7);
                         statusEl.innerHTML = '⚠️ Default θέση';
                         showToast('⚠️ Default θέση', '#e74c3c');
-                        isInitialLoad = false;
                     }
                     document.getElementById('locateBtn').innerHTML = '📍';
                     isLocationTracking = false;
                 });
-        }
-        
-        function calcHeadingFromHistory(lat, lng) {
-            var pos = { lat: lat, lng: lng };
-            positionHistory.push(pos);
-            if (positionHistory.length > 10) { positionHistory.shift(); }
-            if (positionHistory.length < 2) return null;
-            var p1 = positionHistory[positionHistory.length - 2];
-            var p2 = positionHistory[positionHistory.length - 1];
-            return calcHeading(p1, p2);
         }
         
         // ============================================================
@@ -1006,7 +1069,7 @@
         });
         
         // ============================================================
-        //  ΦΩΤΟΓΡΑΦΙΕΣ - ΑΠΛΟΠΟΙΗΜΕΝΕΣ
+        //  ΦΩΤΟΓΡΑΦΙΕΣ
         // ============================================================
         var pendingPhotoPos = null;
         
@@ -1136,7 +1199,6 @@
             updateWaypointsPanel();
             resetRotation();
             localStorage.removeItem('athos_last_route_state');
-            isInitialLoad = true;
             showToast('🗑️ Καθαρίστηκαν όλα', '#e74c3c');
         }
         
@@ -1568,7 +1630,7 @@
         document.getElementById('speedSelect')?.addEventListener('change', updateInfo);
         document.getElementById('photoBtn')?.addEventListener('click', function() { takePhoto(); });
         document.getElementById('helpBtn')?.addEventListener('click', function() {
-            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS\n🆘 SOS → Αποστολή θέσης\n📸 Φωτογραφία → Λήψη με κάμερα ή συλλογή\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n🗺️ Διαδρομές → Φόρτωση / Διαγραφή\n🗑️ Καθαρισμός → Διαγράφει όλα\n🧭 Πατήστε το compass για επαναφορά περιστροφής');
+            alert('🧭 Athos Path Finder\n\n📍 Κλικ στον χάρτη → Start / End / Ενδιάμεσο / Φωτογραφία\n📍 Θέση μου → Εντοπισμός με GPS\n🆘 SOS → Αποστολή θέσης\n📸 Φωτογραφία → Λήψη με κάμερα ή συλλογή\n💾 Αποθήκευση → Τοπική αποθήκευση διαδρομής\n🗺️ Διαδρομές → Φόρτωση / Διαγραφή\n🗑️ Καθαρισμός → Διαγράφει όλα\n🧭 Ομαλή περιστροφή χάρτη με cooldown');
         });
         
         // ============================================================
@@ -1579,9 +1641,10 @@
         updateWaypointsPanel();
         initMap();
         
-        console.log('📱 Athos Path Finder - Απλή έκδοση');
+        console.log('📱 Athos Path Finder - Ομαλή περιστροφή');
         console.log('📍 Κλικ στον χάρτη για προσθήκη σημείων');
-        console.log('🔄 Η τελευταία διαδρομή φορτώνεται αυτόματα');
+        console.log('🔄 Η περιστροφή γίνεται ομαλά με cooldown');
+        console.log('🧭 Η περιστροφή ΔΕΝ ξεκινά από μόνη της');
     </script>
 </body>
 </html>
