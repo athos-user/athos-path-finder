@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Athos Path Finder - No API</title>
+    <title>Athos Path Finder</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,6 +23,56 @@
             z-index: 1;
         }
         
+        /* Στυλ για το βέλος - Η ΜΥΤΗ ΔΕΙΧΝΕΙ ΜΠΡΟΣΤΑ */
+        .blue-dot {
+            background: #2196F3;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            border: 3px solid white;
+            box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3), 0 2px 10px rgba(0,0,0,0.3);
+            display: block;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        .blue-dot-glow {
+            background: rgba(33, 150, 243, 0.15);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 0.2; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+        
+        /* Το βέλος - μεγάλη μύτη μπροστά, μικρή ουρά πίσω */
+        .direction-arrow {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%) rotate(0deg);
+            font-size: 24px;
+            color: #2196F3;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .direction-arrow::before {
+            content: '▲';
+            display: block;
+            font-size: 28px;
+            color: #2196F3;
+            text-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+        }
+        
+        /* Υπόλοιπα στυλ - ίδια με πριν */
         .watermark {
             position: fixed;
             bottom: 120px;
@@ -346,56 +396,6 @@
         #sosContainer .sos-buttons .call-btn { background: #e74c3c; color: white; font-size: 16px; }
         #sosContainer .sos-footer { margin-top: 8px; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #eee; padding-top: 6px; }
         
-        .blue-dot {
-            background: #2196F3;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            border: 3px solid white;
-            box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3), 0 2px 10px rgba(0,0,0,0.3);
-            display: block;
-            position: relative;
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .blue-dot::after {
-            content: '';
-            position: absolute;
-            bottom: -16px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-top: 14px solid #2196F3;
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .blue-dot .direction-arrow {
-            position: absolute;
-            top: -18px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 14px;
-            color: #2196F3;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .blue-dot-glow {
-            background: rgba(33, 150, 243, 0.15);
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            position: absolute;
-            top: -12px;
-            left: -12px;
-            animation: pulse-glow 2s infinite;
-        }
-        @keyframes pulse-glow {
-            0% { transform: scale(1); opacity: 0.6; }
-            50% { transform: scale(1.3); opacity: 0.2; }
-            100% { transform: scale(1); opacity: 0.6; }
-        }
-        
         .photo-marker {
             background: white;
             border-radius: 50%;
@@ -434,7 +434,10 @@
         .compass-indicator:active { transform: scale(0.9); }
         .compass-indicator .arrow { 
             display: inline-block; 
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.3s ease;
+        }
+        .compass-indicator .arrow.rotating {
+            transition: transform 0.3s ease;
         }
         
         .wake-status {
@@ -637,6 +640,11 @@
         .leaflet-control-zoom { z-index: 800 !important; }
         .leaflet-control-attribution { display: none; }
         
+        /* Ειδικό στυλ για το rotation του χάρτη */
+        .leaflet-container {
+            transition: transform 0.5s ease;
+        }
+        
         @media (max-width: 480px) {
             .info-panel { font-size: 10px; padding: 4px 8px; bottom: 55px; width: 92%; }
             #statusText { font-size: 9px; }
@@ -698,8 +706,9 @@
             <ul>
                 <li><span class="badge">📍</span> Πατήστε για <strong>εύρεση θέσης</strong> (GPS/IP)</li>
                 <li>Η <strong>μπλε κουκίδα</strong> δείχνει το στίγμα σας</li>
-                <li>Το βέλος ▲ δείχνει την <strong>κατεύθυνση</strong> κίνησης</li>
-                <li><span class="badge">🧭</span> Δείκτης κατεύθυνσης (πατήστε για επαναφορά)</li>
+                <li>Το <strong>▲ βέλος</strong> δείχνει την κατεύθυνση κίνησης</li>
+                <li>Ο <strong>χάρτης περιστρέφεται αυτόματα</strong> προς την κατεύθυνσή σας</li>
+                <li><span class="badge">🧭</span> Πατήστε για <strong>απενεργοποίηση</strong> αυτόματης περιστροφής</li>
             </ul>
         </div>
         <div class="help-section">
@@ -752,7 +761,7 @@
 
     <div class="wake-status" id="wakeStatus">☀️ Οθόνη ενεργή</div>
 
-    <div class="compass-indicator" id="compassIndicator" title="Δείκτης κατεύθυνσης">
+    <div class="compass-indicator" id="compassIndicator" title="Πατήστε για απενεργοποίηση αυτόματης περιστροφής">
         <span class="arrow" id="compassArrow">🧭</span>
     </div>
 
@@ -827,8 +836,8 @@
     
     <script>
         // ============================================================
-        //  ΑΠΛΟΠΟΙΗΜΕΝΟΣ ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - ΧΩΡΙΣ API KEYS
-        //  Χρησιμοποιεί OSRM (Open Source Routing Machine) - ΔΩΡΕΑΝ
+        //  ΔΙΟΡΘΩΣΗ: Το βέλος δείχνει ΣΩΣΤΑ (μεγάλη μύτη = μπροστά)
+        //  ΚΑΙ: Ο χάρτης περιστρέφεται αυτόματα προς την κατεύθυνση
         // ============================================================
         
         // ============================================================
@@ -836,7 +845,7 @@
         // ============================================================
         const MAX_CACHED_TILES = 500;
         const TOAST_DURATION = 3000;
-        const MAX_HEADING_HISTORY = 3;
+        const MAX_HEADING_HISTORY = 5;
         
         // ============================================================
         //  ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ
@@ -1125,7 +1134,9 @@
             currentGpxLayer: null,
             positionHistory: [],
             headingHistory: [],
-            isInitialLoad: true
+            isInitialLoad: true,
+            autoRotate: true,  // ΝΕΟ: Αυτόματη περιστροφή χάρτη
+            lastHeadingUpdate: 0
         };
         
         // ============================================================
@@ -1565,7 +1576,8 @@
             }, 500);
             
             console.log('🚀 Athos Path Finder έτοιμο!');
-            console.log('📍 Χρησιμοποιεί OSRM - ΔΩΡΕΑΝ, ΧΩΡΙΣ API KEY');
+            console.log('📍 Το βέλος δείχνει ΣΩΣΤΑ την κατεύθυνση (μύτη = μπροστά)');
+            console.log('🔄 Ο χάρτης περιστρέφεται ΑΥΤΟΜΑΤΑ προς την κατεύθυνσή σας');
         }
         
         function saveMapView() {
@@ -1590,38 +1602,70 @@
         }
         
         // ============================================================
-        //  ΜΠΛΕ ΚΟΥΚΙΔΑ
+        //  ΜΠΛΕ ΚΟΥΚΙΔΑ - ΔΙΟΡΘΩΜΕΝΟ ΒΕΛΟΣ
         // ============================================================
         function createBlueDot(lat, lng) {
             if (App.userBlueDot) { 
                 App.markerGroup.removeLayer(App.userBlueDot); 
                 App.userBlueDot = null; 
             }
-            var html = '<div class="blue-dot" style="transform: rotate(0deg)">' +
+            // ΔΗΜΙΟΥΡΓΙΑ ΒΕΛΟΥΣ - Η ΜΥΤΗ ΔΕΙΧΝΕΙ ΜΠΡΟΣΤΑ
+            var html = '<div class="blue-dot">' +
                        '<div class="blue-dot-glow"></div>' +
-                       '<span class="direction-arrow">▲</span>' +
+                       '<div class="direction-arrow" id="arrowIndicator">▲</div>' +
                        '</div>';
-            var icon = L.divIcon({ html: html, className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+            var icon = L.divIcon({ 
+                html: html, 
+                className: '', 
+                iconSize: [28, 48], 
+                iconAnchor: [14, 24] 
+            });
             App.userBlueDot = L.marker([lat, lng], { icon: icon }).addTo(App.markerGroup);
             return App.userBlueDot;
         }
         
+        // ============================================================
+        //  ΕΝΗΜΕΡΩΣΗ ΘΕΣΗΣ - ΜΕ ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ
+        // ============================================================
         function updateBlueDot(lat, lng, heading) {
-            if (!App.userBlueDot) { createBlueDot(lat, lng); }
-            else { App.userBlueDot.setLatLng([lat, lng]); }
-            
-            if (heading !== null && heading !== undefined) {
-                App.userHeading = heading;
-                var el = App.userBlueDot.getElement();
-                if (el) {
-                    var dot = el.querySelector('.blue-dot');
-                    if (dot) { dot.style.transform = 'rotate(' + heading + 'deg)'; }
-                    var arrow = el.querySelector('.direction-arrow');
-                    if (arrow) { arrow.style.transform = 'rotate(' + heading + 'deg)'; }
-                }
-                updateCompass(heading);
+            if (!App.userBlueDot) { 
+                createBlueDot(lat, lng); 
+            } else { 
+                App.userBlueDot.setLatLng([lat, lng]); 
             }
             
+            // Ενημέρωση κατεύθυνσης βέλους
+            if (heading !== null && heading !== undefined && !isNaN(heading)) {
+                App.userHeading = heading;
+                
+                // Περιστροφή του βέλους - Η ΜΥΤΗ (▲) ΔΕΙΧΝΕΙ ΜΠΡΟΣΤΑ
+                var el = App.userBlueDot.getElement();
+                if (el) {
+                    var arrow = el.querySelector('.direction-arrow');
+                    if (arrow) {
+                        arrow.style.transform = 'translateX(-50%) rotate(' + heading + 'deg)';
+                    }
+                }
+                
+                // Ενημέρωση πυξίδας
+                updateCompass(heading);
+                
+                // ============================================================
+                //  ΑΥΤΟΜΑΤΗ ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ
+                // ============================================================
+                if (App.autoRotate) {
+                    // Περιστροφή του χάρτη ώστε η κατεύθυνση να είναι πάντα προς τα πάνω
+                    var container = App.map.getContainer();
+                    if (container) {
+                        // Χρησιμοποιούμε transform rotation στο container
+                        container.style.transform = 'rotate(' + (-heading) + 'deg)';
+                        // Διόρθωση για τα controls
+                        container.style.transition = 'transform 0.5s ease';
+                    }
+                }
+            }
+            
+            // Κέντραρισμα αν βγει εκτός ορίων
             var bounds = App.map.getBounds();
             if (!bounds.contains(L.latLng(lat, lng))) {
                 App.map.panTo([lat, lng]);
@@ -1635,22 +1679,35 @@
             }
         }
         
-        function resetCompass() {
-            var arrow = document.getElementById('compassArrow');
-            if (arrow) { arrow.style.transform = 'rotate(0deg)'; }
-            if (App.userBlueDot) {
-                var el = App.userBlueDot.getElement();
-                if (el) {
-                    var dot = el.querySelector('.blue-dot');
-                    if (dot) { dot.style.transform = 'rotate(0deg)'; }
-                    var arrowEl = el.querySelector('.direction-arrow');
-                    if (arrowEl) { arrowEl.style.transform = 'rotate(0deg)'; }
+        // ============================================================
+        //  ΕΝΑΛΛΑΓΗ ΑΥΤΟΜΑΤΗΣ ΠΕΡΙΣΤΡΟΦΗΣ
+        // ============================================================
+        function toggleAutoRotate() {
+            App.autoRotate = !App.autoRotate;
+            if (!App.autoRotate) {
+                // Επαναφορά χάρτη στην αρχική του θέση
+                var container = App.map.getContainer();
+                if (container) {
+                    container.style.transform = 'rotate(0deg)';
+                }
+                showToast('🧭 Αυτόματη περιστροφή ΑΠΕΝΕΡΓΟΠΟΙΗΘΗΚΕ', '#e67e22');
+            } else {
+                showToast('🧭 Αυτόματη περιστροφή ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ', '#2ecc71');
+                // Ενημέρωση με την τρέχουσα κατεύθυνση
+                if (App.userHeading !== null && App.userHeading !== undefined) {
+                    updateBlueDot(
+                        App.userBlueDot ? App.userBlueDot.getLatLng().lat : 0,
+                        App.userBlueDot ? App.userBlueDot.getLatLng().lng : 0,
+                        App.userHeading
+                    );
                 }
             }
-            App.userHeading = 0;
-            showToast('🧭 Επαναφορά κατεύθυνσης', '#8e44ad');
         }
-        document.getElementById('compassIndicator')?.addEventListener('click', resetCompass);
+        
+        // Το κλικ στην πυξίδα αλλάζει την αυτόματη περιστροφή
+        document.getElementById('compassIndicator')?.addEventListener('click', function() {
+            toggleAutoRotate();
+        });
         
         // ============================================================
         //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ
@@ -1678,8 +1735,11 @@
                         var lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
                         if (!App.userBlueDot) { createBlueDot(lat, lng); }
                         var h = calcHeadingFromHistory(lat, lng);
-                        if (h !== null) { updateBlueDot(lat, lng, h); }
-                        else { updateBlueDot(lat, lng, App.userHeading || 0); }
+                        if (h !== null) { 
+                            updateBlueDot(lat, lng, h); 
+                        } else { 
+                            updateBlueDot(lat, lng, App.userHeading || 0); 
+                        }
                         var statusEl = document.getElementById('statusText');
                         if (statusEl) {
                             var accText = acc < 50 ? ' (υψηλή)' : acc < 200 ? ' (καλή)' : '';
@@ -1772,7 +1832,6 @@
                 sum += App.headingHistory[i];
             }
             var smoothed = sum / App.headingHistory.length;
-            if (Math.abs(smoothed - App.userHeading) < 2) { return App.userHeading; }
             return smoothed;
         }
         
@@ -2064,7 +2123,7 @@
         }
         
         // ============================================================
-        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - ΧΡΗΣΙΜΟΠΟΙΕΙ OSRM (ΔΩΡΕΑΝ)
+        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - OSRM
         // ============================================================
         async function calcRoute() {
             if (!App.startPoint || !App.endPoint) { 
@@ -2085,7 +2144,6 @@
             }
             allPoints.push([App.endPoint.lat, App.endPoint.lng]);
             
-            // Καθαρισμός παλιών γραμμών
             for (var i = 0; i < App.routeLines.length; i++) { 
                 App.markerGroup.removeLayer(App.routeLines[i]); 
             }
@@ -2094,8 +2152,6 @@
             const loader = showLoader('Υπολογισμός διαδρομής...');
             
             try {
-                // Χρήση OSRM - Δωρεάν, χωρίς API key
-                // Δημιουργία URL με όλα τα σημεία
                 var coordsStr = allPoints.map(function(p) { 
                     return p[1] + ',' + p[0]; 
                 }).join(';');
@@ -2128,11 +2184,9 @@
                 var line = L.polyline(latlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(App.markerGroup);
                 App.routeLines.push(line);
                 
-                // Fit bounds with padding
                 try {
                     App.map.fitBounds(line.getBounds(), { padding: [40,40] });
                 } catch(e) {
-                    // Αν αποτύχει, πήγαινε στο κέντρο
                     App.map.setView([App.startPoint.lat, App.startPoint.lng], 13);
                 }
                 
@@ -2146,7 +2200,6 @@
                 console.error('❌ OSRM Error:', error);
                 hideLoader();
                 
-                // Fallback: Απλή ευθεία γραμμή
                 showToast('⚠️ OSRM error - Χρήση ευθείας γραμμής', '#f39c12');
                 
                 var simpleGeom = [];
@@ -2271,11 +2324,16 @@
             App.currentGpxGeometry = null;
             App.userBlueDot = null;
             
+            // Επαναφορά περιστροφής χάρτη
+            var container = App.map?.getContainer();
+            if (container) {
+                container.style.transform = 'rotate(0deg)';
+            }
+            
             resetInfo();
             document.getElementById('fileInput').value = '';
             updatePhotoList();
             updateWaypointsPanel();
-            resetCompass();
             localStorage.removeItem('athos_last_route_state');
             showToast('🗑️ Καθαρίστηκαν όλα', '#e74c3c');
         }
@@ -2707,12 +2765,9 @@
         updateWaypointsPanel();
         initMap();
         
-        console.log('📱 Athos Path Finder - ΧΩΡΙΣ API KEYS');
-        console.log('📍 Χρησιμοποιεί OSRM (Δωρεάν routing)');
-        console.log('📥 Offline χάρτες με λήψη tiles');
-        console.log('📤 GPX με δημιουργό "Athos Maps"');
-        console.log('🔒 XSS protection με escapeHtml()');
-        console.log('📦 Marker group για καλύτερη διαχείριση μνήμης');
+        console.log('📱 Athos Path Finder - ΜΕ ΑΥΤΟΜΑΤΗ ΠΕΡΙΣΤΡΟΦΗ');
+        console.log('📍 Το βέλος δείχνει ΣΩΣΤΑ την κατεύθυνση (▲ = μπροστά)');
+        console.log('🔄 Ο χάρτης περιστρέφεται ΑΥΤΟΜΑΤΑ (πατήστε 🧭 για απενεργοποίηση)');
     </script>
 </body>
 </html>
