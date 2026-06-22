@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Athos Path Finder</title>
+    <title>Athos Path Finder - No API</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -501,7 +501,6 @@
             background: rgba(255,255,255,0.3);
         }
         
-        /* TILE PROGRESS */
         #tileProgress {
             position: fixed;
             bottom: 120px;
@@ -520,7 +519,6 @@
         #tileProgress .bar { width: 100%; height: 4px; background: #444; border-radius: 2px; margin-top: 6px; overflow: hidden; }
         #tileProgress .bar .fill { height: 100%; background: #2ecc71; border-radius: 2px; transition: width 0.3s ease; width: 0%; }
         
-        /* LOADER OVERLAY */
         #loader-overlay {
             position: fixed;
             top: 0;
@@ -829,20 +827,16 @@
     
     <script>
         // ============================================================
+        //  ΑΠΛΟΠΟΙΗΜΕΝΟΣ ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - ΧΩΡΙΣ API KEYS
+        //  Χρησιμοποιεί OSRM (Open Source Routing Machine) - ΔΩΡΕΑΝ
+        // ============================================================
+        
+        // ============================================================
         //  ΣΤΑΘΕΡΕΣ
         // ============================================================
         const MAX_CACHED_TILES = 500;
-        const MAX_PHOTOS = 50;
         const TOAST_DURATION = 3000;
         const MAX_HEADING_HISTORY = 3;
-        
-        // ============================================================
-        //  API KEYS (Διορθώθηκε)
-        // ============================================================
-        // Δημόσιο test key για OpenRouteService
-        const ORS_API_KEY = '5b3ce3597851110001cf6248e6d3c0dcb5f047b1bc3b0c4a61b1f44b';
-        // Ο χρήστης μπορεί να βάλει το δικό του GraphHopper key
-        const GRAPHHOPPER_API_KEY = 'YOUR_GRAPHHOPPER_API_KEY_HERE';
         
         // ============================================================
         //  ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ
@@ -918,39 +912,8 @@
             return (h + 360) % 360;
         }
         
-        function getLocalStorageSize() {
-            let total = 0;
-            for (let key in localStorage) {
-                if (localStorage.hasOwnProperty(key)) {
-                    total += localStorage[key].length * 2;
-                }
-            }
-            return total / 1024 / 1024;
-        }
-        
-        function cleanupLocalStorage() {
-            const size = getLocalStorageSize();
-            if (size > 4) {
-                // Καθαρισμός παλιών tiles
-                try {
-                    const data = localStorage.getItem('athos_tile_cache');
-                    if (data) {
-                        const cache = JSON.parse(data);
-                        const keys = Object.keys(cache);
-                        if (keys.length > MAX_CACHED_TILES) {
-                            keys.sort((a, b) => cache[a].timestamp - cache[b].timestamp);
-                            const toRemove = keys.slice(0, keys.length - MAX_CACHED_TILES);
-                            toRemove.forEach(key => delete cache[key]);
-                            localStorage.setItem('athos_tile_cache', JSON.stringify(cache));
-                            console.log('🧹 Cleaned up ' + toRemove.length + ' old tiles');
-                        }
-                    }
-                } catch(e) {}
-            }
-        }
-        
         // ============================================================
-        //  OFFLINE TILES - ΛΗΨΗ ΧΑΡΤΗ (Με debounce)
+        //  OFFLINE TILES
         // ============================================================
         var isDownloading = false;
         var tileCache = {};
@@ -965,7 +928,6 @@
         
         function saveTileCache() {
             try {
-                cleanupLocalStorage();
                 localStorage.setItem('athos_tile_cache', JSON.stringify(tileCache));
             } catch(e) {}
         }
@@ -980,8 +942,8 @@
             downloadTimeout = setTimeout(async function() {
                 downloadTimeout = null;
                 
-                var bounds = map.getBounds();
-                var zoom = map.getZoom();
+                var bounds = App.map.getBounds();
+                var zoom = App.map.getZoom();
                 var downloadZoom = Math.min(zoom + 1, 16);
                 var tiles = [];
                 
@@ -1136,7 +1098,7 @@
         document.getElementById('wakeLockBtn')?.addEventListener('click', toggleWakeLock);
         
         // ============================================================
-        //  ΑΝΤΙΚΕΙΜΕΝΟ ΕΦΑΡΜΟΓΗΣ (Αποφυγή pollution)
+        //  ΑΝΤΙΚΕΙΜΕΝΟ ΕΦΑΡΜΟΓΗΣ
         // ============================================================
         const App = {
             map: null,
@@ -1185,7 +1147,7 @@
         });
         
         // ============================================================
-        //  GPX - ΜΕ ΔΗΜΙΟΥΡΓΟ Athos Maps
+        //  GPX
         // ============================================================
         function generateGpxWithAthosMaps(geometry, start, end, waypoints, photos, fileName) {
             var now = new Date();
@@ -1270,9 +1232,6 @@
             return gpx;
         }
         
-        // ============================================================
-        //  GPX ΕΞΑΓΩΓΗ
-        // ============================================================
         function exportGpx() {
             if (!App.lastMainGeometry || App.lastMainGeometry.length < 2) {
                 showToast('⚠️ Δεν υπάρχει διαδρομή για εξαγωγή.', '#e67e22');
@@ -1324,7 +1283,7 @@
         }
         
         // ============================================================
-        //  GPX ΦΟΡΤΩΣΗ (με έλεγχο toGeoJSON)
+        //  GPX ΦΟΡΤΩΣΗ
         // ============================================================
         function loadGpxFile(file) {
             if (!window.FileReader) {
@@ -1426,7 +1385,7 @@
                         var line = L.polyline(latlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(App.markerGroup);
                         App.routeLines.push(line);
                         App.currentGpxLayer = line;
-                        map.fitBounds(line.getBounds(), { padding: [40,40] });
+                        App.map.fitBounds(line.getBounds(), { padding: [40,40] });
                         App.lastMainGeometry = geometry;
                         App.lastMainDistance = computeDistance(geometry);
                         updateInfo();
@@ -1548,7 +1507,6 @@
         function initMap() {
             loadTileCache();
             
-            // Custom tile layer with cache support
             var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap',
                 maxZoom: 19,
@@ -1580,13 +1538,9 @@
                 tapTolerance: 15
             });
             
-            // Δημιουργία marker group
             App.markerGroup = L.layerGroup().addTo(App.map);
-            
-            // Φόρτωση αποθηκευμένης προβολής
             loadMapView();
             
-            // Ενημέρωση κουμπιού αν υπάρχουν cached tiles
             if (Object.keys(tileCache).length > 0) {
                 document.getElementById('downloadTilesBtn').classList.add('active');
             }
@@ -1596,7 +1550,6 @@
                 showPopup(e);
             });
             
-            // Αποθήκευση προβολής όταν αλλάζει
             App.map.on('moveend', function() {
                 saveMapView();
             });
@@ -1612,7 +1565,7 @@
             }, 500);
             
             console.log('🚀 Athos Path Finder έτοιμο!');
-            console.log('📥 Offline tiles: ' + Object.keys(tileCache).length);
+            console.log('📍 Χρησιμοποιεί OSRM - ΔΩΡΕΑΝ, ΧΩΡΙΣ API KEY');
         }
         
         function saveMapView() {
@@ -1824,7 +1777,7 @@
         }
         
         // ============================================================
-        //  POPUP - ΠΡΟΣΘΗΚΗ ΣΗΜΕΙΩΝ
+        //  POPUP
         // ============================================================
         function showPopup(e) {
             var lat = e.latlng.lat, lng = e.latlng.lng;
@@ -2072,7 +2025,6 @@
         function updatePhotoList() {
             var container = document.getElementById('photoItems');
             if (!container) {
-                // Δημιουργία container αν δεν υπάρχει
                 var panel = document.getElementById('waypointsPanel');
                 if (panel) {
                     var div = document.createElement('div');
@@ -2112,7 +2064,7 @@
         }
         
         // ============================================================
-        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ (με loader)
+        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - ΧΡΗΣΙΜΟΠΟΙΕΙ OSRM (ΔΩΡΕΑΝ)
         // ============================================================
         async function calcRoute() {
             if (!App.startPoint || !App.endPoint) { 
@@ -2142,86 +2094,88 @@
             const loader = showLoader('Υπολογισμός διαδρομής...');
             
             try {
-                var coords = allPoints.map(function(p) { return [p[1], p[0]]; });
-                var response = await fetch('https://api.openrouteservice.org/v2/directions/foot-hiking', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'Authorization': 'Bearer ' + ORS_API_KEY  // Διορθώθηκε
-                    },
-                    body: JSON.stringify({ 
-                        coordinates: coords, 
-                        preference: 'recommended', 
-                        units: 'km', 
-                        geometry: true, 
-                        geometry_format: 'geojson',
-                        instructions: false
-                    })
-                });
+                // Χρήση OSRM - Δωρεάν, χωρίς API key
+                // Δημιουργία URL με όλα τα σημεία
+                var coordsStr = allPoints.map(function(p) { 
+                    return p[1] + ',' + p[0]; 
+                }).join(';');
+                
+                var osrmUrl = 'https://router.project-osrm.org/route/v1/foot/' + coordsStr + '?overview=full&geometries=geojson';
+                
+                console.log('🌐 OSRM Request:', osrmUrl);
+                
+                var response = await fetch(osrmUrl);
                 
                 if (!response.ok) {
                     var errorText = await response.text();
-                    console.warn('ORS error:', response.status, errorText);
-                    throw new Error('ORS error: ' + response.status);
+                    console.warn('OSRM error:', response.status, errorText);
+                    throw new Error('OSRM error: ' + response.status);
                 }
                 
                 var data = await response.json();
-                var feature = data.features?.[0];
-                if (!feature) throw new Error('No route from ORS');
                 
-                var geom = feature.geometry.coordinates;
+                if (!data.routes || !data.routes[0]) {
+                    throw new Error('No route from OSRM');
+                }
+                
+                var route = data.routes[0];
+                var geom = route.geometry.coordinates;
+                
                 App.lastMainGeometry = geom;
-                App.lastMainDistance = (feature.properties?.summary?.distance || 0) / 1000;
+                App.lastMainDistance = route.distance / 1000;
+                
                 var latlngs = geom.map(function(c) { return [c[1], c[0]]; });
                 var line = L.polyline(latlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(App.markerGroup);
                 App.routeLines.push(line);
-                App.map.fitBounds(line.getBounds(), { padding: [40,40] });
+                
+                // Fit bounds with padding
+                try {
+                    App.map.fitBounds(line.getBounds(), { padding: [40,40] });
+                } catch(e) {
+                    // Αν αποτύχει, πήγαινε στο κέντρο
+                    App.map.setView([App.startPoint.lat, App.startPoint.lng], 13);
+                }
+                
                 updateInfo();
                 document.getElementById('osmLink').href = 'https://www.openstreetmap.org/directions?engine=foot&route=' + allPoints.map(function(p) { return p[0] + ',' + p[1]; }).join(';');
                 saveLastRoute();
                 hideLoader();
-                showToast('✅ Διαδρομή υπολογίστηκε (ORS)', '#2ecc71');
-                return;
+                showToast('✅ Διαδρομή υπολογίστηκε (OSRM)', '#2ecc71');
                 
-            } catch(orsError) {
-                console.warn('ORS failed, trying GraphHopper:', orsError.message);
+            } catch(error) {
+                console.error('❌ OSRM Error:', error);
+                hideLoader();
+                
+                // Fallback: Απλή ευθεία γραμμή
+                showToast('⚠️ OSRM error - Χρήση ευθείας γραμμής', '#f39c12');
+                
+                var simpleGeom = [];
+                for (var i = 0; i < allPoints.length; i++) {
+                    simpleGeom.push([allPoints[i][1], allPoints[i][0]]);
+                }
+                
+                App.lastMainGeometry = simpleGeom;
+                App.lastMainDistance = computeDistance(simpleGeom);
+                
+                var simpleLatlngs = simpleGeom.map(function(c) { return [c[1], c[0]]; });
+                var simpleLine = L.polyline(simpleLatlngs, { 
+                    color: '#e67e22', 
+                    weight: 4, 
+                    opacity: 0.8,
+                    dashArray: '8, 8'
+                }).addTo(App.markerGroup);
+                App.routeLines.push(simpleLine);
                 
                 try {
-                    var ghUrl = 'https://graphhopper.com/api/1/route?key=' + GRAPHHOPPER_API_KEY + '&profile=foot&points_encoded=false&calc_points=true&elevation=false';
-                    for (var i = 0; i < allPoints.length; i++) {
-                        ghUrl += '&point=' + allPoints[i][0] + ',' + allPoints[i][1];
-                    }
-                    
-                    var ghResponse = await fetch(ghUrl);
-                    if (!ghResponse.ok) {
-                        var ghError = await ghResponse.text();
-                        console.warn('GraphHopper error:', ghResponse.status, ghError);
-                        throw new Error('GraphHopper error: ' + ghResponse.status);
-                    }
-                    
-                    var ghData = await ghResponse.json();
-                    if (!ghData.paths || !ghData.paths[0]) {
-                        throw new Error('No route from GraphHopper');
-                    }
-                    
-                    var ghCoords = ghData.paths[0].points.coordinates;
-                    App.lastMainGeometry = ghCoords;
-                    App.lastMainDistance = ghData.paths[0].distance / 1000;
-                    var ghLatlngs = ghCoords.map(function(c) { return [c[1], c[0]]; });
-                    var ghLine = L.polyline(ghLatlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(App.markerGroup);
-                    App.routeLines.push(ghLine);
-                    App.map.fitBounds(ghLine.getBounds(), { padding: [40,40] });
-                    updateInfo();
-                    document.getElementById('osmLink').href = 'https://www.openstreetmap.org/directions?engine=foot&route=' + allPoints.map(function(p) { return p[0] + ',' + p[1]; }).join(';');
-                    saveLastRoute();
-                    hideLoader();
-                    showToast('✅ Διαδρομή υπολογίστηκε (GraphHopper)', '#2ecc71');
-                    
-                } catch(ghError) {
-                    console.error('Both services failed:', ghError);
-                    hideLoader();
-                    showToast('❌ Αποτυχία υπολογισμού διαδρομής', '#e74c3c');
+                    App.map.fitBounds(simpleLine.getBounds(), { padding: [40,40] });
+                } catch(e) {
+                    App.map.setView([App.startPoint.lat, App.startPoint.lng], 13);
                 }
+                
+                updateInfo();
+                document.getElementById('osmLink').href = 'https://www.openstreetmap.org/directions?engine=foot&route=' + allPoints.map(function(p) { return p[0] + ',' + p[1]; }).join(';');
+                saveLastRoute();
+                showToast('⚠️ Χρησιμοποιείται ευθεία γραμμή (OSRM offline)', '#f39c12');
             }
         }
         
@@ -2281,8 +2235,6 @@
             
             list.innerHTML = html;
             if (countSpan) countSpan.innerText = total;
-            
-            // Ενημέρωση φωτογραφιών
             updatePhotoList();
         }
         
@@ -2301,10 +2253,8 @@
         function clearAll() {
             if (App.isLocationTracking) { stopLocationTracking(); if (wakeLockActive) { releaseWakeLock(); } }
             
-            // Καθαρισμός όλων των layers στο group
             App.markerGroup.clearLayers();
             
-            // Επαναφορά μεταβλητών
             App.startMarker = null;
             App.endMarker = null;
             App.markers = [];
@@ -2547,7 +2497,7 @@
         }
         
         // ============================================================
-        //  ΑΠΟΘΗΚΕΥΣΗ ΔΙΑΔΡΟΜΩΝ ΣΤΗ ΛΙΣΤΑ
+        //  ΑΠΟΘΗΚΕΥΣΗ ΔΙΑΔΡΟΜΩΝ
         // ============================================================
         function getSavedRoutes() {
             try { return JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); }
@@ -2757,11 +2707,10 @@
         updateWaypointsPanel();
         initMap();
         
-        console.log('📱 Athos Path Finder - ΠΛΗΡΗΣ ΕΚΔΟΣΗ (με διορθώσεις)');
-        console.log('📍 Υπολογισμός διαδρομής με ORS + GraphHopper fallback');
-        console.log('📥 Offline χάρτες με λήψη tiles (debounce + auto-cleanup)');
-        console.log('📤 GPX με δημιουργό "Athos Maps" (με escapeHtml)');
-        console.log('❓ Πλήρης βοήθεια');
+        console.log('📱 Athos Path Finder - ΧΩΡΙΣ API KEYS');
+        console.log('📍 Χρησιμοποιεί OSRM (Δωρεάν routing)');
+        console.log('📥 Offline χάρτες με λήψη tiles');
+        console.log('📤 GPX με δημιουργό "Athos Maps"');
         console.log('🔒 XSS protection με escapeHtml()');
         console.log('📦 Marker group για καλύτερη διαχείριση μνήμης');
     </script>
