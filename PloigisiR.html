@@ -14,65 +14,36 @@
             font-family: 'Segoe UI', Roboto, sans-serif;
             background: #f0f2f5;
         }
-        #map { 
-            width: 100%; 
-            height: 100%;
+        
+        /* ============================================================
+           ΔΙΟΡΘΩΣΗ: Ο ΧΑΡΤΗΣ ΔΕΝ ΚΟΒΕΤΑΙ ΣΤΗΝ ΠΕΡΙΣΤΡΟΦΗ
+           ============================================================ */
+        #map-container {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             z-index: 1;
         }
         
-        /* Στυλ για το βέλος - Η ΜΥΤΗ ΔΕΙΧΝΕΙ ΜΠΡΟΣΤΑ */
-        .blue-dot {
-            background: #2196F3;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            border: 3px solid white;
-            box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3), 0 2px 10px rgba(0,0,0,0.3);
-            display: block;
-            position: relative;
-            transition: transform 0.3s ease;
-        }
-        .blue-dot-glow {
-            background: rgba(33, 150, 243, 0.15);
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
+        #map {
+            width: 200%;
+            height: 200%;
             position: absolute;
-            top: -10px;
-            left: -10px;
-            animation: pulse-glow 2s infinite;
-        }
-        @keyframes pulse-glow {
-            0% { transform: scale(1); opacity: 0.6; }
-            50% { transform: scale(1.3); opacity: 0.2; }
-            100% { transform: scale(1); opacity: 0.6; }
+            top: -50%;
+            left: -50%;
+            z-index: 1;
+            transform-origin: center center;
+            transition: transform 0.4s ease;
         }
         
-        /* Το βέλος - μεγάλη μύτη μπροστά, μικρή ουρά πίσω */
-        .direction-arrow {
-            position: absolute;
-            top: -28px;
-            left: 50%;
-            transform: translateX(-50%) rotate(0deg);
-            font-size: 24px;
-            color: #2196F3;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            transition: transform 0.3s ease;
-            line-height: 1;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-        .direction-arrow::before {
-            content: '▲';
-            display: block;
-            font-size: 28px;
-            color: #2196F3;
-            text-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+        /* Όταν περιστρέφεται, το map-container κόβει την περίσσεια */
+        #map-container.rotating {
+            overflow: hidden;
         }
         
-        /* Υπόλοιπα στυλ - ίδια με πριν */
         .watermark {
             position: fixed;
             bottom: 120px;
@@ -396,6 +367,52 @@
         #sosContainer .sos-buttons .call-btn { background: #e74c3c; color: white; font-size: 16px; }
         #sosContainer .sos-footer { margin-top: 8px; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #eee; padding-top: 6px; }
         
+        .blue-dot {
+            background: #2196F3;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            border: 3px solid white;
+            box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3), 0 2px 10px rgba(0,0,0,0.3);
+            display: block;
+            position: relative;
+        }
+        .blue-dot-glow {
+            background: rgba(33, 150, 243, 0.15);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 0.2; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+        
+        .direction-arrow {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%) rotate(0deg);
+            font-size: 24px;
+            color: #2196F3;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .direction-arrow::before {
+            content: '▲';
+            display: block;
+            font-size: 28px;
+            color: #2196F3;
+            text-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+        }
+        
         .photo-marker {
             background: white;
             border-radius: 50%;
@@ -434,9 +451,6 @@
         .compass-indicator:active { transform: scale(0.9); }
         .compass-indicator .arrow { 
             display: inline-block; 
-            transition: transform 0.3s ease;
-        }
-        .compass-indicator .arrow.rotating {
             transition: transform 0.3s ease;
         }
         
@@ -640,11 +654,6 @@
         .leaflet-control-zoom { z-index: 800 !important; }
         .leaflet-control-attribution { display: none; }
         
-        /* Ειδικό στυλ για το rotation του χάρτη */
-        .leaflet-container {
-            transition: transform 0.5s ease;
-        }
-        
         @media (max-width: 480px) {
             .info-panel { font-size: 10px; padding: 4px 8px; bottom: 55px; width: 92%; }
             #statusText { font-size: 9px; }
@@ -663,7 +672,12 @@
     </style>
 </head>
 <body>
-    <div id="map"></div>
+    <!-- ============================================================
+         ΝΕΟ: CONTAINER ΓΙΑ ΤΟΝ ΧΑΡΤΗ ΜΕ 200% ΜΕΓΕΘΟΣ
+         ============================================================ -->
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
 
     <div class="watermark">
         ATHOS <span>MAPS</span>
@@ -836,8 +850,8 @@
     
     <script>
         // ============================================================
-        //  ΔΙΟΡΘΩΣΗ: Το βέλος δείχνει ΣΩΣΤΑ (μεγάλη μύτη = μπροστά)
-        //  ΚΑΙ: Ο χάρτης περιστρέφεται αυτόματα προς την κατεύθυνση
+        //  ΟΛΟΣ Ο ΚΩΔΙΚΑΣ ΜΕ ΤΗ ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΟΝ ΧΑΡΤΗ
+        //  Ο ΧΑΡΤΗΣ ΕΙΝΑΙ 200% ΚΑΙ ΔΕΝ ΚΟΒΕΤΑΙ ΣΤΗΝ ΠΕΡΙΣΤΡΟΦΗ
         // ============================================================
         
         // ============================================================
@@ -1111,6 +1125,7 @@
         // ============================================================
         const App = {
             map: null,
+            mapContainer: null,
             startPoint: null,
             startName: 'Αφετηρία',
             startMarker: null,
@@ -1135,7 +1150,7 @@
             positionHistory: [],
             headingHistory: [],
             isInitialLoad: true,
-            autoRotate: true,  // ΝΕΟ: Αυτόματη περιστροφή χάρτη
+            autoRotate: true,
             lastHeadingUpdate: 0
         };
         
@@ -1513,10 +1528,12 @@
         };
         
         // ============================================================
-        //  ΧΑΡΤΗΣ
+        //  ΧΑΡΤΗΣ - ΝΕΑ ΥΛΟΠΟΙΗΣΗ ΜΕ 200% ΜΕΓΕΘΟΣ
         // ============================================================
         function initMap() {
             loadTileCache();
+            
+            App.mapContainer = document.getElementById('map-container');
             
             var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap',
@@ -1542,11 +1559,14 @@
                 return url.replace('{s}', subdomains[idx]);
             };
             
+            // ΔΗΜΙΟΥΡΓΙΑ ΧΑΡΤΗ ΜΕΣΑ ΣΤΟ 200% DIV
             App.map = L.map('map', { 
                 layers: [tileLayer], 
                 zoomControl: true,
                 tap: true,
-                tapTolerance: 15
+                tapTolerance: 15,
+                center: [40.16, 24.32],
+                zoom: 10
             });
             
             App.markerGroup = L.layerGroup().addTo(App.map);
@@ -1576,7 +1596,7 @@
             }, 500);
             
             console.log('🚀 Athos Path Finder έτοιμο!');
-            console.log('📍 Το βέλος δείχνει ΣΩΣΤΑ την κατεύθυνση (μύτη = μπροστά)');
+            console.log('📍 Ο χάρτης είναι 200% και ΔΕΝ κόβεται στην περιστροφή');
             console.log('🔄 Ο χάρτης περιστρέφεται ΑΥΤΟΜΑΤΑ προς την κατεύθυνσή σας');
         }
         
@@ -1602,14 +1622,13 @@
         }
         
         // ============================================================
-        //  ΜΠΛΕ ΚΟΥΚΙΔΑ - ΔΙΟΡΘΩΜΕΝΟ ΒΕΛΟΣ
+        //  ΜΠΛΕ ΚΟΥΚΙΔΑ - ΜΕ ΣΩΣΤΟ ΒΕΛΟΣ
         // ============================================================
         function createBlueDot(lat, lng) {
             if (App.userBlueDot) { 
                 App.markerGroup.removeLayer(App.userBlueDot); 
                 App.userBlueDot = null; 
             }
-            // ΔΗΜΙΟΥΡΓΙΑ ΒΕΛΟΥΣ - Η ΜΥΤΗ ΔΕΙΧΝΕΙ ΜΠΡΟΣΤΑ
             var html = '<div class="blue-dot">' +
                        '<div class="blue-dot-glow"></div>' +
                        '<div class="direction-arrow" id="arrowIndicator">▲</div>' +
@@ -1625,7 +1644,7 @@
         }
         
         // ============================================================
-        //  ΕΝΗΜΕΡΩΣΗ ΘΕΣΗΣ - ΜΕ ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ
+        //  ΕΝΗΜΕΡΩΣΗ ΘΕΣΗΣ - ΜΕ ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ (ΠΛΗΡΗΣ ΟΘΟΝΗ)
         // ============================================================
         function updateBlueDot(lat, lng, heading) {
             if (!App.userBlueDot) { 
@@ -1634,11 +1653,9 @@
                 App.userBlueDot.setLatLng([lat, lng]); 
             }
             
-            // Ενημέρωση κατεύθυνσης βέλους
             if (heading !== null && heading !== undefined && !isNaN(heading)) {
                 App.userHeading = heading;
                 
-                // Περιστροφή του βέλους - Η ΜΥΤΗ (▲) ΔΕΙΧΝΕΙ ΜΠΡΟΣΤΑ
                 var el = App.userBlueDot.getElement();
                 if (el) {
                     var arrow = el.querySelector('.direction-arrow');
@@ -1647,25 +1664,21 @@
                     }
                 }
                 
-                // Ενημέρωση πυξίδας
                 updateCompass(heading);
                 
                 // ============================================================
-                //  ΑΥΤΟΜΑΤΗ ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ
+                //  ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ - ΜΕΤΑΚΙΝΗΣΗ ΟΛΟΥ ΤΟΥ CONTAINER
+                //  Ο ΧΑΡΤΗΣ ΕΙΝΑΙ 200% ΚΑΙ ΔΕΝ ΚΟΒΕΤΑΙ
                 // ============================================================
                 if (App.autoRotate) {
-                    // Περιστροφή του χάρτη ώστε η κατεύθυνση να είναι πάντα προς τα πάνω
-                    var container = App.map.getContainer();
+                    var container = document.getElementById('map');
                     if (container) {
-                        // Χρησιμοποιούμε transform rotation στο container
                         container.style.transform = 'rotate(' + (-heading) + 'deg)';
-                        // Διόρθωση για τα controls
-                        container.style.transition = 'transform 0.5s ease';
+                        container.style.transition = 'transform 0.4s ease';
                     }
                 }
             }
             
-            // Κέντραρισμα αν βγει εκτός ορίων
             var bounds = App.map.getBounds();
             if (!bounds.contains(L.latLng(lat, lng))) {
                 App.map.panTo([lat, lng]);
@@ -1684,27 +1697,22 @@
         // ============================================================
         function toggleAutoRotate() {
             App.autoRotate = !App.autoRotate;
+            var container = document.getElementById('map');
             if (!App.autoRotate) {
-                // Επαναφορά χάρτη στην αρχική του θέση
-                var container = App.map.getContainer();
                 if (container) {
                     container.style.transform = 'rotate(0deg)';
                 }
                 showToast('🧭 Αυτόματη περιστροφή ΑΠΕΝΕΡΓΟΠΟΙΗΘΗΚΕ', '#e67e22');
             } else {
                 showToast('🧭 Αυτόματη περιστροφή ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ', '#2ecc71');
-                // Ενημέρωση με την τρέχουσα κατεύθυνση
                 if (App.userHeading !== null && App.userHeading !== undefined) {
-                    updateBlueDot(
-                        App.userBlueDot ? App.userBlueDot.getLatLng().lat : 0,
-                        App.userBlueDot ? App.userBlueDot.getLatLng().lng : 0,
-                        App.userHeading
-                    );
+                    if (container) {
+                        container.style.transform = 'rotate(' + (-App.userHeading) + 'deg)';
+                    }
                 }
             }
         }
         
-        // Το κλικ στην πυξίδα αλλάζει την αυτόματη περιστροφή
         document.getElementById('compassIndicator')?.addEventListener('click', function() {
             toggleAutoRotate();
         });
@@ -2325,7 +2333,7 @@
             App.userBlueDot = null;
             
             // Επαναφορά περιστροφής χάρτη
-            var container = App.map?.getContainer();
+            var container = document.getElementById('map');
             if (container) {
                 container.style.transform = 'rotate(0deg)';
             }
@@ -2765,9 +2773,9 @@
         updateWaypointsPanel();
         initMap();
         
-        console.log('📱 Athos Path Finder - ΜΕ ΑΥΤΟΜΑΤΗ ΠΕΡΙΣΤΡΟΦΗ');
-        console.log('📍 Το βέλος δείχνει ΣΩΣΤΑ την κατεύθυνση (▲ = μπροστά)');
-        console.log('🔄 Ο χάρτης περιστρέφεται ΑΥΤΟΜΑΤΑ (πατήστε 🧭 για απενεργοποίηση)');
+        console.log('📱 Athos Path Finder - ΜΕ 200% ΧΑΡΤΗ');
+        console.log('📍 Ο χάρτης ΔΕΝ κόβεται στην περιστροφή (200% μέγεθος)');
+        console.log('🔄 Αυτόματη περιστροφή με ομαλή μετάβαση');
     </script>
 </body>
 </html>
