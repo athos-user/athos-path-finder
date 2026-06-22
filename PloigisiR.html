@@ -496,7 +496,6 @@
             background: rgba(255,255,255,0.3);
         }
         
-        /* Help Modal */
         .help-modal {
             position: fixed;
             top: 50%;
@@ -609,13 +608,11 @@
         <button class="close-btn" onclick="document.getElementById('gpxToast').style.display='none'">✕ Κατάλαβα</button>
     </div>
 
-    <!-- HELP MODAL -->
     <div class="help-modal" id="helpModal">
         <div class="help-header">
             <h2>🧭 Athos Path Finder</h2>
             <button id="closeHelpBtn">✕</button>
         </div>
-        
         <div class="help-section">
             <h3>📍 Σχεδίαση Διαδρομής</h3>
             <ul>
@@ -626,7 +623,6 @@
                 <li><span class="badge">✏️</span> Πατήστε για μετονομασία σε κάθε σημείο</li>
             </ul>
         </div>
-        
         <div class="help-section">
             <h3>📍 Θέση μου &amp; Πλοήγηση</h3>
             <ul>
@@ -636,7 +632,6 @@
                 <li><span class="badge">🧭</span> Δείκτης κατεύθυνσης (πατήστε για επαναφορά)</li>
             </ul>
         </div>
-        
         <div class="help-section">
             <h3>📸 Φωτογραφίες</h3>
             <ul>
@@ -645,17 +640,16 @@
                 <li>Οι φωτογραφίες εμφανίζονται στον χάρτη 📷</li>
             </ul>
         </div>
-        
         <div class="help-section">
             <h3>💾 Αποθήκευση &amp; Φόρτωση</h3>
             <ul>
                 <li><span class="badge">💾</span> <strong>Αποθήκευση</strong> της τρέχουσας διαδρομής</li>
                 <li><span class="badge">🗺️</span> <strong>Φόρτωση</strong> αποθηκευμένων διαδρομών</li>
-                <li><span class="badge">📤</span> <strong>Εξαγωγή GPX</strong> με δημιουργό "Athos Maps"</li>
+                <li><span class="badge gpx">📤</span> <strong>Εξαγωγή GPX</strong> με δημιουργό "Athos Maps"</li>
                 <li>Το GPX αποθηκεύεται στον φάκελο <strong>Λήψεις/Downloads</strong></li>
+                <li><span class="badge gpx">📂</span> <strong>Φόρτωση GPX</strong> με όλα τα σημεία (Start, End, Waypoints)</li>
             </ul>
         </div>
-        
         <div class="help-section">
             <h3>🆘 SOS &amp; Έκτακτη Ανάγκη</h3>
             <ul>
@@ -664,18 +658,15 @@
                 <li><span class="badge sos">📞 112</span> Άμεση κλήση στην Ευρωπαϊκή γραμμή έκτακτης ανάγκης</li>
             </ul>
         </div>
-        
         <div class="help-section">
             <h3>⚙️ Άλλες Λειτουργίες</h3>
             <ul>
                 <li><span class="badge">☀️</span> <strong>Κράτημα οθόνης</strong> αναμμένης</li>
                 <li><span class="badge">🗑️</span> <strong>Καθαρισμός</strong> όλων των σημείων</li>
                 <li><span class="badge">📥</span> <strong>Λήψη χάρτη</strong> για offline χρήση</li>
-                <li><span class="badge">📂</span> <strong>Φόρτωση GPX/KML</strong> αρχείου</li>
                 <li>Η τελευταία διαδρομή <strong>αποθηκεύεται</strong> αυτόματα</li>
             </ul>
         </div>
-        
         <div style="text-align:center;margin-top:12px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:#888;">
             <a href="https://agionorosroutes.blogspot.com/" target="_blank" style="color:#2c5f2d;text-decoration:none;">🏛️ agionorosroutes.blogspot.com</a>
         </div>
@@ -981,6 +972,183 @@
         }
         
         // ============================================================
+        //  GPX ΦΟΡΤΩΣΗ - ΜΕ ΑΝΑΓΝΩΡΙΣΗ ΣΗΜΕΙΩΝ (Waypoints)
+        // ============================================================
+        function loadGpxFile(file) {
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(ev.target.result, 'text/xml');
+                    if (doc.getElementsByTagName('parsererror').length > 0) {
+                        throw new Error('Λάθος XML');
+                    }
+                    
+                    var geojson = toGeoJSON.gpx(doc);
+                    clearAll();
+                    
+                    var geometry = null;
+                    var waypointsData = [];
+                    var startWpt = null;
+                    var endWpt = null;
+                    
+                    // 1. Εύρεση της γραμμής (track)
+                    if (geojson.features) {
+                        for (var i = 0; i < geojson.features.length; i++) {
+                            var feat = geojson.features[i];
+                            if (feat.geometry && (feat.geometry.type === 'LineString' || feat.geometry.type === 'MultiLineString')) {
+                                if (feat.geometry.type === 'LineString') { 
+                                    geometry = feat.geometry.coordinates; 
+                                } else if (feat.geometry.type === 'MultiLineString') { 
+                                    geometry = feat.geometry.coordinates.flat(); 
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 2. Εύρεση σημείων (waypoints) από το XML
+                    var wptNodes = doc.getElementsByTagName('wpt');
+                    for (var i = 0; i < wptNodes.length; i++) {
+                        var node = wptNodes[i];
+                        var lat = parseFloat(node.getAttribute('lat'));
+                        var lon = parseFloat(node.getAttribute('lon'));
+                        if (isNaN(lat) || isNaN(lon)) continue;
+                        
+                        var name = '';
+                        var nameNode = node.getElementsByTagName('name');
+                        if (nameNode.length > 0) {
+                            name = nameNode[0].textContent || '';
+                        }
+                        
+                        var sym = '';
+                        var symNode = node.getElementsByTagName('sym');
+                        if (symNode.length > 0) {
+                            sym = symNode[0].textContent || '';
+                        }
+                        
+                        var type = '';
+                        var typeNode = node.getElementsByTagName('type');
+                        if (typeNode.length > 0) {
+                            type = typeNode[0].textContent || '';
+                        }
+                        
+                        waypointsData.push({
+                            lat: lat,
+                            lng: lon,
+                            name: name,
+                            sym: sym,
+                            type: type
+                        });
+                    }
+                    
+                    // 3. Ταξινόμηση σημείων: Start, End, Waypoints
+                    var startCandidates = [];
+                    var endCandidates = [];
+                    var waypointCandidates = [];
+                    
+                    for (var i = 0; i < waypointsData.length; i++) {
+                        var w = waypointsData[i];
+                        if (w.sym === 'Start' || w.type === 'Αφετηρία' || w.name.toLowerCase().includes('start')) {
+                            startCandidates.push(w);
+                        } else if (w.sym === 'End' || w.type === 'Προορισμός' || w.name.toLowerCase().includes('end') || w.name.toLowerCase().includes('προορισμός')) {
+                            endCandidates.push(w);
+                        } else {
+                            waypointCandidates.push(w);
+                        }
+                    }
+                    
+                    // Αν δεν βρήκαμε με sym, δοκιμάζουμε με τη σειρά
+                    if (startCandidates.length === 0 && waypointsData.length > 0) {
+                        startCandidates.push(waypointsData[0]);
+                    }
+                    if (endCandidates.length === 0 && waypointsData.length > 1) {
+                        endCandidates.push(waypointsData[waypointsData.length - 1]);
+                    }
+                    
+                    // 4. Φόρτωση της διαδρομής
+                    if (geometry && geometry.length > 0) {
+                        currentGpxGeometry = geometry;
+                        var latlngs = geometry.map(function(c) { return [c[1], c[0]]; });
+                        var line = L.polyline(latlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map);
+                        routeLines.push(line);
+                        currentGpxLayer = line;
+                        map.fitBounds(line.getBounds(), { padding: [40,40] });
+                        lastMainGeometry = geometry;
+                        lastMainDistance = computeDistance(geometry);
+                        updateInfo();
+                    }
+                    
+                    // 5. Φόρτωση Start
+                    if (startCandidates.length > 0) {
+                        var s = startCandidates[0];
+                        startPoint = { lat: s.lat, lng: s.lng };
+                        startName = s.name || 'Αφετηρία';
+                        startMarker = L.marker([startPoint.lat, startPoint.lng], {
+                            icon: getColorIcon('green'), draggable: true
+                        }).addTo(map).bindPopup('🚩 ' + startName + '<br><button onclick="renameStart()" style="background:#2c5f2d;color:white;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:3px;">✏️ Μετονομασία</button>');
+                        startMarker.on('dragend', function(e) {
+                            startPoint = { lat: e.target.getLatLng().lat, lng: e.target.getLatLng().lng };
+                            calcRoute(); saveLastRoute();
+                        });
+                    }
+                    
+                    // 6. Φόρτωση End
+                    if (endCandidates.length > 0) {
+                        var e = endCandidates[0];
+                        endPoint = { lat: e.lat, lng: e.lng };
+                        endName = e.name || 'Προορισμός';
+                        endMarker = L.marker([endPoint.lat, endPoint.lng], {
+                            icon: getColorIcon('red'), draggable: true
+                        }).addTo(map).bindPopup('🏁 ' + endName + '<br><button onclick="renameEnd()" style="background:#2c5f2d;color:white;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:3px;">✏️ Μετονομασία</button>');
+                        endMarker.on('dragend', function(e) {
+                            endPoint = { lat: e.target.getLatLng().lat, lng: e.target.getLatLng().lng };
+                            calcRoute(); saveLastRoute();
+                        });
+                    }
+                    
+                    // 7. Φόρτωση Ενδιάμεσων σημείων
+                    for (var i = 0; i < waypointCandidates.length; i++) {
+                        var w = waypointCandidates[i];
+                        // Αποφυγή διπλότυπων με Start/End
+                        var isDuplicate = false;
+                        if (startPoint && Math.abs(w.lat - startPoint.lat) < 0.0001 && Math.abs(w.lng - startPoint.lng) < 0.0001) isDuplicate = true;
+                        if (endPoint && Math.abs(w.lat - endPoint.lat) < 0.0001 && Math.abs(w.lng - endPoint.lng) < 0.0001) isDuplicate = true;
+                        if (isDuplicate) continue;
+                        
+                        waypoints.push({ lat: w.lat, lng: w.lng });
+                        waypointNames.push(w.name || 'Σημείο ' + (waypoints.length));
+                        var idx = waypoints.length - 1;
+                        var marker = L.marker([w.lat, w.lng], {
+                            icon: getColorIcon('blue'), draggable: true
+                        }).addTo(map).bindPopup('📍 ' + waypointNames[idx] + '<br><button onclick="removeWp(' + idx + ')" style="background:#b22222;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:3px;">✖ Διαγραφή</button><br><button onclick="renameWaypoint(' + idx + ')" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:3px;">✏️ Μετονομασία</button>');
+                        (function(idx) {
+                            marker.on('dragend', function(e) {
+                                waypoints[idx] = { lat: e.target.getLatLng().lat, lng: e.target.getLatLng().lng };
+                                calcRoute(); saveLastRoute();
+                            });
+                        })(i);
+                        markers.push(marker);
+                    }
+                    
+                    updateWaypointsPanel();
+                    
+                    // 8. Υπολογισμός διαδρομής αν υπάρχουν Start και End
+                    if (startPoint && endPoint) {
+                        calcRoute();
+                    }
+                    
+                    saveLastRoute();
+                    alert('✅ GPX/KML φορτώθηκε με ' + (startPoint ? 1 : 0) + ' αφετηρία, ' + (endPoint ? 1 : 0) + ' προορισμό και ' + waypoints.length + ' ενδιάμεσα σημεία!');
+                    
+                } catch(err) {
+                    alert('Σφάλμα: ' + err.message);
+                    console.error('GPX load error:', err);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // ============================================================
         //  ΒΟΗΘΗΤΙΚΕΣ
         // ============================================================
         function getColorIcon(color) {
@@ -1056,7 +1224,7 @@
             if (newName && newName.trim()) {
                 startName = newName.trim();
                 if (startMarker) {
-                    startMarker.setPopupContent('🚩 ' + startName);
+                    startMarker.setPopupContent('🚩 ' + startName + '<br><button onclick="renameStart()" style="background:#2c5f2d;color:white;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:3px;">✏️ Μετονομασία</button>');
                 }
                 updateWaypointsPanel();
                 saveLastRoute();
@@ -1070,7 +1238,7 @@
             if (newName && newName.trim()) {
                 endName = newName.trim();
                 if (endMarker) {
-                    endMarker.setPopupContent('🏁 ' + endName);
+                    endMarker.setPopupContent('🏁 ' + endName + '<br><button onclick="renameEnd()" style="background:#2c5f2d;color:white;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:3px;">✏️ Μετονομασία</button>');
                 }
                 updateWaypointsPanel();
                 saveLastRoute();
@@ -1084,13 +1252,16 @@
             if (newName && newName.trim()) {
                 waypointNames[idx] = newName.trim();
                 if (markers[idx]) {
-                    markers[idx].setPopupContent('📍 ' + waypointNames[idx] + '<br><button onclick="removeWp(' + idx + ')" style="background:#b22222;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;">✖ Διαγραφή</button><br><button onclick="renameWaypoint(' + idx + ')" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:3px;">✏️ Μετονομασία</button>');
+                    markers[idx].setPopupContent('📍 ' + waypointNames[idx] + '<br><button onclick="removeWp(' + idx + ')" style="background:#b22222;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:3px;">✖ Διαγραφή</button><br><button onclick="renameWaypoint(' + idx + ')" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:3px;">✏️ Μετονομασία</button>');
                 }
                 updateWaypointsPanel();
                 saveLastRoute();
                 showToast('✅ Μετονομάστηκε σε: ' + waypointNames[idx], '#2ecc71');
             }
         };
+        
+        window.renameStart = renameStart;
+        window.renameEnd = renameEnd;
         
         // ============================================================
         //  ΧΑΡΤΗΣ
@@ -1107,13 +1278,11 @@
                 showPopup(e);
             });
             
-            // Φόρτωση τελευταίας διαδρομής ΚΑΙ αυτόματη εύρεση θέσης
             setTimeout(function() {
                 var hasLastRoute = loadLastRoute();
                 if (hasLastRoute) {
                     console.log('🔄 Φορτώθηκε η τελευταία διαδρομή');
                 }
-                // ΑΥΤΟΜΑΤΗ ΕΥΡΕΣΗ ΘΕΣΗΣ
                 setTimeout(function() { 
                     locateUser(); 
                 }, 500);
@@ -1183,7 +1352,7 @@
         document.getElementById('compassIndicator')?.addEventListener('click', resetCompass);
         
         // ============================================================
-        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ - ΑΥΤΟΜΑΤΟΣ
+        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ
         // ============================================================
         function locateUser() {
             if (isLocationTracking) { stopLocationTracking(); return; }
@@ -1316,7 +1485,7 @@
         }
         
         // ============================================================
-        //  ΠΡΟΣΘΗΚΗ ΣΗΜΕΙΩΝ - ΜΕ ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ
+        //  ΠΡΟΣΘΗΚΗ ΣΗΜΕΙΩΝ
         // ============================================================
         function addStart(latlng) {
             if (isLocationTracking) { stopLocationTracking(); }
@@ -1339,7 +1508,6 @@
             calcRoute(); updateWaypointsPanel(); saveLastRoute();
             showToast('✅ Προστέθηκε αφετηρία: ' + startName, '#2ecc71');
         }
-        window.renameStart = renameStart;
         
         function addEnd(latlng) {
             if (isLocationTracking) { stopLocationTracking(); }
@@ -1362,7 +1530,6 @@
             calcRoute(); updateWaypointsPanel(); saveLastRoute();
             showToast('✅ Προστέθηκε προορισμός: ' + endName, '#2ecc71');
         }
-        window.renameEnd = renameEnd;
         
         function addWaypoint(latlng) {
             if (isLocationTracking) { stopLocationTracking(); }
@@ -1652,7 +1819,7 @@
         }
         
         // ============================================================
-        //  ΠΑΝΕΛ ΣΗΜΕΙΩΝ - ΜΕ ΚΟΥΜΠΙ ΜΕΤΟΝΟΜΑΣΙΑΣ
+        //  ΠΑΝΕΛ ΣΗΜΕΙΩΝ
         // ============================================================
         function updateWaypointsPanel() {
             var list = document.getElementById('waypointsList');
@@ -1720,7 +1887,7 @@
         }
         
         // ============================================================
-        //  SOS
+        //  SOS (συντομευμένο)
         // ============================================================
         var sosPos = null;
         
@@ -1789,45 +1956,12 @@
         });
         
         // ============================================================
-        //  GPX ΦΟΡΤΩΣΗ
+        //  GPX ΦΟΡΤΩΣΗ - ΧΡΗΣΗ ΤΗΣ ΝΕΑΣ ΣΥΝΑΡΤΗΣΗΣ
         // ============================================================
         document.getElementById('fileInput').addEventListener('change', function(e) {
             var file = e.target.files[0];
             if (!file) return;
-            var reader = new FileReader();
-            reader.onload = function(ev) {
-                try {
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(ev.target.result, 'text/xml');
-                    if (doc.getElementsByTagName('parsererror').length > 0) throw new Error('Λάθος XML');
-                    var geojson = toGeoJSON.gpx(doc);
-                    clearAll();
-                    var geometry = null;
-                    if (geojson.features) {
-                        for (var i = 0; i < geojson.features.length; i++) {
-                            var feat = geojson.features[i];
-                            if (feat.geometry && (feat.geometry.type === 'LineString' || feat.geometry.type === 'MultiLineString')) {
-                                if (feat.geometry.type === 'LineString') { geometry = feat.geometry.coordinates; break; }
-                                else if (feat.geometry.type === 'MultiLineString') { geometry = feat.geometry.coordinates.flat(); break; }
-                            }
-                        }
-                    }
-                    if (geometry && geometry.length > 0) {
-                        currentGpxGeometry = geometry;
-                        var latlngs = geometry.map(function(c) { return [c[1], c[0]]; });
-                        var line = L.polyline(latlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map);
-                        routeLines.push(line);
-                        currentGpxLayer = line;
-                        map.fitBounds(line.getBounds(), { padding: [40,40] });
-                        lastMainGeometry = geometry;
-                        lastMainDistance = computeDistance(geometry);
-                        updateInfo();
-                        saveLastRoute();
-                        alert('✅ GPX/KML φορτώθηκε!');
-                    } else { alert('Το αρχείο δεν περιέχει διαδρομή.'); }
-                } catch(err) { alert('Σφάλμα: ' + err.message); }
-            };
-            reader.readAsText(file);
+            loadGpxFile(file);
             e.target.value = '';
         });
         
@@ -2145,10 +2279,10 @@
         initMap();
         
         console.log('📱 Athos Path Finder - ΠΛΗΡΗΣ ΕΚΔΟΣΗ');
-        console.log('📍 Αυτόματη εύρεση θέσης κατά την εκκίνηση');
-        console.log('✏️ Μετονομασία σε όλα τα σημεία (Start/End/Waypoints)');
+        console.log('📍 Φόρτωση GPX με όλα τα σημεία (Start, End, Waypoints)');
+        console.log('✏️ Μετονομασία σε όλα τα σημεία');
         console.log('📤 GPX με δημιουργό "Athos Maps"');
-        console.log('❓ Πλήρης βοήθεια με όλες τις λειτουργίες');
+        console.log('❓ Πλήρης βοήθεια');
     </script>
 </body>
 </html>
