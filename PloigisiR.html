@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Athos Path Finder - Πεζοπορικός Χάρτης</title>
+    <title>Athos Path Finder - Cycle Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* ΟΛΑ ΤΑ ΣΤΥΛ ΠΑΡΑΜΕΝΟΥΝ ΙΔΙΑ - ΜΙΚΡΟΤΕΡΟ ΑΡΧΕΙΟ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; }
         #map-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 1; }
@@ -21,6 +20,7 @@
         }
         #offtrack-notification .sub { font-size: 12px; font-weight: 400; opacity: 0.9; margin-top: 2px; }
         #offtrack-notification .btn-center { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-left: 10px; }
+        #offtrack-notification .mute-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-left: 6px; }
         @keyframes slideDown { from { transform: translateX(-50%) translateY(-20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
         
         .controls {
@@ -70,6 +70,7 @@
             .controls .logo-link img { height: 18px; max-width: 50px; }
             #offtrack-notification { font-size: 12px; padding: 8px 14px; top: 72px; }
             #offtrack-notification .btn-center { font-size: 10px; padding: 2px 10px; }
+            #offtrack-notification .mute-btn { font-size: 10px; padding: 2px 8px; }
         }
         @media (min-width: 601px) {
             .controls { flex-wrap: wrap; max-height: none; padding: 8px 14px; left: 50%; transform: translateX(-50%); max-width: 95%; width: auto; top: 10px; border-radius: 16px; }
@@ -224,7 +225,10 @@
 <body>
     <div id="offtrack-notification">
         <div>📍 Αποκλίνετε από τη διαδρομή! <span id="offtrack-distance">0</span> μέτρα</div>
-        <div class="sub">Πατήστε <button class="btn-center" id="centerMapBtn">🎯 Επιστροφή στη διαδρομή</button></div>
+        <div class="sub">
+            <button class="btn-center" id="centerMapBtn">🎯 Επιστροφή</button>
+            <button class="mute-btn" id="muteOfftrackBtn">🔇 Σίγαση</button>
+        </div>
     </div>
 
     <div id="map-container">
@@ -246,16 +250,13 @@
     </div>
 
     <div id="loader-overlay">
-        <div class="loader-box">
-            <div class="loader-spinner"></div>
-            <div id="loader-text">Υπολογισμός διαδρομής...</div>
-        </div>
+        <div class="loader-box"><div class="loader-spinner"></div><div id="loader-text">Υπολογισμός διαδρομής...</div></div>
     </div>
 
     <div class="help-modal" id="helpModal">
         <div class="help-header"><h2>🧭 Athos Path Finder</h2><button id="closeHelpBtn">✕</button></div>
         <div class="help-section"><h3>📍 Σχεδίαση Διαδρομής</h3><ul><li><span class="badge">Κλικ</span> στον χάρτη → επιλέξτε <strong>🚩 Start</strong> (αφετηρία)</li><li>Κλικ → επιλέξτε <strong>🏁 End</strong> (προορισμός)</li><li>Κλικ → επιλέξτε <strong>📍 Ενδιάμεσο</strong> για σημεία στάσης</li><li>Μετακινήστε τα σημεία με <strong>drag & drop</strong></li><li><span class="badge">✏️</span> Πατήστε για μετονομασία σε κάθε σημείο</li></ul></div>
-        <div class="help-section"><h3>📍 Θέση μου &amp; Πλοήγηση</h3><ul><li><span class="badge">📍</span> Πατήστε για <strong>εύρεση θέσης</strong> (GPS/IP)</li><li>Η <strong>μπλε κουκίδα</strong> δείχνει το στίγμα σας</li><li>Το <strong>▲ βέλος</strong> δείχνει την κατεύθυνση κίνησης</li><li>Ο <strong>χάρτης περιστρέφεται αυτόματα</strong> προς την κατεύθυνσή σας</li><li><span class="badge">🧭</span> Πατήστε για <strong>απενεργοποίηση</strong> αυτόματης περιστροφής</li><li>🔔 <strong>Ειδοποίηση</strong> όταν αποκλίνετε από τη διαδρομή (&gt;150 μέτρα)</li></ul></div>
+        <div class="help-section"><h3>📍 Θέση μου &amp; Πλοήγηση</h3><ul><li><span class="badge">📍</span> Πατήστε για <strong>εύρεση θέσης</strong> (GPS/IP)</li><li>Η <strong>μπλε κουκίδα</strong> δείχνει το στίγμα σας</li><li>Το <strong>▲ βέλος</strong> δείχνει την κατεύθυνση κίνησης</li><li>Ο <strong>χάρτης περιστρέφεται αυτόματα</strong> προς την κατεύθυνσή σας</li><li><span class="badge">🧭</span> Πατήστε για <strong>απενεργοποίηση</strong> αυτόματης περιστροφής</li><li>🔔 <strong>Ειδοποίηση</strong> όταν αποκλίνετε από τη διαδρομή (&gt;150 μέτρα) - <strong>Μπορείτε να την κάνετε σίγαση</strong></li></ul></div>
         <div class="help-section"><h3>📸 Φωτογραφίες</h3><ul><li><span class="badge photo">📸</span> Πατήτε για <strong>λήψη φωτογραφίας</strong> με θέση</li><li>Κατά την προσθήκη σημείου, σας <strong>ρωτάει</strong> για φωτογραφία</li><li>Οι φωτογραφίες εμφανίζονται στον χάρτη 📷</li></ul></div>
         <div class="help-section"><h3>💾 Αποθήκευση &amp; Φόρτωση</h3><ul><li><span class="badge">💾</span> <strong>Αποθήκευση</strong> της τρέχουσας διαδρομής</li><li><span class="badge">🗺️</span> <strong>Φόρτωση</strong> αποθηκευμένων διαδρομών</li><li><span class="badge gpx">📤</span> <strong>Εξαγωγή GPX</strong> με δημιουργό "Athos Maps"</li><li>Το GPX αποθηκεύεται στον φάκελο <strong>Λήψεις/Downloads</strong></li><li><span class="badge gpx">📂</span> <strong>Φόρτωση GPX</strong> με όλα τα σημεία</li></ul></div>
         <div class="help-section"><h3>📥 Offline Χάρτες</h3><ul><li><span class="badge offline">📥</span> <strong>Λήψη χάρτη</strong> για offline χρήση</li><li>Το κουμπί γίνεται <strong>πράσινο</strong> (✅) όταν υπάρχουν αποθηκευμένοι χάρτες</li><li>Οι χάρτες αποθηκεύονται στη <strong>μνήμη</strong> της συσκευής σας</li><li>Λειτουργεί και <strong>χωρίς σύνδεση</strong> στο διαδίκτυο</li></ul></div>
@@ -286,8 +287,7 @@
 
     <div id="routeDropdownContainer">
         <div class="routes-header"><span>🗺️ Διαδρομές</span><div><button id="saveRouteFromListBtn" style="background:#2c5f2d;color:white;">💾 Αποθήκευση</button><button id="hideRoutesBtn" style="background:#888;color:white;">✕ Κλείσιμο</button></div></div>
-        <div id="routesList"></div>
-        <div id="routeStatus"></div>
+        <div id="routesList"></div><div id="routeStatus"></div>
     </div>
 
     <div id="waypointsPanel">
@@ -324,9 +324,9 @@
     
     <script>
         // ============================================================
-        //  ΠΕΖΟΠΟΡΙΚΟΣ ΧΑΡΤΗΣ - OpenTopoMap (δείχνει ΜΟΝΟΠΑΤΙΑ)
-        //  Χρησιμοποιούμε OpenTopoMap που είναι ειδικά για πεζοπορία
-        //  URL: https://opentopomap.org/
+        //  ΧΑΡΤΗΣ: OpenStreetMap Cycle Map - ΔΕΙΧΝΕΙ ΜΟΝΟΠΑΤΙΑ
+        //  Το "Cycle Map" layer δείχνει όλα τα μονοπάτια με κόκκινο
+        //  URL: https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png
         // ============================================================
         
         // ============================================================
@@ -336,6 +336,7 @@
         const TOAST_DURATION = 3000;
         const MAX_HEADING_HISTORY = 5;
         const OFFTRACK_THRESHOLD = 150;
+        var offtrackMuted = false; // MUTE για την ειδοποίηση
         
         // ============================================================
         //  ΒΟΗΘΗΤΙΚΕΣ
@@ -484,7 +485,8 @@
                     for (var i = 0; i < tiles.length; i++) {
                         var tile = tiles[i];
                         var key = tile.z + '/' + tile.x + '/' + tile.y;
-                        var url = 'https://{s}.tile.opentopomap.org/' + key + '.png';
+                        // Χρησιμοποιούμε τον Cycle Map για τα tiles
+                        var url = 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png';
                         var subdomains = ['a', 'b', 'c'];
                         var urlWithSub = url.replace('{s}', subdomains[i % 3]);
                         
@@ -807,26 +809,25 @@
         };
         
         // ============================================================
-        //  MAP - ΜΕ ΠΕΖΟΠΟΡΙΚΟ ΧΑΡΤΗ OpenTopoMap
+        //  MAP - ΜΕ Cycle Map (δείχνει μονοπάτια)
         // ============================================================
         function initMap() {
             loadTileCache();
             App.mapContainer = document.getElementById('map-container');
             
             // ==========================================================
-            //  ΠΕΖΟΠΟΡΙΚΟΣ ΧΑΡΤΗΣ - OpenTopoMap
-            //  Δείχνει όλα τα μονοπάτια, υψομετρικές καμπύλες, κορυφές
-            //  Ειδικά σχεδιασμένος για πεζοπορία
+            //  CYCLE MAP - ΔΕΙΧΝΕΙ ΟΛΑ ΤΑ ΜΟΝΟΠΑΤΙΑ ΜΕ ΚΟΚΚΙΝΟ
+            //  Το layer αυτό είναι ειδικά σχεδιασμένο για ποδήλατο/πεζοπορία
             // ==========================================================
-            var tileLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenTopoMap, &copy; OpenStreetMap',
-                maxZoom: 17,
+            var tileLayer = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap, &copy; CyclOSM',
+                maxZoom: 18,
                 getTileUrl: function(coords) {
                     var key = coords.z + '/' + coords.x + '/' + coords.y;
                     if (tileCache[key]) {
                         return tileCache[key].data;
                     }
-                    return 'https://{s}.tile.opentopomap.org/' + key + '.png';
+                    return 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/' + key + '.png';
                 }
             });
             
@@ -848,7 +849,7 @@
                 tap: true,
                 tapTolerance: 15,
                 center: [40.16, 24.32],
-                zoom: 12
+                zoom: 13
             });
             
             App.markerGroup = L.layerGroup().addTo(App.map);
@@ -876,6 +877,17 @@
                 }
             });
             
+            // MUTE για την ειδοποίηση
+            document.getElementById('muteOfftrackBtn')?.addEventListener('click', function() {
+                offtrackMuted = !offtrackMuted;
+                this.textContent = offtrackMuted ? '🔊 Ενεργοποίηση' : '🔇 Σίγαση';
+                showToast(offtrackMuted ? '🔇 Η ειδοποίηση απενεργοποιήθηκε' : '🔊 Η ειδοποίηση ενεργοποιήθηκε', offtrackMuted ? '#e67e22' : '#2ecc71');
+                // Αν είναι muted, κρύβουμε την τρέχουσα ειδοποίηση
+                if (offtrackMuted) {
+                    hideOfftrackNotification();
+                }
+            });
+            
             setTimeout(function() {
                 var hasLastRoute = loadLastRoute();
                 if (hasLastRoute) { console.log('🔄 Φορτώθηκε η τελευταία διαδρομή'); }
@@ -883,8 +895,8 @@
             }, 500);
             
             console.log('🚀 Athos Path Finder έτοιμο!');
-            console.log('🗺️ ΠΕΖΟΠΟΡΙΚΟΣ ΧΑΡΤΗΣ OpenTopoMap');
-            console.log('🥾 Δείχνει ΟΛΑ τα μονοπάτια και υψομετρικά');
+            console.log('🗺️ CYCLE MAP - Δείχνει ΟΛΑ τα μονοπάτια');
+            console.log('🔇 Η ειδοποίηση απόκλισης έχει σίγαση (πατήστε το κουμπί)');
         }
         
         function saveMapView() {
@@ -896,9 +908,13 @@
         }
         
         // ============================================================
-        //  OFFTRACK
+        //  OFFTRACK - ΜΕ MUTE
         // ============================================================
         function checkOfftrack() {
+            if (offtrackMuted) {
+                hideOfftrackNotification();
+                return;
+            }
             if (!App.lastKnownLat || !App.lastKnownLng) return;
             if (!App.routePath || App.routePath.length < 2) { hideOfftrackNotification(); return; }
             var userPos = L.latLng(App.lastKnownLat, App.lastKnownLng);
@@ -909,8 +925,11 @@
                 if (d < minDist) minDist = d;
             }
             App.offtrackDistance = minDist;
-            if (minDist > OFFTRACK_THRESHOLD && App.isLocationTracking) { showOfftrackNotification(minDist); }
-            else { hideOfftrackNotification(); }
+            if (minDist > OFFTRACK_THRESHOLD && App.isLocationTracking && !offtrackMuted) { 
+                showOfftrackNotification(minDist); 
+            } else { 
+                hideOfftrackNotification(); 
+            }
         }
         
         function showOfftrackNotification(distance) {
@@ -958,7 +977,7 @@
                 }
             }
             checkOfftrack();
-            if (App.offtrackDistance > OFFTRACK_THRESHOLD * 2) {
+            if (App.offtrackDistance > OFFTRACK_THRESHOLD * 2 && !offtrackMuted) {
                 App.map.panTo([lat, lng]);
                 showToast('📍 Επιστροφή στη διαδρομή', '#2196F3');
             }
@@ -1183,7 +1202,7 @@
         };
         
         // ============================================================
-        //  ΦΩΤΟΓΡΑΦΙΕΣ
+        //  ΦΩΤΟΓΡΑΦΙΕΣ (συντομευμένες)
         // ============================================================
         var pendingPhotoPos = null;
         
@@ -1468,7 +1487,7 @@
         }
         
         // ============================================================
-        //  SOS
+        //  SOS (συντομευμένο)
         // ============================================================
         var sosPos = null;
         function openSos() {
@@ -1528,7 +1547,7 @@
         });
         
         // ============================================================
-        //  FILE INPUT
+        //  FILE INPUT, DOWNLOAD, SAVE/LOAD ROUTES (συντομευμένα)
         // ============================================================
         document.getElementById('fileInput').addEventListener('change', function(e) {
             var file = e.target.files[0];
@@ -1536,15 +1555,8 @@
             loadGpxFile(file);
             e.target.value = '';
         });
-        
-        // ============================================================
-        //  DOWNLOAD TILES
-        // ============================================================
         document.getElementById('downloadTilesBtn')?.addEventListener('click', downloadTiles);
         
-        // ============================================================
-        //  SAVE / LOAD ROUTE
-        // ============================================================
         function saveLastRoute() {
             try {
                 if (!App.lastMainGeometry || App.lastMainGeometry.length < 2) return;
@@ -1622,9 +1634,6 @@
             } catch(e) { return false; }
         }
         
-        // ============================================================
-        //  SAVED ROUTES LIST
-        // ============================================================
         function getSavedRoutes() {
             try { return JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); } catch(e) { return []; }
         }
@@ -1783,11 +1792,10 @@
         updateWaypointsPanel();
         initMap();
         
-        console.log('📱 Athos Path Finder - ΠΕΖΟΠΟΡΙΚΟΣ ΧΑΡΤΗΣ');
-        console.log('🗺️ OpenTopoMap - Δείχνει ΟΛΑ τα μονοπάτια');
-        console.log('🥾 Ιδανικός για πεζοπορία στο Άγιο Όρος');
+        console.log('📱 Athos Path Finder - CYCLE MAP');
+        console.log('🗺️ Δείχνει ΟΛΑ τα μονοπάτια με κόκκινο χρώμα');
+        console.log('🔇 Η ειδοποίηση απόκλισης έχει κουμπί σίγασης');
         console.log('📱 2 γραμμές σε κινητά');
-        console.log('🔔 Ειδοποίηση απόκλισης από τη διαδρομή');
     </script>
 </body>
 </html>
