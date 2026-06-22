@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Athos Path Finder</title>
+    <title>Athos Path Finder - Χάρτης Μονοπατιών</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -891,32 +891,40 @@
     
     <script>
         // ============================================================
-        //  ΧΑΡΤΗΣ: CYCLE MAP - ΔΕΙΧΝΕΙ ΟΛΑ ΤΑ ΜΟΝΟΠΑΤΙΑ
-        //  Το Cycle Map εμφανίζει τα μονοπάτια με κόκκινο χρώμα
-        //  Είναι ιδανικός για πεζοπορία και ποδήλατο
+        //  ΧΑΡΤΗΣ: CyclOSM - ΔΕΙΧΝΕΙ ΟΛΑ ΤΑ ΜΟΝΟΠΑΤΙΑ ΜΕ ΚΟΚΚΙΝΟ
+        //  Αυτός είναι ο χάρτης από το Safe A.html αλλά με CyclOSM
         // ============================================================
-        var osm = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', { 
-            attribution: '&copy; OpenStreetMap &amp; CyclOSM', 
-            maxZoom: 18 
-        });
-        var map = L.map('map', { layers: [osm], zoomControl: true }).setView([40.16, 24.32], 13);
-
-        // ============================================================
-        //  API KEYS
-        // ============================================================
+        
+        // API KEYS
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
         var GRAPHHOPPER_API_KEY = '5fece833-cd75-4373-a6ba-a4137d3f5132';
 
         // ============================================================
-        //  ΔΗΜΙΟΥΡΓΙΑ ΜΟΝΑΔΙΚΟΥ ID
+        //  ΧΑΡΤΗΣ - CyclOSM (ΔΕΙΧΝΕΙ ΜΟΝΟΠΑΤΙΑ)
         // ============================================================
+        var osm = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap, &copy; CyclOSM',
+            maxZoom: 18
+        });
+
+        var map = L.map('map', { 
+            layers: [osm], 
+            zoomControl: true,
+            center: [40.16, 24.32],
+            zoom: 13
+        });
+
+        // ============================================================
+        //  ΥΠΟΛΟΙΠΟΣ ΚΩΔΙΚΑΣ ΙΔΙΟΣ ΜΕ ΤΟ Safe A.html
+        //  (ΟΛΕΣ ΟΙ ΛΕΙΤΟΥΡΓΙΕΣ ΠΑΡΑΜΕΝΟΥΝ ΙΔΙΕΣ)
+        // ============================================================
+        
+        // ΔΗΜΙΟΥΡΓΙΑ ΜΟΝΑΔΙΚΟΥ ID
         function generateRouteId() {
             return 'route_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
         }
 
-        // ============================================================
-        //  ΑΝΑΒΑΘΜΙΣΗ ΠΑΛΙΩΝ ΔΙΑΔΡΟΜΩΝ ΜΕ ID
-        // ============================================================
+        // ΑΝΑΒΑΘΜΙΣΗ ΠΑΛΙΩΝ ΔΙΑΔΡΟΜΩΝ ΜΕ ID
         function upgradeRoutesWithId() {
             var upgraded = false;
             try {
@@ -936,9 +944,7 @@
             return upgraded;
         }
 
-        // ============================================================
-        //  INDEXEDDB - ΑΠΟΘΗΚΕΥΣΗ ΦΩΤΟΓΡΑΦΙΩΝ
-        // ============================================================
+        // INDEXEDDB - ΑΠΟΘΗΚΕΥΣΗ ΦΩΤΟΓΡΑΦΙΩΝ
         var db = null;
         var DB_NAME = 'AthosPhotoDB';
         var STORE_NAME = 'photos';
@@ -1002,9 +1008,7 @@
 
         openPhotoDB().catch(function(err) { console.warn('⚠️ IndexedDB error:', err); });
 
-        // ============================================================
-        //  CACHING TILES
-        // ============================================================
+        // CACHING TILES
         var isDownloading = false, tileCache = {};
 
         function loadTileCache() {
@@ -1175,90 +1179,7 @@
         document.getElementById('hideRoutesBtn')?.addEventListener('click', hideRouteDropdown);
 
         // ============================================================
-        //  ΔΟΜΕΣ
-        // ============================================================
-        var startPoint = null, startName = 'Αφετηρία', startMarker = null;
-        var endPoint = null, endName = 'Προορισμός', endMarker = null;
-        var waypoints = [], waypointNames = [], waypointDescs = [], waypointColors = [], waypointElevs = [], waypointImages = [], waypointStops = [], markers = [];
-        var routeLines = [];
-        var lastMainDistance = null, lastMainGeometry = null;
-        var isNavigating = false, isMinimized = false, navigationSteps = [];
-        var currentLocationMarker = null, routePhotos = [], photoMarkers = [];
-        var navigationWatchId = null, userPositionMarker = null;
-        var locationWatchId = null, isLocationTracking = false, userInteracted = false, isPaused = false;
-        var navStatusEl = document.getElementById('navStatus');
-        var navStartBtn = document.getElementById('navStartBtn');
-        var navPauseBtn = document.getElementById('navPauseBtn');
-        var navStopBtn = document.getElementById('navStopBtn');
-        var pois = [], poiNames = [], poiDescs = [], poiColors = [], poiElevs = [], poiImages = [], poiMarkers = [];
-        var currentGpxGeometry = null, currentGpxStartName = 'Αφετηρία GPX', currentGpxEndName = 'Προορισμός GPX', currentGpxLayer = null, currentGpxDistance = null;
-        
-        // ============================================================
-        //  ΠΥΞΙΔΑ & ΠΡΟΣΑΝΑΤΟΛΙΣΜΟΣ ΧΑΡΤΗ
-        // ============================================================
-        var currentHeading = null;
-        var autoRotateMap = false;
-        var compassBtn = document.getElementById('compassBtn');
-        
-        compassBtn.addEventListener('click', function() {
-            autoRotateMap = !autoRotateMap;
-            if (autoRotateMap) {
-                compassBtn.classList.add('active');
-                compassBtn.title = 'Κλείδωμα προσανατολισμού στον Βορρά';
-                requestOrientationPermission();
-                showToast('🧭 Αυτόματη περιστροφή χάρτη ΕΝΕΡΓΗ', '#e67e22');
-            } else {
-                compassBtn.classList.remove('active');
-                compassBtn.title = 'Προσανατολισμός χάρτη στην πυξίδα';
-                map.setBearing(0);
-                showToast('🧭 Ο χάρτης επέστρεψε στον Βορρά', '#888');
-            }
-        });
-        
-        function requestOrientationPermission() {
-            if (window.DeviceOrientationEvent) {
-                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    DeviceOrientationEvent.requestPermission()
-                        .then(function(permissionState) {
-                            if (permissionState === 'granted') {
-                                window.addEventListener('deviceorientation', handleOrientation, true);
-                            }
-                        })
-                        .catch(console.error);
-                } else {
-                    window.addEventListener('deviceorientation', handleOrientation, true);
-                }
-            }
-        }
-        
-        function handleOrientation(event) {
-            var heading;
-            if (event.webkitCompassHeading !== undefined) {
-                heading = event.webkitCompassHeading;
-            } else if (event.alpha !== null && event.alpha !== undefined) {
-                heading = 360 - event.alpha;
-            } else {
-                return;
-            }
-            if (currentHeading !== null && Math.abs(heading - currentHeading) < 2) {
-                return;
-            }
-            currentHeading = heading;
-            if (autoRotateMap && isNavigating) {
-                map.setBearing(currentHeading);
-            }
-            if (currentLocationMarker && currentLocationMarker.setRotationAngle) {
-                currentLocationMarker.setRotationAngle(currentHeading);
-            }
-            if (userPositionMarker && userPositionMarker.setRotationAngle) {
-                userPositionMarker.setRotationAngle(currentHeading);
-            }
-        }
-        
-        requestOrientationPermission();
-
-        // ============================================================
-        //  ΧΑΡΤΗΣ - ΣΥΝΕΧΕΙΑ
+        //  ΒΑΣΙΚΕΣ ΛΕΙΤΟΥΡΓΙΕΣ
         // ============================================================
         function getColorIcon(color) {
             return L.icon({
@@ -1324,6 +1245,7 @@
             if (userPositionMarker) { map.removeLayer(userPositionMarker); userPositionMarker = null; }
             if (navigationWatchId) { navigator.geolocation.clearWatch(navigationWatchId); navigationWatchId = null; }
             document.getElementById('miniNavBar').classList.remove('active');
+            // Επαναφορά προσανατολισμού χάρτη
             map.setBearing(0);
         }
 
@@ -1358,12 +1280,14 @@
                 locationWatchId = navigator.geolocation.watchPosition(
                     function(pos) {
                         var lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
+                        // Χρήση heading από το geolocation API αν είναι διαθέσιμο
                         if (pos.coords.heading !== null && pos.coords.heading !== undefined && !isNaN(pos.coords.heading)) {
                             currentHeading = pos.coords.heading;
                             if (autoRotateMap) {
                                 map.setBearing(currentHeading);
                             }
                         }
+                        
                         if (currentLocationMarker) {
                             currentLocationMarker.setLatLng([lat, lng]);
                             if (currentHeading !== null && currentLocationMarker.setRotationAngle) {
@@ -1940,6 +1864,7 @@
                 if (navigator.geolocation) {
                     navigationWatchId = navigator.geolocation.watchPosition(
                         function(pos) { if (isPaused) return; var lat = pos.coords.latitude, lng = pos.coords.longitude; if (userPositionMarker) { userPositionMarker.setLatLng([lat, lng]); } 
+                            // Χρήση heading από GPS αν είναι διαθέσιμο
                             if (pos.coords.heading !== null && pos.coords.heading !== undefined && !isNaN(pos.coords.heading)) {
                                 currentHeading = pos.coords.heading;
                             }
@@ -1963,6 +1888,7 @@
 
         function startNavigation() {
             isNavigating = true; isPaused = false; isMinimized = false;
+            // Ενεργοποίηση αυτόματης περιστροφής κατά την πλοήγηση
             if (!autoRotateMap) {
                 autoRotateMap = true;
                 compassBtn.classList.add('active');
@@ -2015,6 +1941,7 @@
                     function(pos) { 
                         if (isPaused) return; 
                         var lat = pos.coords.latitude, lng = pos.coords.longitude; 
+                        // Χρήση heading από GPS αν είναι διαθέσιμο
                         if (pos.coords.heading !== null && pos.coords.heading !== undefined && !isNaN(pos.coords.heading)) {
                             currentHeading = pos.coords.heading;
                         }
@@ -2024,6 +1951,7 @@
                                 userPositionMarker.setRotationAngle(currentHeading);
                             }
                         }
+                        // Περιστροφή χάρτη αν είναι ενεργή
                         if (autoRotateMap) {
                             map.setView([lat, lng], map.getZoom(), { animate: true });
                             if (currentHeading !== null) {
@@ -2057,10 +1985,13 @@
             updateNavStatus('Αναμονή', 'inactive');
             if (navigationWatchId) { navigator.geolocation.clearWatch(navigationWatchId); navigationWatchId = null; }
             if (userPositionMarker) { map.removeLayer(userPositionMarker); userPositionMarker = null; }
+            
+            // Επαναφορά προσανατολισμού χάρτη στον Βορρά
             map.setBearing(0);
             autoRotateMap = false;
             compassBtn.classList.remove('active');
             compassBtn.title = 'Προσανατολισμός χάρτη στην πυξίδα';
+            
             var statusEl = document.getElementById('statusText');
             if (statusEl) { statusEl.innerHTML = 'Πλοήγηση τερματίστηκε'; setTimeout(function() { statusEl.innerHTML = 'Πατήστε "Θέση μου"'; }, 2000); }
             showToast('⏹️ Πλοήγηση τερματίστηκε', '#e74c3c');
@@ -2298,6 +2229,70 @@
         }, 200);
 
         // ============================================================
+        //  ΠΥΞΙΔΑ & ΠΡΟΣΑΝΑΤΟΛΙΣΜΟΣ ΧΑΡΤΗ
+        // ============================================================
+        var currentHeading = null;
+        var autoRotateMap = false;
+        var compassBtn = document.getElementById('compassBtn');
+
+        compassBtn.addEventListener('click', function() {
+            autoRotateMap = !autoRotateMap;
+            if (autoRotateMap) {
+                compassBtn.classList.add('active');
+                compassBtn.title = 'Κλείδωμα προσανατολισμού στον Βορρά';
+                requestOrientationPermission();
+                showToast('🧭 Αυτόματη περιστροφή χάρτη ΕΝΕΡΓΗ', '#e67e22');
+            } else {
+                compassBtn.classList.remove('active');
+                compassBtn.title = 'Προσανατολισμός χάρτη στην πυξίδα';
+                map.setBearing(0);
+                showToast('🧭 Ο χάρτης επέστρεψε στον Βορρά', '#888');
+            }
+        });
+
+        function requestOrientationPermission() {
+            if (window.DeviceOrientationEvent) {
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(function(permissionState) {
+                            if (permissionState === 'granted') {
+                                window.addEventListener('deviceorientation', handleOrientation, true);
+                            }
+                        })
+                        .catch(console.error);
+                } else {
+                    window.addEventListener('deviceorientation', handleOrientation, true);
+                }
+            }
+        }
+
+        function handleOrientation(event) {
+            var heading;
+            if (event.webkitCompassHeading !== undefined) {
+                heading = event.webkitCompassHeading;
+            } else if (event.alpha !== null && event.alpha !== undefined) {
+                heading = 360 - event.alpha;
+            } else {
+                return;
+            }
+            if (currentHeading !== null && Math.abs(heading - currentHeading) < 2) {
+                return;
+            }
+            currentHeading = heading;
+            if (autoRotateMap && isNavigating) {
+                map.setBearing(currentHeading);
+            }
+            if (currentLocationMarker && currentLocationMarker.setRotationAngle) {
+                currentLocationMarker.setRotationAngle(currentHeading);
+            }
+            if (userPositionMarker && userPositionMarker.setRotationAngle) {
+                userPositionMarker.setRotationAngle(currentHeading);
+            }
+        }
+
+        requestOrientationPermission();
+
+        // ============================================================
         //  EVENTS
         // ============================================================
         document.getElementById('locateBtn')?.addEventListener('click', locateUser);
@@ -2504,7 +2499,7 @@
         }
 
         // ============================================================
-        //  ΕΚΚΙΝΗΣΗ - ΜΕ ΑΥΤΟΜΑΤΟ ΕΝΤΟΠΙΣΜΟ
+        //  ΕΚΚΙΝΗΣΗ
         // ============================================================
         resetInfo();
         updatePhotoList();
@@ -2516,12 +2511,14 @@
         }, 200);
         
         console.log('🚀 Athos Path Finder έτοιμο!');
-        console.log('🗺️ Χάρτης: Cycle Map - Δείχνει ΟΛΑ τα μονοπάτια');
+        console.log('🗺️ Χάρτης: CyclOSM - ΔΕΙΧΝΕΙ ΟΛΑ ΤΑ ΜΟΝΟΠΑΤΙΑ ΜΕ ΚΟΚΚΙΝΟ');
         console.log('📍 Αυτόματος εντοπισμός θέσης...');
         console.log('🧭 Αυτόματος προσανατολισμός χάρτη διαθέσιμος');
         
+        // 1. Άμεσος εντοπισμός
         setTimeout(function() { locateUser(); }, 800);
         
+        // 2. Επαναφορά όταν η σελίδα γίνεται ορατή ξανά
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
                 console.log('📱 Σελίδα ορατή - έλεγχος θέσης...');
@@ -2531,6 +2528,7 @@
             }
         });
         
+        // 3. Περιοδικός έλεγχος για απώλεια GPS
         setInterval(function() {
             if (!isLocationTracking && !currentLocationMarker) {
                 var statusEl = document.getElementById('statusText');
@@ -2540,6 +2538,7 @@
             }
         }, 30000);
         
+        // 4. Φόρτωση αποθηκευμένης θέσης
         try {
             var savedLocation = JSON.parse(localStorage.getItem('athos_last_location'));
             if (savedLocation && savedLocation.lat && savedLocation.lng && !currentLocationMarker) {
@@ -2551,6 +2550,7 @@
             }
         } catch(e) {}
         
+        // 5. Επιπλέον προσπάθεια για κινητά
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
             setTimeout(function() {
@@ -2562,7 +2562,6 @@
         }
         
         console.log('📍 Η εφαρμογή εντοπίζει αυτόματα τη θέση σας');
-        console.log('🗺️ Χάρτης: Cycle Map - Όλα τα μονοπάτια ορατά!');
     </script>
 </body>
 </html>
