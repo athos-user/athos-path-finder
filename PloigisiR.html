@@ -16,7 +16,7 @@
         }
         
         /* ============================================================
-           ΔΙΟΡΘΩΣΗ: Ο ΧΑΡΤΗΣ ΔΕΝ ΚΟΒΕΤΑΙ ΣΤΗΝ ΠΕΡΙΣΤΡΟΦΗ
+           Ο ΧΑΡΤΗΣ ΣΕ 200% ΜΕΓΕΘΟΣ - ΔΕΝ ΚΟΒΕΤΑΙ
            ============================================================ */
         #map-container {
             position: absolute;
@@ -36,12 +36,51 @@
             left: -50%;
             z-index: 1;
             transform-origin: center center;
-            transition: transform 0.4s ease;
+            transition: transform 0.15s ease; /* ΠΙΟ ΓΡΗΓΟΡΟ ΚΑΙ ΟΜΑΛΟ */
         }
         
-        /* Όταν περιστρέφεται, το map-container κόβει την περίσσεια */
-        #map-container.rotating {
-            overflow: hidden;
+        /* NOTIFICATION BANNER - ΕΜΦΑΝΙΖΕΤΑΙ ΟΤΑΝ ΒΓΑΙΝΟΥΜΕ ΕΚΤΟΣ */
+        #offtrack-notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            background: rgba(231, 76, 60, 0.95);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
+            display: none;
+            text-align: center;
+            max-width: 90%;
+            border: 2px solid rgba(255,255,255,0.2);
+            animation: slideDown 0.5s ease;
+        }
+        #offtrack-notification .sub {
+            font-size: 12px;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+        #offtrack-notification .btn-center {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 4px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        #offtrack-notification .btn-center:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
         }
         
         .watermark {
@@ -196,6 +235,8 @@
             .controls button#wakeLockBtn::after { content: '☀️'; }
             .controls button#exportGpxBtn::after { content: '📤'; }
             .controls button#downloadTilesBtn::after { content: '📥'; }
+            #offtrack-notification { font-size: 12px; padding: 8px 14px; top: 70px; }
+            #offtrack-notification .btn-center { font-size: 10px; padding: 2px 10px; }
         }
         
         .info-panel {
@@ -401,7 +442,7 @@
             font-size: 24px;
             color: #2196F3;
             text-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            transition: transform 0.3s ease;
+            transition: transform 0.15s ease;
             line-height: 1;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
@@ -672,9 +713,12 @@
     </style>
 </head>
 <body>
-    <!-- ============================================================
-         ΝΕΟ: CONTAINER ΓΙΑ ΤΟΝ ΧΑΡΤΗ ΜΕ 200% ΜΕΓΕΘΟΣ
-         ============================================================ -->
+    <!-- NOTIFICATION BANNER -->
+    <div id="offtrack-notification">
+        <div>📍 Έχετε απομακρυνθεί από την οθόνη! <span id="offtrack-distance">0</span> μέτρα</div>
+        <div class="sub">Πατήστε <button class="btn-center" id="centerMapBtn">🎯 Επιστροφή στο κέντρο</button></div>
+    </div>
+
     <div id="map-container">
         <div id="map"></div>
     </div>
@@ -723,6 +767,7 @@
                 <li>Το <strong>▲ βέλος</strong> δείχνει την κατεύθυνση κίνησης</li>
                 <li>Ο <strong>χάρτης περιστρέφεται αυτόματα</strong> προς την κατεύθυνσή σας</li>
                 <li><span class="badge">🧭</span> Πατήστε για <strong>απενεργοποίηση</strong> αυτόματης περιστροφής</li>
+                <li>🔔 <strong>Ειδοποίηση</strong> όταν απομακρύνεστε (&gt;150 μέτρα)</li>
             </ul>
         </div>
         <div class="help-section">
@@ -850,8 +895,10 @@
     
     <script>
         // ============================================================
-        //  ΟΛΟΣ Ο ΚΩΔΙΚΑΣ ΜΕ ΤΗ ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΟΝ ΧΑΡΤΗ
-        //  Ο ΧΑΡΤΗΣ ΕΙΝΑΙ 200% ΚΑΙ ΔΕΝ ΚΟΒΕΤΑΙ ΣΤΗΝ ΠΕΡΙΣΤΡΟΦΗ
+        //  ΒΕΛΤΙΩΣΕΙΣ:
+        //  1. Πιο ομαλή περιστροφή (0.15s)
+        //  2. Αυτόματη επιστροφή στο κέντρο όταν βγαίνει εκτός
+        //  3. Ειδοποίηση όταν >150 μέτρα από το κέντρο
         // ============================================================
         
         // ============================================================
@@ -860,6 +907,7 @@
         const MAX_CACHED_TILES = 500;
         const TOAST_DURATION = 3000;
         const MAX_HEADING_HISTORY = 5;
+        const OFFTRACK_THRESHOLD = 150; // μέτρα
         
         // ============================================================
         //  ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ
@@ -1151,7 +1199,11 @@
             headingHistory: [],
             isInitialLoad: true,
             autoRotate: true,
-            lastHeadingUpdate: 0
+            lastHeadingUpdate: 0,
+            lastKnownLat: null,
+            lastKnownLng: null,
+            isOfftrack: false,
+            offtrackDistance: 0
         };
         
         // ============================================================
@@ -1528,7 +1580,7 @@
         };
         
         // ============================================================
-        //  ΧΑΡΤΗΣ - ΝΕΑ ΥΛΟΠΟΙΗΣΗ ΜΕ 200% ΜΕΓΕΘΟΣ
+        //  ΧΑΡΤΗΣ
         // ============================================================
         function initMap() {
             loadTileCache();
@@ -1559,7 +1611,6 @@
                 return url.replace('{s}', subdomains[idx]);
             };
             
-            // ΔΗΜΙΟΥΡΓΙΑ ΧΑΡΤΗ ΜΕΣΑ ΣΤΟ 200% DIV
             App.map = L.map('map', { 
                 layers: [tileLayer], 
                 zoomControl: true,
@@ -1583,6 +1634,17 @@
             
             App.map.on('moveend', function() {
                 saveMapView();
+                // Έλεγχος αν το στίγμα είναι εκτός ορίων μετά από μετακίνηση
+                checkOfftrack();
+            });
+            
+            // Κουμπί επιστροφής στο κέντρο
+            document.getElementById('centerMapBtn')?.addEventListener('click', function() {
+                if (App.lastKnownLat && App.lastKnownLng) {
+                    App.map.panTo([App.lastKnownLat, App.lastKnownLng]);
+                    hideOfftrackNotification();
+                    showToast('🎯 Επιστροφή στο στίγμα', '#2ecc71');
+                }
             });
             
             setTimeout(function() {
@@ -1596,33 +1658,42 @@
             }, 500);
             
             console.log('🚀 Athos Path Finder έτοιμο!');
-            console.log('📍 Ο χάρτης είναι 200% και ΔΕΝ κόβεται στην περιστροφή');
-            console.log('🔄 Ο χάρτης περιστρέφεται ΑΥΤΟΜΑΤΑ προς την κατεύθυνσή σας');
-        }
-        
-        function saveMapView() {
-            try {
-                const center = App.map.getCenter();
-                const zoom = App.map.getZoom();
-                localStorage.setItem('athos_map_view', JSON.stringify({ lat: center.lat, lng: center.lng, zoom: zoom }));
-            } catch(e) {}
-        }
-        
-        function loadMapView() {
-            try {
-                const view = JSON.parse(localStorage.getItem('athos_map_view'));
-                if (view && view.lat && view.lng) {
-                    App.map.setView([view.lat, view.lng], view.zoom || 10);
-                } else {
-                    App.map.setView([40.16, 24.32], 10);
-                }
-            } catch(e) {
-                App.map.setView([40.16, 24.32], 10);
-            }
+            console.log('📍 Πιο ομαλή περιστροφή (0.15s)');
+            console.log('🔔 Ειδοποίηση όταν >' + OFFTRACK_THRESHOLD + ' μέτρα από το κέντρο');
         }
         
         // ============================================================
-        //  ΜΠΛΕ ΚΟΥΚΙΔΑ - ΜΕ ΣΩΣΤΟ ΒΕΛΟΣ
+        //  ΕΛΕΓΧΟΣ ΑΠΟΜΑΚΡΥΝΣΗΣ
+        // ============================================================
+        function checkOfftrack() {
+            if (!App.lastKnownLat || !App.lastKnownLng) return;
+            
+            var center = App.map.getCenter();
+            var distance = L.latLng(App.lastKnownLat, App.lastKnownLng).distanceTo(center);
+            App.offtrackDistance = distance;
+            
+            if (distance > OFFTRACK_THRESHOLD && App.isLocationTracking) {
+                showOfftrackNotification(distance);
+            } else {
+                hideOfftrackNotification();
+            }
+        }
+        
+        function showOfftrackNotification(distance) {
+            var el = document.getElementById('offtrack-notification');
+            var distEl = document.getElementById('offtrack-distance');
+            if (distEl) distEl.textContent = Math.round(distance);
+            el.style.display = 'block';
+            App.isOfftrack = true;
+        }
+        
+        function hideOfftrackNotification() {
+            document.getElementById('offtrack-notification').style.display = 'none';
+            App.isOfftrack = false;
+        }
+        
+        // ============================================================
+        //  ΜΠΛΕ ΚΟΥΚΙΔΑ
         // ============================================================
         function createBlueDot(lat, lng) {
             if (App.userBlueDot) { 
@@ -1644,9 +1715,12 @@
         }
         
         // ============================================================
-        //  ΕΝΗΜΕΡΩΣΗ ΘΕΣΗΣ - ΜΕ ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ (ΠΛΗΡΗΣ ΟΘΟΝΗ)
+        //  ΕΝΗΜΕΡΩΣΗ ΘΕΣΗΣ - ΜΕ ΕΛΕΓΧΟ ΑΠΟΜΑΚΡΥΝΣΗΣ
         // ============================================================
         function updateBlueDot(lat, lng, heading) {
+            App.lastKnownLat = lat;
+            App.lastKnownLng = lng;
+            
             if (!App.userBlueDot) { 
                 createBlueDot(lat, lng); 
             } else { 
@@ -1666,22 +1740,30 @@
                 
                 updateCompass(heading);
                 
-                // ============================================================
-                //  ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ - ΜΕΤΑΚΙΝΗΣΗ ΟΛΟΥ ΤΟΥ CONTAINER
-                //  Ο ΧΑΡΤΗΣ ΕΙΝΑΙ 200% ΚΑΙ ΔΕΝ ΚΟΒΕΤΑΙ
-                // ============================================================
+                // ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ - ΠΙΟ ΟΜΑΛΗ
                 if (App.autoRotate) {
                     var container = document.getElementById('map');
                     if (container) {
+                        container.style.transition = 'transform 0.15s ease';
                         container.style.transform = 'rotate(' + (-heading) + 'deg)';
-                        container.style.transition = 'transform 0.4s ease';
                     }
                 }
             }
             
-            var bounds = App.map.getBounds();
-            if (!bounds.contains(L.latLng(lat, lng))) {
+            // Έλεγχος αν το στίγμα είναι εκτός ορίων
+            var center = App.map.getCenter();
+            var distance = L.latLng(lat, lng).distanceTo(center);
+            
+            if (distance > OFFTRACK_THRESHOLD && App.isLocationTracking) {
+                showOfftrackNotification(distance);
+            } else {
+                hideOfftrackNotification();
+            }
+            
+            // Αν το στίγμα βγει πολύ έξω (πάνω από 2x το threshold), πήγαινε εκεί
+            if (distance > OFFTRACK_THRESHOLD * 2) {
                 App.map.panTo([lat, lng]);
+                showToast('📍 Επιστροφή στο στίγμα', '#2196F3');
             }
         }
         
@@ -1707,6 +1789,7 @@
                 showToast('🧭 Αυτόματη περιστροφή ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ', '#2ecc71');
                 if (App.userHeading !== null && App.userHeading !== undefined) {
                     if (container) {
+                        container.style.transition = 'transform 0.15s ease';
                         container.style.transform = 'rotate(' + (-App.userHeading) + 'deg)';
                     }
                 }
@@ -1779,6 +1862,7 @@
             var statusEl = document.getElementById('statusText');
             if (statusEl) { statusEl.innerHTML = 'Πατήστε "Θέση μου"'; }
             if (wakeLockActive) { releaseWakeLock(); }
+            hideOfftrackNotification();
             showToast('📍 Παρακολούθηση σταμάτησε', '#888');
         }
         
@@ -1844,7 +1928,7 @@
         }
         
         // ============================================================
-        //  POPUP
+        //  POPUP - ΠΡΟΣΘΗΚΗ ΣΗΜΕΙΩΝ
         // ============================================================
         function showPopup(e) {
             var lat = e.latlng.lat, lng = e.latlng.lng;
@@ -2332,11 +2416,11 @@
             App.currentGpxGeometry = null;
             App.userBlueDot = null;
             
-            // Επαναφορά περιστροφής χάρτη
             var container = document.getElementById('map');
             if (container) {
                 container.style.transform = 'rotate(0deg)';
             }
+            hideOfftrackNotification();
             
             resetInfo();
             document.getElementById('fileInput').value = '';
@@ -2773,9 +2857,10 @@
         updateWaypointsPanel();
         initMap();
         
-        console.log('📱 Athos Path Finder - ΜΕ 200% ΧΑΡΤΗ');
-        console.log('📍 Ο χάρτης ΔΕΝ κόβεται στην περιστροφή (200% μέγεθος)');
-        console.log('🔄 Αυτόματη περιστροφή με ομαλή μετάβαση');
+        console.log('📱 Athos Path Finder - ΠΛΗΡΗΣ ΕΚΔΟΣΗ');
+        console.log('🔄 Πιο ομαλή περιστροφή (0.15s)');
+        console.log('🔔 Ειδοποίηση όταν >' + OFFTRACK_THRESHOLD + ' μέτρα από το κέντρο');
+        console.log('🎯 Αυτόματη επιστροφή όταν >' + (OFFTRACK_THRESHOLD * 2) + ' μέτρα');
     </script>
 </body>
 </html>
