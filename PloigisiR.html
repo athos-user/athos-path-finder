@@ -106,6 +106,9 @@
         .controls button#wakeLockBtn { background: #f39c12; }
         .controls button#wakeLockBtn.active { background: #27ae60; }
         .controls button#exportGpxBtn { background: #1a7a3a; }
+        .controls button#downloadTilesBtn { background: #d35400; }
+        .controls button#downloadTilesBtn.active { background: #27ae60 !important; }
+        .controls button#downloadTilesBtn.active::after { content: ' ✅'; }
         .controls #speedSelect { padding: 2px 3px; font-size: 8px; min-height: 22px; max-width: 45px; }
         .controls #fileInput { max-width: 50px; padding: 2px 3px; font-size: 8px; }
         .controls .logo-link {
@@ -164,12 +167,14 @@
             .controls button#toggleWaypointsBtn span,
             .controls button#saveRouteBtn span,
             .controls button#wakeLockBtn span,
-            .controls button#exportGpxBtn span { display: none; }
+            .controls button#exportGpxBtn span,
+            .controls button#downloadTilesBtn span { display: none; }
             .controls button#showRoutesBtn::after { content: '🗺️'; }
             .controls button#toggleWaypointsBtn::after { content: '📍'; }
             .controls button#saveRouteBtn::after { content: '💾'; }
             .controls button#wakeLockBtn::after { content: '☀️'; }
             .controls button#exportGpxBtn::after { content: '📤'; }
+            .controls button#downloadTilesBtn::after { content: '📥'; }
         }
         
         .info-panel {
@@ -496,6 +501,25 @@
             background: rgba(255,255,255,0.3);
         }
         
+        /* TILE PROGRESS */
+        #tileProgress {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1500;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 14px;
+            text-align: center;
+            display: none;
+            min-width: 200px;
+            font-size: 13px;
+        }
+        #tileProgress .bar { width: 100%; height: 4px; background: #444; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+        #tileProgress .bar .fill { height: 100%; background: #2ecc71; border-radius: 2px; transition: width 0.3s ease; width: 0%; }
+        
         .help-modal {
             position: fixed;
             top: 50%;
@@ -573,6 +597,7 @@
         .help-modal .help-section .badge.gpx { background: #1a7a3a; }
         .help-modal .help-section .badge.photo { background: #8e44ad; }
         .help-modal .help-section .badge.sos { background: #e74c3c; }
+        .help-modal .help-section .badge.offline { background: #d35400; }
         
         .leaflet-control-zoom { z-index: 800 !important; }
         .leaflet-control-attribution { display: none; }
@@ -590,6 +615,7 @@
             .help-modal .help-header h2 { font-size: 16px; }
             .help-modal .help-section h3 { font-size: 12px; }
             .help-modal .help-section p, .help-modal .help-section li { font-size: 11px; }
+            #tileProgress { bottom: 100px; padding: 10px 16px; font-size: 12px; min-width: 150px; }
         }
     </style>
 </head>
@@ -600,6 +626,8 @@
         ATHOS <span>MAPS</span>
         <span class="sub">✦ agionorosroutes.blogspot.com ✦</span>
     </div>
+
+    <div id="tileProgress"><div>📥 Κατέβασμα χάρτη...</div><div class="bar"><div class="fill" id="tileFill"></div></div><div id="tilePercent" style="font-size:11px; margin-top:4px;">0%</div></div>
 
     <div class="gpx-toast" id="gpxToast">
         <div>✅ Το αρχείο GPX κατέβηκε!</div>
@@ -647,7 +675,16 @@
                 <li><span class="badge">🗺️</span> <strong>Φόρτωση</strong> αποθηκευμένων διαδρομών</li>
                 <li><span class="badge gpx">📤</span> <strong>Εξαγωγή GPX</strong> με δημιουργό "Athos Maps"</li>
                 <li>Το GPX αποθηκεύεται στον φάκελο <strong>Λήψεις/Downloads</strong></li>
-                <li><span class="badge gpx">📂</span> <strong>Φόρτωση GPX</strong> με όλα τα σημεία (Start, End, Waypoints)</li>
+                <li><span class="badge gpx">📂</span> <strong>Φόρτωση GPX</strong> με όλα τα σημεία</li>
+            </ul>
+        </div>
+        <div class="help-section">
+            <h3>📥 Offline Χάρτες</h3>
+            <ul>
+                <li><span class="badge offline">📥</span> <strong>Λήψη χάρτη</strong> για offline χρήση</li>
+                <li>Το κουμπί γίνεται <strong>πράσινο</strong> (✅) όταν υπάρχουν αποθηκευμένοι χάρτες</li>
+                <li>Οι χάρτες αποθηκεύονται στη <strong>μνήμη</strong> της συσκευής σας</li>
+                <li>Λειτουργεί και <strong>χωρίς σύνδεση</strong> στο διαδίκτυο</li>
             </ul>
         </div>
         <div class="help-section">
@@ -663,7 +700,6 @@
             <ul>
                 <li><span class="badge">☀️</span> <strong>Κράτημα οθόνης</strong> αναμμένης</li>
                 <li><span class="badge">🗑️</span> <strong>Καθαρισμός</strong> όλων των σημείων</li>
-                <li><span class="badge">📥</span> <strong>Λήψη χάρτη</strong> για offline χρήση</li>
                 <li>Η τελευταία διαδρομή <strong>αποθηκεύεται</strong> αυτόματα</li>
             </ul>
         </div>
@@ -686,6 +722,7 @@
         <button id="toggleWaypointsBtn" title="Σημεία"><span>📍</span></button>
         <button id="saveRouteBtn" title="Αποθήκευση"><span>💾</span></button>
         <button id="exportGpxBtn" title="Εξαγωγή GPX"><span>📤</span></button>
+        <button id="downloadTilesBtn" title="Λήψη χάρτη για offline χρήση"><span>📥</span></button>
         <button id="clearBtn" title="Καθαρισμός">🗑️</button>
         <input type="file" id="fileInput" accept=".gpx,.kml,.xml" title="Φόρτωση GPX">
         <select id="speedSelect" title="Ταχύτητα">
@@ -747,6 +784,147 @@
     <script src="https://cdn.jsdelivr.net/npm/@mapbox/togeojson@0.16.0/togeojson.min.js"></script>
     
     <script>
+        // ============================================================
+        //  OFFLINE TILES - ΛΗΨΗ ΧΑΡΤΗ
+        // ============================================================
+        var isDownloading = false;
+        var tileCache = {};
+        
+        function loadTileCache() {
+            try {
+                var data = localStorage.getItem('athos_tile_cache');
+                if (data) { tileCache = JSON.parse(data); }
+            } catch(e) { tileCache = {}; }
+        }
+        
+        function saveTileCache() {
+            try {
+                var keys = Object.keys(tileCache);
+                if (keys.length > 500) {
+                    var sorted = keys.sort(function(a, b) {
+                        return tileCache[a].timestamp - tileCache[b].timestamp;
+                    });
+                    var toRemove = sorted.slice(0, keys.length - 500);
+                    for (var i = 0; i < toRemove.length; i++) {
+                        delete tileCache[toRemove[i]];
+                    }
+                }
+                localStorage.setItem('athos_tile_cache', JSON.stringify(tileCache));
+            } catch(e) {}
+        }
+        
+        async function downloadTiles() {
+            if (isDownloading) {
+                alert('Η λήψη είναι ήδη σε εξέλιξη.');
+                return;
+            }
+            
+            var bounds = map.getBounds();
+            var zoom = map.getZoom();
+            var downloadZoom = Math.min(zoom + 1, 16);
+            var tiles = [];
+            
+            function latLngToTile(lat, lng, zoom) {
+                var latRad = lat * Math.PI / 180;
+                var n = Math.pow(2, zoom);
+                var x = Math.floor((lng + 180) / 360 * n);
+                var y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+                return { x: x, y: y };
+            }
+            
+            var nw = latLngToTile(bounds.getNorth(), bounds.getWest(), downloadZoom);
+            var se = latLngToTile(bounds.getSouth(), bounds.getEast(), downloadZoom);
+            var minX = Math.min(nw.x, se.x);
+            var maxX = Math.max(nw.x, se.x);
+            var minY = Math.min(nw.y, se.y);
+            var maxY = Math.max(nw.y, se.y);
+            
+            for (var x = minX; x <= maxX; x++) {
+                for (var y = minY; y <= maxY; y++) {
+                    tiles.push({ x: x, y: y, z: downloadZoom });
+                }
+            }
+            
+            if (tiles.length === 0) {
+                alert('Δεν βρέθηκαν tiles για λήψη.');
+                return;
+            }
+            
+            var confirmMsg = '📥 Λήψη χάρτη για offline χρήση:\n' +
+                '📍 Περιοχή: ' + bounds.getCenter().lat.toFixed(4) + ', ' + bounds.getCenter().lng.toFixed(4) + '\n' +
+                '🔍 Zoom: ' + downloadZoom + '\n' +
+                '📊 Tiles: ~' + tiles.length + '\n' +
+                '💾 Εκτίμηση: ~' + Math.round(tiles.length * 5 / 1024) + ' MB\n\n' +
+                '⚠️ Η λήψη μπορεί να διαρκέσει αρκετά λεπτά.\nΣυνέχεια;';
+            
+            if (!confirm(confirmMsg)) return;
+            
+            isDownloading = true;
+            var progressDiv = document.getElementById('tileProgress');
+            var fill = document.getElementById('tileFill');
+            var percent = document.getElementById('tilePercent');
+            progressDiv.style.display = 'block';
+            fill.style.width = '0%';
+            percent.innerText = '0%';
+            document.getElementById('downloadTilesBtn').innerHTML = '⏹️ Ακύρωση';
+            
+            var downloaded = 0;
+            var failed = 0;
+            
+            try {
+                loadTileCache();
+                
+                for (var i = 0; i < tiles.length; i++) {
+                    var tile = tiles[i];
+                    var key = tile.z + '/' + tile.x + '/' + tile.y;
+                    var url = 'https://{s}.tile.openstreetmap.org/' + key + '.png';
+                    var subdomains = ['a', 'b', 'c'];
+                    var urlWithSub = url.replace('{s}', subdomains[i % 3]);
+                    
+                    if (tileCache[key]) {
+                        downloaded++;
+                    } else {
+                        try {
+                            var response = await fetch(urlWithSub);
+                            if (!response.ok) throw new Error('HTTP ' + response.status);
+                            var blob = await response.blob();
+                            var reader = new FileReader();
+                            var dataUrl = await new Promise(function(resolve) {
+                                reader.onload = function(e) { resolve(e.target.result); };
+                                reader.readAsDataURL(blob);
+                            });
+                            tileCache[key] = { data: dataUrl, timestamp: Date.now() };
+                            downloaded++;
+                        } catch(err) {
+                            failed++;
+                            console.warn('Failed to download tile:', key, err);
+                        }
+                    }
+                    
+                    var pct = Math.round(((downloaded + failed) / tiles.length) * 100);
+                    fill.style.width = Math.min(100, pct) + '%';
+                    percent.innerText = Math.min(100, pct) + '% (' + downloaded + '/' + tiles.length + ')';
+                    
+                    if (i % 5 === 0) {
+                        await new Promise(function(resolve) { setTimeout(resolve, 50); });
+                    }
+                }
+                
+                saveTileCache();
+                document.getElementById('downloadTilesBtn').innerHTML = '📥 Κατέβασμα';
+                document.getElementById('downloadTilesBtn').classList.add('active');
+                
+                alert('✅ Λήψη ολοκληρώθηκε!\n📥 Αποθηκεύτηκαν: ' + downloaded + ' tiles\n❌ Απέτυχαν: ' + failed + ' tiles\n📦 Σύνολο: ' + Object.keys(tileCache).length + ' tiles');
+                
+            } catch(err) {
+                alert('❌ Σφάλμα: ' + err.message);
+            } finally {
+                isDownloading = false;
+                progressDiv.style.display = 'none';
+                document.getElementById('downloadTilesBtn').innerHTML = '📥 Κατέβασμα';
+            }
+        }
+        
         // ============================================================
         //  WAKE LOCK
         // ============================================================
@@ -1257,11 +1435,47 @@
         //  ΧΑΡΤΗΣ
         // ============================================================
         function initMap() {
-            var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-                attribution: '&copy; OpenStreetMap', 
-                maxZoom: 19 
+            // Φόρτωση cached tiles
+            loadTileCache();
+            
+            // Custom tile layer with cache support
+            var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap',
+                maxZoom: 19,
+                // Πριν φορτώσει από το διαδίκτυο, ελέγχει την cache
+                getTileUrl: function(coords) {
+                    var key = coords.z + '/' + coords.x + '/' + coords.y;
+                    if (tileCache[key]) {
+                        return tileCache[key].data;
+                    }
+                    return 'https://{s}.tile.openstreetmap.org/' + key + '.png';
+                }
             });
-            map = L.map('map', { layers: [osm], zoomControl: true }).setView([40.16, 24.32], 10);
+            
+            // Override του getTileUrl για υποστήριξη cache
+            var originalGetTileUrl = tileLayer.getTileUrl;
+            tileLayer.getTileUrl = function(coords) {
+                var key = coords.z + '/' + coords.x + '/' + coords.y;
+                if (tileCache[key]) {
+                    return tileCache[key].data;
+                }
+                var url = originalGetTileUrl.call(this, coords);
+                var subdomains = ['a', 'b', 'c'];
+                var idx = (coords.x + coords.y) % subdomains.length;
+                return url.replace('{s}', subdomains[idx]);
+            };
+            
+            map = L.map('map', { 
+                layers: [tileLayer], 
+                zoomControl: true,
+                tap: true,
+                tapTolerance: 15
+            }).setView([40.16, 24.32], 10);
+            
+            // Ενημέρωση κουμπιού αν υπάρχουν cached tiles
+            if (Object.keys(tileCache).length > 0) {
+                document.getElementById('downloadTilesBtn').classList.add('active');
+            }
             
             map.on('click', function(e) {
                 if (isLocationTracking) { stopLocationTracking(); }
@@ -1279,6 +1493,7 @@
             }, 500);
             
             console.log('🚀 Athos Path Finder έτοιμο!');
+            console.log('📥 Offline tiles: ' + Object.keys(tileCache).length);
         }
         
         // ============================================================
@@ -1723,7 +1938,7 @@
         }
         
         // ============================================================
-        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - ΜΕ FALLBACK ΣΕ GRAPHHOPPER
+        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ
         // ============================================================
         async function calcRoute() {
             if (!startPoint || !endPoint) { 
@@ -1731,7 +1946,6 @@
                 return; 
             }
             
-            // Έλεγχος αν τα σημεία είναι πολύ κοντά
             var dist = L.latLng(startPoint.lat, startPoint.lng).distanceTo(L.latLng(endPoint.lat, endPoint.lng));
             if (dist < 10) {
                 showToast('⚠️ Η απόσταση είναι πολύ μικρή (<10 μέτρα)', '#e67e22');
@@ -1748,7 +1962,6 @@
             for (var i = 0; i < routeLines.length; i++) { map.removeLayer(routeLines[i]); }
             routeLines = [];
             
-            // ΠΡΩΤΗ ΠΡΟΣΠΑΘΕΙΑ: ORS
             try {
                 var coords = allPoints.map(function(p) { return [p[1], p[0]]; });
                 var response = await fetch('https://api.openrouteservice.org/v2/directions/foot-hiking', {
@@ -1792,7 +2005,6 @@
                 showToast('🔄 Δοκιμή GraphHopper...', '#f39c12');
             }
             
-            // ΔΕΥΤΕΡΗ ΠΡΟΣΠΑΘΕΙΑ: GraphHopper
             try {
                 var ghUrl = 'https://graphhopper.com/api/1/route?key=' + GRAPHHOPPER_API_KEY + '&profile=foot&points_encoded=false&calc_points=true&elevation=false';
                 for (var i = 0; i < allPoints.length; i++) {
@@ -2002,6 +2214,11 @@
             loadGpxFile(file);
             e.target.value = '';
         });
+        
+        // ============================================================
+        //  EVENTS - OFFLINE TILES
+        // ============================================================
+        document.getElementById('downloadTilesBtn')?.addEventListener('click', downloadTiles);
         
         // ============================================================
         //  ΑΠΟΘΗΚΕΥΣΗ / ΦΟΡΤΩΣΗ
@@ -2318,7 +2535,7 @@
         
         console.log('📱 Athos Path Finder - ΠΛΗΡΗΣ ΕΚΔΟΣΗ');
         console.log('📍 Υπολογισμός διαδρομής με ORS + GraphHopper fallback');
-        console.log('✏️ Μετονομασία σε όλα τα σημεία');
+        console.log('📥 Offline χάρτες με λήψη tiles');
         console.log('📤 GPX με δημιουργό "Athos Maps"');
         console.log('❓ Πλήρης βοήθεια');
     </script>
