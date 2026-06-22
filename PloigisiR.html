@@ -36,9 +36,7 @@
             transition: transform 0.15s ease;
         }
         
-        /* ============================================================
-           ΕΙΔΟΠΟΙΗΣΗ ΑΠΟΚΛΗΣΗΣ ΑΠΟ ΤΗ ΔΙΑΔΡΟΜΗ
-           ============================================================ */
+        /* ΕΙΔΟΠΟΙΗΣΗ ΑΠΟΚΛΙΣΗΣ */
         #offtrack-notification {
             position: fixed;
             top: 80px;
@@ -74,16 +72,13 @@
             font-size: 12px;
             margin-left: 10px;
         }
-        #offtrack-notification .btn-center:hover {
-            background: rgba(255,255,255,0.3);
-        }
         @keyframes slideDown {
             from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
             to { transform: translateX(-50%) translateY(0); opacity: 1; }
         }
         
         /* ============================================================
-           ΠΑΝΕΛΙ ΕΛΕΓΧΟΥ - 2 ΓΡΑΜΜΕΣ ΣΕ ΚΙΝΗΤΑ
+           ΠΑΝΕΛ ΕΛΕΓΧΟΥ - 2 ΓΡΑΜΜΕΣ ΜΟΝΟ ΣΕ ΚΙΝΗΤΑ
            ============================================================ */
         .controls {
             position: fixed;
@@ -164,7 +159,9 @@
             object-fit: contain;
         }
         
-        /* ΔΙΑΤΑΞΗ 2 ΓΡΑΜΜΩΝ ΣΕ ΚΙΝΗΤΑ */
+        /* ============================================================
+           ΚΙΝΗΤΑ: 2 ΓΡΑΜΜΕΣ - ΟΛΑ ΤΑ ΚΟΥΜΠΙΑ
+           ============================================================ */
         @media (max-width: 600px) {
             .controls {
                 top: 4px;
@@ -183,11 +180,17 @@
                 min-height: 30px;
                 border-radius: 6px;
             }
-            /* Όλα τα κουμπιά σε 2 σειρές */
+            /* ΟΛΑ ΤΑ ΚΟΥΜΠΙΑ ΣΕ 2 ΓΡΑΜΜΕΣ ΜΕ FLEX WRAP */
+            .controls {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 4px;
+            }
             .controls button, .controls select, .controls input, .controls .logo-link {
                 flex: 0 0 auto;
             }
-            /* Κουμπιά με κείμενο σε κινητά - εμφάνιση icons */
+            /* Κουμπιά με icons μόνο */
             .controls button span { display: none; }
             .controls button#showRoutesBtn::after { content: '🗺️'; }
             .controls button#toggleWaypointsBtn::after { content: '📍'; }
@@ -195,7 +198,6 @@
             .controls button#wakeLockBtn::after { content: '☀️'; }
             .controls button#exportGpxBtn::after { content: '📤'; }
             .controls button#downloadTilesBtn::after { content: '📥'; }
-            /* Τα κουμπιά με ειδικά εικονίδια */
             .controls button#locateBtn { font-size: 16px; }
             .controls button#sosBtn { font-size: 16px; }
             .controls button#photoBtn { font-size: 16px; }
@@ -249,7 +251,7 @@
         }
         
         /* ============================================================
-           ΠΛΗΡΟΦΟΡΙΑΚΟ ΠΑΝΕΛ - ΜΕΓΑΛΥΤΕΡΑ ΓΡΑΜΜΑΤΑ
+           ΠΛΗΡΟΦΟΡΙΑΚΟ ΠΑΝΕΛ
            ============================================================ */
         .info-panel {
             position: fixed;
@@ -925,6 +927,9 @@
         <span class="arrow" id="compassArrow">🧭</span>
     </div>
 
+    <!-- ============================================================
+         ΠΑΝΕΛ ΕΛΕΓΧΟΥ - 2 ΓΡΑΜΜΕΣ ΣΕ ΚΙΝΗΤΑ
+         ============================================================ -->
     <div class="controls">
         <button id="locateBtn" title="Εντοπισμός θέσης">📍</button>
         <button id="sosBtn" title="SOS" style="background:#e74c3c;">🆘</button>
@@ -1003,11 +1008,8 @@
     
     <script>
         // ============================================================
-        //  ΟΛΟΣ Ο ΚΩΔΙΚΑΣ ΜΕ ΤΙΣ ΔΙΟΡΘΩΣΕΙΣ
-        //  1. Ειδοποίηση απομάκρυνσης από τη διαδρομή
-        //  2. Μεγαλύτερα γράμματα στα χλμ/ώρα
-        //  3. Μεγαλύτερα εικονίδια σε 2 γραμμές
-        //  4. Διόρθωση προσθήκης σημείων
+        //  ΠΛΗΡΗΣ ΚΩΔΙΚΑΣ - ΔΙΟΡΘΩΜΕΝΗ ΠΡΟΣΘΗΚΗ ΣΗΜΕΙΩΝ
+        //  2 ΓΡΑΜΜΕΣ ΣΕ ΚΙΝΗΤΑ
         // ============================================================
         
         // ============================================================
@@ -1016,10 +1018,10 @@
         const MAX_CACHED_TILES = 500;
         const TOAST_DURATION = 3000;
         const MAX_HEADING_HISTORY = 5;
-        const OFFTRACK_THRESHOLD = 150; // μέτρα
+        const OFFTRACK_THRESHOLD = 150;
         
         // ============================================================
-        //  ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ
+        //  ΒΟΗΘΗΤΙΚΕΣ
         // ============================================================
         function escapeHtml(text) {
             if (!text) return '';
@@ -1093,7 +1095,7 @@
         }
         
         // ============================================================
-        //  OFFLINE TILES
+        //  TILE CACHE
         // ============================================================
         var isDownloading = false;
         var tileCache = {};
@@ -1278,7 +1280,7 @@
         document.getElementById('wakeLockBtn')?.addEventListener('click', toggleWakeLock);
         
         // ============================================================
-        //  ΑΝΤΙΚΕΙΜΕΝΟ ΕΦΑΡΜΟΓΗΣ
+        //  APP OBJECT
         // ============================================================
         const App = {
             map: null,
@@ -1308,16 +1310,15 @@
             headingHistory: [],
             isInitialLoad: true,
             autoRotate: true,
-            lastHeadingUpdate: 0,
             lastKnownLat: null,
             lastKnownLng: null,
             isOfftrack: false,
             offtrackDistance: 0,
-            routePath: null // Για έλεγχο απόκλισης από τη διαδρομή
+            routePath: null
         };
         
         // ============================================================
-        //  HELP MODAL
+        //  HELP
         // ============================================================
         function showHelp() {
             document.getElementById('helpModal').classList.add('active');
@@ -1470,9 +1471,6 @@
             showToast('✅ Το GPX "' + fileName + '" κατέβηκε', '#2ecc71');
         }
         
-        // ============================================================
-        //  GPX ΦΟΡΤΩΣΗ
-        // ============================================================
         function loadGpxFile(file) {
             if (!window.FileReader) {
                 showToast('⚠️ Το πρόγραμμα περιήγησής σας δεν υποστηρίζει φόρτωση αρχείων.', '#e74c3c');
@@ -1569,7 +1567,7 @@
                     
                     if (geometry && geometry.length > 0) {
                         App.currentGpxGeometry = geometry;
-                        App.routePath = geometry; // Αποθήκευση για έλεγχο απόκλισης
+                        App.routePath = geometry;
                         var latlngs = geometry.map(function(c) { return [c[1], c[0]]; });
                         var line = L.polyline(latlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(App.markerGroup);
                         App.routeLines.push(line);
@@ -1646,7 +1644,7 @@
         }
         
         // ============================================================
-        //  ΜΕΤΟΝΟΜΑΣΙΑ ΣΗΜΕΙΩΝ
+        //  ΜΕΤΟΝΟΜΑΣΙΑ
         // ============================================================
         window.renameStart = function() {
             if (!App.startPoint) return;
@@ -1691,7 +1689,7 @@
         };
         
         // ============================================================
-        //  ΧΑΡΤΗΣ
+        //  MAP
         // ============================================================
         function initMap() {
             loadTileCache();
@@ -1767,12 +1765,31 @@
             }, 500);
             
             console.log('🚀 Athos Path Finder έτοιμο!');
-            console.log('📍 Πιο ομαλή περιστροφή (0.15s)');
-            console.log('🔔 Ειδοποίηση απόκλισης από τη διαδρομή >' + OFFTRACK_THRESHOLD + ' μέτρα');
+        }
+        
+        function saveMapView() {
+            try {
+                const center = App.map.getCenter();
+                const zoom = App.map.getZoom();
+                localStorage.setItem('athos_map_view', JSON.stringify({ lat: center.lat, lng: center.lng, zoom: zoom }));
+            } catch(e) {}
+        }
+        
+        function loadMapView() {
+            try {
+                const view = JSON.parse(localStorage.getItem('athos_map_view'));
+                if (view && view.lat && view.lng) {
+                    App.map.setView([view.lat, view.lng], view.zoom || 10);
+                } else {
+                    App.map.setView([40.16, 24.32], 10);
+                }
+            } catch(e) {
+                App.map.setView([40.16, 24.32], 10);
+            }
         }
         
         // ============================================================
-        //  ΕΛΕΓΧΟΣ ΑΠΟΚΛΙΣΗΣ ΑΠΟ ΤΗ ΔΙΑΔΡΟΜΗ
+        //  OFFTRACK
         // ============================================================
         function checkOfftrack() {
             if (!App.lastKnownLat || !App.lastKnownLng) return;
@@ -1784,7 +1801,6 @@
             var userPos = L.latLng(App.lastKnownLat, App.lastKnownLng);
             var minDist = Infinity;
             
-            // Βρες την κοντινότερη απόσταση από το σημείο στη διαδρομή
             for (var i = 0; i < App.routePath.length; i++) {
                 var p = L.latLng(App.routePath[i][1], App.routePath[i][0]);
                 var d = userPos.distanceTo(p);
@@ -1814,7 +1830,7 @@
         }
         
         // ============================================================
-        //  ΜΠΛΕ ΚΟΥΚΙΔΑ
+        //  BLUE DOT
         // ============================================================
         function createBlueDot(lat, lng) {
             if (App.userBlueDot) { 
@@ -1835,9 +1851,6 @@
             return App.userBlueDot;
         }
         
-        // ============================================================
-        //  ΕΝΗΜΕΡΩΣΗ ΘΕΣΗΣ
-        // ============================================================
         function updateBlueDot(lat, lng, heading) {
             App.lastKnownLat = lat;
             App.lastKnownLng = lng;
@@ -1870,10 +1883,8 @@
                 }
             }
             
-            // Έλεγχος απόκλισης από τη διαδρομή
             checkOfftrack();
             
-            // Αν το στίγμα βγει πολύ έξω (2x threshold), πήγαινε εκεί
             if (App.offtrackDistance > OFFTRACK_THRESHOLD * 2) {
                 App.map.panTo([lat, lng]);
                 showToast('📍 Επιστροφή στη διαδρομή', '#2196F3');
@@ -1887,9 +1898,6 @@
             }
         }
         
-        // ============================================================
-        //  ΕΝΑΛΛΑΓΗ ΑΥΤΟΜΑΤΗΣ ΠΕΡΙΣΤΡΟΦΗΣ
-        // ============================================================
         function toggleAutoRotate() {
             App.autoRotate = !App.autoRotate;
             var container = document.getElementById('map');
@@ -1914,7 +1922,7 @@
         });
         
         // ============================================================
-        //  ΕΝΤΟΠΙΣΜΟΣ ΘΕΣΗΣ
+        //  LOCATE
         // ============================================================
         function locateUser() {
             if (App.isLocationTracking) { stopLocationTracking(); return; }
@@ -2041,52 +2049,53 @@
         }
         
         // ============================================================
-        //  POPUP - ΠΡΟΣΘΗΚΗ ΣΗΜΕΙΩΝ (ΔΙΟΡΘΩΜΕΝΟ)
+        //  POPUP - ΔΙΟΡΘΩΜΕΝΟ: ΧΡΗΣΙΜΟΠΟΙΕΙ DATA ATTRIBUTES
         // ============================================================
         function showPopup(e) {
-            var lat = e.latlng.lat, lng = e.latlng.lng;
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+            
+            // Δημιουργία του popup περιεχομένου με data-attributes
             var content = document.createElement('div');
             content.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:4px;max-width:280px;';
             content.innerHTML = 
-                '<button id="popupStart" style="background:#2c5f2d;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex:1;min-width:55px;">🚩 Start</button>' +
-                '<button id="popupEnd" style="background:#b22222;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex:1;min-width:55px;">🏁 End</button>' +
-                '<button id="popupWp" style="background:#2980b9;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex:1;min-width:55px;">📍 Σημείο</button>' +
-                '<button id="popupPhoto" style="background:#8e44ad;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex:1;min-width:55px;">📸</button>';
+                '<button class="popup-btn" data-action="start" style="background:#2c5f2d;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex:1;min-width:55px;">🚩 Start</button>' +
+                '<button class="popup-btn" data-action="end" style="background:#b22222;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex:1;min-width:55px;">🏁 End</button>' +
+                '<button class="popup-btn" data-action="waypoint" style="background:#2980b9;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex:1;min-width:55px;">📍 Σημείο</button>' +
+                '<button class="popup-btn" data-action="photo" style="background:#8e44ad;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex:1;min-width:55px;">📸</button>';
+            
             var popup = L.popup().setLatLng(e.latlng).setContent(content).openOn(App.map);
+            
+            // Event delegation - ένας listener για όλα τα κουμπιά
             setTimeout(function() {
-                var startBtn = document.getElementById('popupStart');
-                var endBtn = document.getElementById('popupEnd');
-                var wpBtn = document.getElementById('popupWp');
-                var photoBtn = document.getElementById('popupPhoto');
-                if (startBtn) { 
-                    startBtn.onclick = function() { 
-                        App.map.closePopup(); 
-                        addStart(e.latlng); 
-                    }; 
-                }
-                if (endBtn) { 
-                    endBtn.onclick = function() { 
-                        App.map.closePopup(); 
-                        addEnd(e.latlng); 
-                    }; 
-                }
-                if (wpBtn) { 
-                    wpBtn.onclick = function() { 
-                        App.map.closePopup(); 
-                        addWaypoint(e.latlng); 
-                    }; 
-                }
-                if (photoBtn) { 
-                    photoBtn.onclick = function() { 
-                        App.map.closePopup(); 
-                        takePhoto(e.latlng); 
-                    }; 
-                }
+                var btns = document.querySelectorAll('.popup-btn');
+                btns.forEach(function(btn) {
+                    btn.onclick = function() {
+                        var action = this.dataset.action;
+                        var latlng = e.latlng;
+                        App.map.closePopup();
+                        
+                        switch(action) {
+                            case 'start':
+                                addStart(latlng);
+                                break;
+                            case 'end':
+                                addEnd(latlng);
+                                break;
+                            case 'waypoint':
+                                addWaypoint(latlng);
+                                break;
+                            case 'photo':
+                                takePhoto(latlng);
+                                break;
+                        }
+                    };
+                });
             }, 50);
         }
         
         // ============================================================
-        //  ΠΡΟΣΘΗΚΗ ΣΗΜΕΙΩΝ (ΔΙΟΡΘΩΜΕΝΟ)
+        //  ΠΡΟΣΘΗΚΗ ΣΗΜΕΙΩΝ
         // ============================================================
         function addStart(latlng) {
             if (App.isLocationTracking) { stopLocationTracking(); }
@@ -2348,7 +2357,7 @@
         }
         
         // ============================================================
-        //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - OSRM
+        //  ROUTE CALCULATION
         // ============================================================
         async function calcRoute() {
             if (!App.startPoint || !App.endPoint) { 
@@ -2383,8 +2392,6 @@
                 
                 var osrmUrl = 'https://router.project-osrm.org/route/v1/foot/' + coordsStr + '?overview=full&geometries=geojson';
                 
-                console.log('🌐 OSRM Request:', osrmUrl);
-                
                 var response = await fetch(osrmUrl);
                 
                 if (!response.ok) {
@@ -2403,7 +2410,7 @@
                 var geom = route.geometry.coordinates;
                 
                 App.lastMainGeometry = geom;
-                App.routePath = geom; // Αποθήκευση για έλεγχο απόκλισης
+                App.routePath = geom;
                 App.lastMainDistance = route.distance / 1000;
                 
                 var latlngs = geom.map(function(c) { return [c[1], c[0]]; });
@@ -2420,13 +2427,12 @@
                 document.getElementById('osmLink').href = 'https://www.openstreetmap.org/directions?engine=foot&route=' + allPoints.map(function(p) { return p[0] + ',' + p[1]; }).join(';');
                 saveLastRoute();
                 hideLoader();
-                showToast('✅ Διαδρομή υπολογίστηκε (OSRM)', '#2ecc71');
+                showToast('✅ Διαδρομή υπολογίστηκε', '#2ecc71');
                 
             } catch(error) {
-                console.error('❌ OSRM Error:', error);
+                console.error('❌ Error:', error);
                 hideLoader();
-                
-                showToast('⚠️ OSRM error - Χρήση ευθείας γραμμής', '#f39c12');
+                showToast('⚠️ Χρήση ευθείας γραμμής', '#f39c12');
                 
                 var simpleGeom = [];
                 for (var i = 0; i < allPoints.length; i++) {
@@ -2455,12 +2461,11 @@
                 updateInfo();
                 document.getElementById('osmLink').href = 'https://www.openstreetmap.org/directions?engine=foot&route=' + allPoints.map(function(p) { return p[0] + ',' + p[1]; }).join(';');
                 saveLastRoute();
-                showToast('⚠️ Χρησιμοποιείται ευθεία γραμμή (OSRM offline)', '#f39c12');
             }
         }
         
         // ============================================================
-        //  ΕΝΗΜΕΡΩΣΗ ΠΛΗΡΟΦΟΡΙΩΝ (ΜΕΓΑΛΥΤΕΡΑ ΓΡΑΜΜΑΤΑ)
+        //  INFO PANEL
         // ============================================================
         function updateInfo() {
             var speed = parseFloat(document.getElementById('speedSelect').value || 4);
@@ -2486,7 +2491,7 @@
         }
         
         // ============================================================
-        //  ΠΑΝΕΛ ΣΗΜΕΙΩΝ
+        //  WAYPOINTS PANEL
         // ============================================================
         function updateWaypointsPanel() {
             var list = document.getElementById('waypointsList');
@@ -2528,7 +2533,7 @@
         });
         
         // ============================================================
-        //  ΚΑΘΑΡΙΣΜΟΣ
+        //  CLEAR
         // ============================================================
         function clearAll() {
             if (App.isLocationTracking) { stopLocationTracking(); if (wakeLockActive) { releaseWakeLock(); } }
@@ -2660,7 +2665,7 @@
         });
         
         // ============================================================
-        //  GPX ΦΟΡΤΩΣΗ
+        //  FILE INPUT
         // ============================================================
         document.getElementById('fileInput').addEventListener('change', function(e) {
             var file = e.target.files[0];
@@ -2670,12 +2675,12 @@
         });
         
         // ============================================================
-        //  EVENTS - OFFLINE TILES
+        //  DOWNLOAD TILES
         // ============================================================
         document.getElementById('downloadTilesBtn')?.addEventListener('click', downloadTiles);
         
         // ============================================================
-        //  ΑΠΟΘΗΚΕΥΣΗ / ΦΟΡΤΩΣΗ
+        //  SAVE / LOAD ROUTE
         // ============================================================
         function saveLastRoute() {
             try {
@@ -2784,7 +2789,7 @@
         }
         
         // ============================================================
-        //  ΑΠΟΘΗΚΕΥΣΗ ΔΙΑΔΡΟΜΩΝ
+        //  SAVED ROUTES LIST
         // ============================================================
         function getSavedRoutes() {
             try { return JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); }
@@ -2988,7 +2993,7 @@
         document.getElementById('exportGpxBtn')?.addEventListener('click', exportGpx);
         
         // ============================================================
-        //  ΕΚΚΙΝΗΣΗ
+        //  START
         // ============================================================
         resetInfo();
         updatePhotoList();
@@ -2996,10 +3001,9 @@
         initMap();
         
         console.log('📱 Athos Path Finder - ΠΛΗΡΗΣ ΕΚΔΟΣΗ');
-        console.log('🔄 Πιο ομαλή περιστροφή (0.15s)');
-        console.log('🔔 Ειδοποίηση απόκλισης από τη διαδρομή >' + OFFTRACK_THRESHOLD + ' μέτρα');
-        console.log('📏 Μεγαλύτερα γράμματα στα χλμ/ώρα');
-        console.log('📱 2 γραμμές εικονιδίων σε κινητά');
+        console.log('📱 2 γραμμές σε κινητά');
+        console.log('🔔 Ειδοποίηση απόκλισης από τη διαδρομή');
+        console.log('✅ Πλήρως λειτουργική προσθήκη σημείων');
     </script>
 </body>
 </html>
