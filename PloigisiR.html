@@ -440,7 +440,8 @@
     <script>
         // ============================================================
         //  ATHOS MAPS - PATH FINDER - ΤΕΛΙΚΗ ΕΚΔΟΣΗ
-        //  Αυτόματο GPS στην Πλοήγηση | Χωρίς περιττή ένδειξη
+        //  Διόρθωση αποθήκευσης/φόρτωσης σημείων
+        //  Αυτόματο GPS στην Πλοήγηση
         // ============================================================
         
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
@@ -542,16 +543,15 @@
                 btn.title = 'Εναλλαγή σε Πλοήγηση';
                 if (isLocationTracking) stopLocationTracking();
                 document.getElementById('locateBtn').classList.remove('active');
+                document.getElementById('locateBtn').innerHTML = '📍 GPS';
                 showToast('✏️ Mode Σχεδίασης - Ο χάρτης δεν κεντράρει αυτόματα', '#e67e22');
             } else {
                 btn.innerHTML = '🧭 Πλοήγηση';
                 btn.classList.remove('design-mode');
                 btn.title = 'Εναλλαγή σε Σχεδίαση';
-                // ΑΥΤΟΜΑΤΗ ΕΝΕΡΓΟΠΟΙΗΣΗ GPS
                 if (!isLocationTracking) {
                     locateUser(true);
                 }
-                document.getElementById('locateBtn').classList.add('active');
                 if (routeLines.length > 0) {
                     map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60], animate: true, duration: 1 });
                 }
@@ -651,7 +651,17 @@
             window.addEventListener('resize', function() { setTimeout(function() { map.invalidateSize({ animate: false }); updateWatermarkPosition(); }, 200); });
             window.addEventListener('orientationchange', function() { setTimeout(function() { map.invalidateSize({ animate: false }); updateWatermarkPosition(); }, 400); });
             registerServiceWorker();
-            setTimeout(function() { var has = loadLastRouteState(); setTimeout(function() { locateUser(true); }, has ? 1000 : 800); }, 500);
+            
+            // Αυτόματη ενεργοποίηση GPS κατά την εκκίνηση
+            setTimeout(function() { 
+                var has = loadLastRouteState(); 
+                setTimeout(function() { 
+                    if (!isDesignMode && !isLocationTracking) {
+                        locateUser(true);
+                    }
+                }, has ? 1000 : 800); 
+            }, 500);
+            
             try { var st = localStorage.getItem('athos_off_route_threshold'); if (st) { OFF_ROUTE_THRESHOLD = parseInt(st); document.getElementById('offRouteThresholdInput').value = OFF_ROUTE_THRESHOLD; } } catch(e) {}
             setTimeout(function() {
                 makeDraggable(document.getElementById('routeInfo'), '.drag-area');
@@ -739,7 +749,7 @@
         function locateByIP(zl) { fetch('https://ipapi.co/json/').then(function(r) { return r.json(); }).then(function(d) { if (d.latitude) { lastKnownPosition = { lat: d.latitude, lng: d.longitude }; updateBlueDot(d.latitude, d.longitude); if (zl !== false) map.flyTo([d.latitude, d.longitude], 13, { duration: 1 }); } initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; document.getElementById('locateBtn').classList.remove('active'); isLocationTracking = false; }).catch(function() { var s = null; try { s = JSON.parse(localStorage.getItem('athos_last_location')); } catch(e) {} if (s && s.lat) { updateBlueDot(s.lat, s.lng); if (zl !== false) map.flyTo([s.lat, s.lng], 13, { duration: 1 }); } else updateBlueDot(38.0, 23.7); initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; document.getElementById('locateBtn').classList.remove('active'); isLocationTracking = false; }); }
         function calculateHeadingFromHistory(lat, lng) { positionHistory.push({ lat: lat, lng: lng }); if (positionHistory.length > 10) positionHistory.shift(); if (positionHistory.length < 2) return null; return calculateHeading(positionHistory[positionHistory.length - 2], positionHistory[positionHistory.length - 1]); }
 
-        // Σημεία & Φωτογραφίες (παραμένουν ίδια)
+        // Σημεία & Φωτογραφίες
         function showClickPopup(e) { var c = document.createElement('div'); c.innerHTML = '<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🚩 Start</button><button id="setEndBtn" style="background:#b22222;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📍 Ενδιάμεσο</button><button id="photoHereBtn" style="background:#8e44ad;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📸</button>'; var p = L.popup().setLatLng(e.latlng).setContent(c).openOn(map); setTimeout(function() { document.getElementById('setStartBtn')?.addEventListener('click', function() { setStartPoint(e.latlng); map.closePopup(); }); document.getElementById('setEndBtn')?.addEventListener('click', function() { setEndPoint(e.latlng); map.closePopup(); }); document.getElementById('addWpBtn')?.addEventListener('click', function() { addWaypoint(e.latlng); map.closePopup(); }); document.getElementById('photoHereBtn')?.addEventListener('click', function() { map.closePopup(); takePhoto(e.latlng); }); }, 100); }
         function setStartPoint(ll) { if (startMarker) map.removeLayer(startMarker); startPoint = ll; startName = prompt('Όνομα:', 'Αφετηρία') || 'Αφετηρία'; startMarker = L.marker(ll, { icon: getColorIcon('green'), draggable: true }).addTo(map).bindPopup('🚩 ' + startName); startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); }); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Αφετηρία: ' + startName, 'start'); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
         function setEndPoint(ll) { if (endMarker) map.removeLayer(endMarker); endPoint = ll; endName = prompt('Όνομα:', 'Προορισμός') || 'Προορισμός'; endMarker = L.marker(ll, { icon: getColorIcon('red'), draggable: true }).addTo(map).bindPopup('🏁 ' + endName); endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); }); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Προορισμός: ' + endName, 'end'); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
@@ -798,14 +808,213 @@
         document.getElementById('fileInput').addEventListener('change', function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { try { var geo = toGeoJSON.gpx(new DOMParser().parseFromString(ev.target.result,'text/xml')); clearAll(); var geom = null; if (geo.features) for (var i=0;i<geo.features.length;i++) if (geo.features[i].geometry?.type==='LineString') { geom = geo.features[i].geometry.coordinates; break; } if (geom) { currentGpxGeometry = geom; var line = L.polyline(geom.map(function(c){return[c[1],c[0]]}),{color:'#2c5f2d',weight:5,opacity:0.8}).addTo(map); routeLines.push(line); currentGpxLayer = line; map.fitBounds(line.getBounds(),{padding:[60,60]}); lastMainGeometry = geom; lastMainDistance = computeDistanceFromCoords(geom); updateInfo(); saveLastRouteState(); showToast('✅ Φορτώθηκε!','#27ae60'); } else alert('Δεν περιέχει διαδρομή.'); } catch(err) { alert('Σφάλμα: '+err.message); } }; r.readAsText(f); e.target.value = ''; });
 
         // Αποθήκευση / Φόρτωση
-        function saveLastRouteState() { try { localStorage.setItem('athos_last_route_state', JSON.stringify({ geometry: lastMainGeometry, distance: lastMainDistance, startName, endName, startPoint, endPoint, startPhoto, endPhoto, waypoints: waypoints.map(function(p,i){return{lat:p.lat,lng:p.lng,name:waypointNames[i]||'Σημείο',photo:waypointPhotos[i]||null}}), routePhotos: routePhotos.map(function(p){return p.image}) })); } catch(e) {} }
-        function loadLastRouteState() { try { var d = localStorage.getItem('athos_last_route_state'); if (!d) return false; var s = JSON.parse(d); if (!s.geometry) return false; lastMainGeometry = s.geometry; lastMainDistance = s.distance || computeDistanceFromCoords(s.geometry); startName = s.startName || 'Αφετηρία'; endName = s.endName || 'Προορισμός'; startPhoto = s.startPhoto || null; endPhoto = s.endPhoto || null; if (s.startPoint) { startPoint = s.startPoint; startMarker = L.marker([startPoint.lat,startPoint.lng],{icon:getColorIcon('green')}).addTo(map).bindPopup('🚩 '+startName); } if (s.endPoint) { endPoint = s.endPoint; endMarker = L.marker([endPoint.lat,endPoint.lng],{icon:getColorIcon('red')}).addTo(map).bindPopup('🏁 '+endName); } if (s.waypoints) { for (var i=0;i<s.waypoints.length;i++) { var w=s.waypoints[i]; waypoints.push(L.latLng(w.lat,w.lng)); waypointNames.push(w.name||'Σημείο'); waypointPhotos.push(w.photo||null); var m=L.marker([w.lat,w.lng],{icon:getColorIcon('blue'),draggable:true}).addTo(map); updateWaypointPopup(m,i); (function(idx){m.on('dragend',function(e){waypoints[idx]=e.target.getLatLng();calculateRoute()})})(i); markers.push(m); } updateWaypointsPanel(); } var ll = s.geometry.map(function(c){return[c[1],c[0]]}); routeLines.push(L.polyline(ll,{color:'#2c5f2d',weight:5,opacity:0.8}).addTo(map)); map.fitBounds(routeLines[0].getBounds(),{padding:[60,60]}); if (s.routePhotos) { routePhotos = s.routePhotos.map(function(img){return{image:img,lat:s.geometry[0][1],lng:s.geometry[0][0],note:'',filename:'photo.jpg',timestamp:new Date().toISOString()}}); for (var j=0;j<routePhotos.length;j++) addPhotoMarker(routePhotos[j]); updatePhotoList(); } updateInfo(); return true; } catch(e) { return false; } }
+        function saveLastRouteState() { 
+            try { 
+                localStorage.setItem('athos_last_route_state', JSON.stringify({ 
+                    geometry: lastMainGeometry, distance: lastMainDistance, 
+                    startName: startName, endName: endName, 
+                    startPoint: startPoint, endPoint: endPoint, 
+                    startPhoto: startPhoto, endPhoto: endPhoto, 
+                    waypoints: waypoints.map(function(p,i){return{lat:p.lat,lng:p.lng,name:waypointNames[i]||'Σημείο',photo:waypointPhotos[i]||null}}), 
+                    routePhotos: routePhotos.map(function(p){return p.image}) 
+                })); 
+            } catch(e) {} 
+        }
+        
+        function loadLastRouteState() { 
+            try { 
+                var d = localStorage.getItem('athos_last_route_state'); 
+                if (!d) return false; 
+                var s = JSON.parse(d); 
+                if (!s.geometry) return false; 
+                lastMainGeometry = s.geometry; 
+                lastMainDistance = s.distance || computeDistanceFromCoords(s.geometry); 
+                startName = s.startName || 'Αφετηρία'; 
+                endName = s.endName || 'Προορισμός'; 
+                startPhoto = s.startPhoto || null; 
+                endPhoto = s.endPhoto || null; 
+                
+                if (s.startPoint) { 
+                    startPoint = s.startPoint; 
+                    startMarker = L.marker([startPoint.lat,startPoint.lng],{icon:getColorIcon('green'),draggable:true}).addTo(map).bindPopup('🚩 '+startName); 
+                    startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); }); 
+                } 
+                if (s.endPoint) { 
+                    endPoint = s.endPoint; 
+                    endMarker = L.marker([endPoint.lat,endPoint.lng],{icon:getColorIcon('red'),draggable:true}).addTo(map).bindPopup('🏁 '+endName); 
+                    endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); }); 
+                } 
+                if (s.waypoints && s.waypoints.length > 0) { 
+                    waypoints = []; waypointNames = []; waypointPhotos = []; markers = [];
+                    for (var i=0;i<s.waypoints.length;i++) { 
+                        var w=s.waypoints[i]; 
+                        waypoints.push(L.latLng(w.lat,w.lng)); 
+                        waypointNames.push(w.name||'Σημείο'); 
+                        waypointPhotos.push(w.photo||null); 
+                        var m=L.marker([w.lat,w.lng],{icon:getColorIcon('blue'),draggable:true}).addTo(map); 
+                        updateWaypointPopup(m,i); 
+                        (function(idx){m.on('dragend',function(e){waypoints[idx]=e.target.getLatLng();calculateRoute()})})(i); 
+                        markers.push(m); 
+                    } 
+                    updateWaypointsPanel(); 
+                } 
+                var ll = s.geometry.map(function(c){return[c[1],c[0]]}); 
+                routeLines.push(L.polyline(ll,{color:'#2c5f2d',weight:5,opacity:0.8}).addTo(map)); 
+                map.fitBounds(routeLines[0].getBounds(),{padding:[60,60]}); 
+                if (s.routePhotos) { 
+                    routePhotos = s.routePhotos.map(function(img){return{image:img,lat:s.geometry[0][1],lng:s.geometry[0][0],note:'',filename:'photo.jpg',timestamp:new Date().toISOString()}}); 
+                    for (var j=0;j<routePhotos.length;j++) addPhotoMarker(routePhotos[j]); 
+                    updatePhotoList(); 
+                } 
+                updateInfo(); 
+                return true; 
+            } catch(e) { return false; } 
+        }
 
-        async function saveRoute() { if (!lastMainGeometry || lastMainGeometry.length < 2) { alert('Δεν υπάρχει διαδρομή.'); return; } var name = prompt('Όνομα:', 'Διαδρομή ' + new Date().toLocaleDateString('el')); if (!name) return; showSaveStatus('Αποθήκευση...', '', 'Συμπίεση φωτογραφιών...'); try { var rid = generateRouteId(); var pids = [], pthumbs = []; if (routePhotos.length > 0) { for (var i = 0; i < routePhotos.length; i++) { var ph = routePhotos[i]; var pid = 'photo_' + rid + '_' + i; showSaveStatus('Αποθήκευση...', '', 'Φωτό ' + (i+1) + '/' + routePhotos.length); var thumb = await createThumbnail(ph.image); var comp = await compressImage(ph.image, 1920, 1920, 0.7); await storePhotoInDB({ id: pid, image: comp, lat: ph.lat, lng: ph.lng, note: ph.note || '', filename: ph.filename || 'photo.jpg', timestamp: ph.timestamp, thumbnail: thumb }); pids.push(pid); pthumbs.push({ id: pid, thumbnail: thumb, lat: ph.lat, lng: ph.lng, note: ph.note || '', timestamp: ph.timestamp }); } } var csp = startPhoto ? await compressImage(startPhoto, 800, 800, 0.6) : null; var cep = endPhoto ? await compressImage(endPhoto, 800, 800, 0.6) : null; var cwp = []; if (waypointPhotos.length > 0) { for (var j = 0; j < waypointPhotos.length; j++) cwp.push(waypointPhotos[j] ? await compressImage(waypointPhotos[j], 800, 800, 0.6) : null); } showSaveStatus('Αποθήκευση...', '', 'Αποθήκευση...'); var rd = { id: rid, name: name, geometry: lastMainGeometry, distance: lastMainDistance, date: new Date().toISOString(), startName: startName || 'Αφετηρία', endName: endName || 'Προορισμός', startPhoto: csp, endPhoto: cep, waypoints: waypoints.map(function(p, i) { return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο', photo: cwp[i] || null }; }), photoIds: pids, photoThumbnails: pthumbs, photoCount: routePhotos.length, createdBy: 'Athos Maps' }; await storeRouteInDB(rd); try { var saved = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); var lr = { id: rid, name: name, geometry: lastMainGeometry, distance: lastMainDistance, date: rd.date, startName: rd.startName, endName: rd.endName, photoIds: pids, photoCount: routePhotos.length, hasPhotos: routePhotos.length > 0, waypoints: rd.waypoints.map(function(w) { return { lat: w.lat, lng: w.lng, name: w.name, photo: null }; }), createdBy: 'Athos Maps' }; var ei = saved.findIndex(function(r) { return r.id === rid; }); if (ei >= 0) saved[ei] = lr; else saved.push(lr); localStorage.setItem('athos_saved_routes', JSON.stringify(saved)); } catch(se) {} showSaveStatus('✅ Αποθηκεύτηκε!', 'success', name + ' | 📸 ' + routePhotos.length); showToast('✅ ' + name + ' (' + routePhotos.length + ' φωτό)', '#2ecc71'); if (document.getElementById('routeDropdownContainer').classList.contains('active')) showRoutesList(); } catch(e) { showSaveStatus('❌ Σφάλμα', 'error', e.message); showToast('❌ ' + e.message, '#e74c3c'); } }
+        // ΔΙΟΡΘΩΜΕΝΗ saveRoute
+        async function saveRoute() { 
+            if (!lastMainGeometry || lastMainGeometry.length < 2) { alert('Δεν υπάρχει διαδρομή.'); return; } 
+            var name = prompt('Όνομα:', 'Διαδρομή ' + new Date().toLocaleDateString('el')); 
+            if (!name) return; 
+            showSaveStatus('Αποθήκευση...', '', 'Συμπίεση φωτογραφιών...'); 
+            try { 
+                var rid = generateRouteId(); 
+                var pids = [], pthumbs = []; 
+                if (routePhotos.length > 0) { 
+                    for (var i = 0; i < routePhotos.length; i++) { 
+                        var ph = routePhotos[i]; var pid = 'photo_' + rid + '_' + i; 
+                        showSaveStatus('Αποθήκευση...', '', 'Φωτό ' + (i+1) + '/' + routePhotos.length); 
+                        var thumb = await createThumbnail(ph.image); 
+                        var comp = await compressImage(ph.image, 1920, 1920, 0.7); 
+                        await storePhotoInDB({ id: pid, image: comp, lat: ph.lat, lng: ph.lng, note: ph.note || '', filename: ph.filename || 'photo.jpg', timestamp: ph.timestamp, thumbnail: thumb }); 
+                        pids.push(pid); pthumbs.push({ id: pid, thumbnail: thumb, lat: ph.lat, lng: ph.lng, note: ph.note || '', timestamp: ph.timestamp }); 
+                    } 
+                } 
+                var csp = startPhoto ? await compressImage(startPhoto, 800, 800, 0.6) : null; 
+                var cep = endPhoto ? await compressImage(endPhoto, 800, 800, 0.6) : null; 
+                var cwp = []; 
+                if (waypointPhotos.length > 0) { for (var j = 0; j < waypointPhotos.length; j++) cwp.push(waypointPhotos[j] ? await compressImage(waypointPhotos[j], 800, 800, 0.6) : null); } 
+                showSaveStatus('Αποθήκευση...', '', 'Αποθήκευση...'); 
+                var rd = { 
+                    id: rid, name: name, geometry: lastMainGeometry, distance: lastMainDistance, date: new Date().toISOString(), 
+                    startPoint: startPoint ? { lat: startPoint.lat, lng: startPoint.lng } : null,
+                    startName: startName || 'Αφετηρία', startPhoto: csp, 
+                    endPoint: endPoint ? { lat: endPoint.lat, lng: endPoint.lng } : null,
+                    endName: endName || 'Προορισμός', endPhoto: cep, 
+                    waypoints: waypoints.map(function(p, i) { return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο '+(i+1), photo: cwp[i] || null }; }), 
+                    photoIds: pids, photoThumbnails: pthumbs, photoCount: routePhotos.length, createdBy: 'Athos Maps' 
+                }; 
+                await storeRouteInDB(rd); 
+                try { 
+                    var saved = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); 
+                    var lr = { 
+                        id: rid, name: name, geometry: lastMainGeometry, distance: lastMainDistance, date: rd.date, 
+                        startPoint: rd.startPoint, startName: rd.startName, startPhoto: csp,
+                        endPoint: rd.endPoint, endName: rd.endName, endPhoto: cep,
+                        waypoints: rd.waypoints, 
+                        photoIds: pids, photoCount: routePhotos.length, hasPhotos: routePhotos.length > 0, createdBy: 'Athos Maps' 
+                    }; 
+                    var ei = saved.findIndex(function(r) { return r.id === rid; }); 
+                    if (ei >= 0) saved[ei] = lr; else saved.push(lr); 
+                    localStorage.setItem('athos_saved_routes', JSON.stringify(saved)); 
+                } catch(se) {} 
+                showSaveStatus('✅ Αποθηκεύτηκε!', 'success', name + ' | 📸 ' + routePhotos.length + ' | 📍 ' + waypoints.length + ' σημεία'); 
+                showToast('✅ ' + name + ' (' + routePhotos.length + ' φωτό, ' + waypoints.length + ' σημεία)', '#2ecc71'); 
+                if (document.getElementById('routeDropdownContainer').classList.contains('active')) showRoutesList(); 
+            } catch(e) { showSaveStatus('❌ Σφάλμα', 'error', e.message); showToast('❌ ' + e.message, '#e74c3c'); } 
+        }
 
-        async function loadRouteDirect(route) { if (!route.geometry || route.geometry.length < 2) { alert('Μη έγκυρη.'); return; } showSaveStatus('Φόρτωση...', '', 'Ανάκτηση...'); try { clearAll(); var fr = null; if (route.id) { try { fr = await getRouteFromDB(route.id); } catch(e) {} } var rd = fr || route; lastMainGeometry = rd.geometry; lastMainDistance = rd.distance || computeDistanceFromCoords(rd.geometry); startPhoto = rd.startPhoto || null; endPhoto = rd.endPhoto || null; var ll = rd.geometry.map(function(c) { return [c[1], c[0]]; }); routeLines.push(L.polyline(ll, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map)); map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60] }); if (rd.waypoints) { for (var i = 0; i < rd.waypoints.length; i++) { var wp = rd.waypoints[i]; waypoints.push(L.latLng(wp.lat, wp.lng)); waypointNames.push(wp.name || 'Σημείο'); waypointPhotos.push(wp.photo || null); var m = L.marker([wp.lat, wp.lng], { icon: getColorIcon('blue'), draggable: true }).addTo(map); updateWaypointPopup(m, i); (function(idx) { m.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); }); })(i); markers.push(m); } updateWaypointsPanel(); } if (rd.photoIds && rd.photoIds.length > 0) { routePhotos = []; photoMarkers = []; for (var j = 0; j < rd.photoIds.length; j++) { showSaveStatus('Φόρτωση...', '', 'Φωτό ' + (j+1) + '/' + rd.photoIds.length); try { var pd = await getPhotoFromDB(rd.photoIds[j]); if (pd) { routePhotos.push({ image: pd.image, lat: pd.lat, lng: pd.lng, note: pd.note || '', filename: pd.filename, timestamp: pd.timestamp, dbId: pd.id }); addPhotoMarker(routePhotos[routePhotos.length - 1]); } } catch(e) { if (rd.photoThumbnails && rd.photoThumbnails[j]) { var th = rd.photoThumbnails[j]; routePhotos.push({ image: th.thumbnail, lat: th.lat, lng: th.lng, note: th.note || '(thumb)', filename: 'thumb.jpg', timestamp: th.timestamp, dbId: th.id }); addPhotoMarker(routePhotos[routePhotos.length - 1]); } } } updatePhotoList(); } var f = rd.geometry[0], l = rd.geometry[rd.geometry.length - 1]; startPoint = { lat: f[1], lng: f[0] }; endPoint = { lat: l[1], lng: l[0] }; startName = rd.startName || 'Αφετηρία'; endName = rd.endName || 'Προορισμός'; if (startMarker) map.removeLayer(startMarker); startMarker = L.marker([f[1], f[0]], { icon: getColorIcon('green') }).addTo(map).bindPopup('🚩 ' + startName); if (endMarker) map.removeLayer(endMarker); endMarker = L.marker([l[1], l[0]], { icon: getColorIcon('red') }).addTo(map).bindPopup('🏁 ' + endName); updateInfo(); updateWaypointsPanel(); saveLastRouteState(); offRouteAlertDismissed = false; hideSaveStatus(); showToast('✅ ' + rd.name + ' | 📸 ' + (rd.photoIds || []).length, '#2ecc71'); } catch(e) { hideSaveStatus(); showToast('❌ ' + e.message, '#e74c3c'); } }
+        // ΔΙΟΡΘΩΜΕΝΗ loadRouteDirect
+        async function loadRouteDirect(route) { 
+            if (!route.geometry || route.geometry.length < 2) { alert('Μη έγκυρη διαδρομή.'); return; } 
+            showSaveStatus('Φόρτωση...', '', 'Ανάκτηση δεδομένων...'); 
+            try { 
+                clearAll(); 
+                var fr = null; 
+                if (route.id) { try { fr = await getRouteFromDB(route.id); } catch(e) {} } 
+                var rd = fr || route; 
+                lastMainGeometry = rd.geometry; 
+                lastMainDistance = rd.distance || computeDistanceFromCoords(rd.geometry); 
+                startPhoto = rd.startPhoto || null; 
+                endPhoto = rd.endPhoto || null; 
+                startName = rd.startName || 'Αφετηρία'; 
+                endName = rd.endName || 'Προορισμός'; 
+                
+                var ll = rd.geometry.map(function(c) { return [c[1], c[0]]; }); 
+                routeLines.push(L.polyline(ll, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map)); 
+                map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60] }); 
+                
+                // Φόρτωση ΑΦΕΤΗΡΙΑΣ
+                if (rd.startPoint) {
+                    startPoint = { lat: rd.startPoint.lat, lng: rd.startPoint.lng };
+                    if (startMarker) map.removeLayer(startMarker);
+                    startMarker = L.marker([startPoint.lat, startPoint.lng], { icon: getColorIcon('green'), draggable: true }).addTo(map).bindPopup('🚩 ' + startName);
+                    startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); });
+                } else if (rd.geometry && rd.geometry.length > 0) {
+                    var first = rd.geometry[0];
+                    startPoint = { lat: first[1], lng: first[0] };
+                    if (startMarker) map.removeLayer(startMarker);
+                    startMarker = L.marker([first[1], first[0]], { icon: getColorIcon('green'), draggable: true }).addTo(map).bindPopup('🚩 ' + startName);
+                    startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); });
+                }
+                
+                // Φόρτωση ΠΡΟΟΡΙΣΜΟΥ
+                if (rd.endPoint) {
+                    endPoint = { lat: rd.endPoint.lat, lng: rd.endPoint.lng };
+                    if (endMarker) map.removeLayer(endMarker);
+                    endMarker = L.marker([endPoint.lat, endPoint.lng], { icon: getColorIcon('red'), draggable: true }).addTo(map).bindPopup('🏁 ' + endName);
+                    endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); });
+                } else if (rd.geometry && rd.geometry.length > 0) {
+                    var last = rd.geometry[rd.geometry.length - 1];
+                    endPoint = { lat: last[1], lng: last[0] };
+                    if (endMarker) map.removeLayer(endMarker);
+                    endMarker = L.marker([last[1], last[0]], { icon: getColorIcon('red'), draggable: true }).addTo(map).bindPopup('🏁 ' + endName);
+                    endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); });
+                }
+                
+                // Φόρτωση ΕΝΔΙΑΜΕΣΩΝ ΣΗΜΕΙΩΝ
+                if (rd.waypoints && rd.waypoints.length > 0) {
+                    waypoints = []; waypointNames = []; waypointPhotos = []; markers = [];
+                    for (var i = 0; i < rd.waypoints.length; i++) { 
+                        var wp = rd.waypoints[i]; 
+                        waypoints.push(L.latLng(wp.lat, wp.lng)); 
+                        waypointNames.push(wp.name || 'Σημείο ' + (i+1)); 
+                        waypointPhotos.push(wp.photo || null); 
+                        var m = L.marker([wp.lat, wp.lng], { icon: getColorIcon('blue'), draggable: true }).addTo(map); 
+                        updateWaypointPopup(m, i); 
+                        (function(idx) { m.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); }); })(i); 
+                        markers.push(m); 
+                    } 
+                    updateWaypointsPanel(); 
+                }
+                
+                // Φόρτωση φωτογραφιών
+                if (rd.photoIds && rd.photoIds.length > 0) { 
+                    routePhotos = []; photoMarkers = []; 
+                    for (var j = 0; j < rd.photoIds.length; j++) { 
+                        showSaveStatus('Φόρτωση...', '', 'Φωτό ' + (j+1) + '/' + rd.photoIds.length); 
+                        try { 
+                            var pd = await getPhotoFromDB(rd.photoIds[j]); 
+                            if (pd) { routePhotos.push({ image: pd.image, lat: pd.lat, lng: pd.lng, note: pd.note || '', filename: pd.filename, timestamp: pd.timestamp, dbId: pd.id }); addPhotoMarker(routePhotos[routePhotos.length - 1]); } 
+                        } catch(e) { 
+                            if (rd.photoThumbnails && rd.photoThumbnails[j]) { 
+                                var th = rd.photoThumbnails[j]; 
+                                routePhotos.push({ image: th.thumbnail, lat: th.lat, lng: th.lng, note: th.note || '(thumb)', filename: 'thumb.jpg', timestamp: th.timestamp, dbId: th.id }); 
+                                addPhotoMarker(routePhotos[routePhotos.length - 1]); 
+                            } 
+                        } 
+                    } 
+                    updatePhotoList(); 
+                } 
+                
+                updateInfo(); updateWaypointsPanel(); saveLastRouteState(); 
+                offRouteAlertDismissed = false; hideSaveStatus(); 
+                var wpCount = rd.waypoints ? rd.waypoints.length : 0;
+                showToast('✅ ' + rd.name + ' | 🚩🏁 + ' + wpCount + ' σημεία | 📸 ' + (rd.photoIds || []).length, '#2ecc71'); 
+            } catch(e) { hideSaveStatus(); showToast('❌ ' + e.message, '#e74c3c'); } 
+        }
 
-        async function showRoutesList() { var c = document.getElementById('routesList'); try { var saved = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); var dbr = []; try { dbr = await getAllRoutesFromDB(); } catch(e) {} var all = [], seen = {}; for (var i = 0; i < dbr.length; i++) { all.push(dbr[i]); seen[dbr[i].id] = true; } for (var j = 0; j < saved.length; j++) { if (!seen[saved[j].id]) { all.push(saved[j]); seen[saved[j].id] = true; } } all.sort(function(a, b) { return (a.name || '').localeCompare(b.name || '', 'el'); }); if (all.length === 0) { c.innerHTML = '<div style="color:#999;padding:10px;text-align:center;">📭 Δεν υπάρχουν διαδρομές</div>'; return; } var html = ''; for (var k = 0; k < all.length; k++) { var r = all[k]; var pc = r.photoCount || (r.photoIds ? r.photoIds.length : 0); html += '<div class="route-item" data-id="' + r.id + '" style="display:flex;justify-content:space-between;align-items:center;padding:6px 7px;border-bottom:1px solid #f0f0f0;cursor:pointer;border-radius:5px;gap:5px;"><div style="flex:1;min-width:0;"><div style="font-weight:600;color:#2c5f2d;font-size:12px;">📍 ' + (r.name || 'Χωρίς όνομα') + (pc > 0 ? ' <span style="font-size:9px;color:#8e44ad;">📸' + pc + '</span>' : '') + '</div><div style="font-size:9px;color:#888;">' + (r.startName || 'Αφετηρία') + ' → ' + (r.endName || 'Προορισμός') + ' · ' + (r.distance ? r.distance.toFixed(1) + 'km' : '') + ' · ' + (r.date ? new Date(r.date).toLocaleDateString('el') : '') + '</div></div><div style="display:flex;gap:3px;"><button class="load-btn" data-id="' + r.id + '" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">📂</button><button class="delete-btn" data-id="' + r.id + '" style="background:#b22222;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">✖</button></div></div>'; } c.innerHTML = html; c.querySelectorAll('.load-btn').forEach(function(b) { b.addEventListener('click', function(e) { e.stopPropagation(); var route = all.find(function(r) { return r.id === b.dataset.id; }); if (route) loadRouteDirect(route); hideRouteDropdown(); }); }); c.querySelectorAll('.delete-btn').forEach(function(b) { b.addEventListener('click', async function(e) { e.stopPropagation(); var id = this.dataset.id; if (confirm('Διαγραφή;')) { try { var fr = await getRouteFromDB(id); if (fr && fr.photoIds) { for (var p = 0; p < fr.photoIds.length; p++) await deletePhotoFromDB(fr.photoIds[p]); } await deleteRouteFromDB(id); } catch(e) {} var s = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); s = s.filter(function(r) { return r.id !== id; }); localStorage.setItem('athos_saved_routes', JSON.stringify(s)); showRoutesList(); showToast('🗑️ Διαγράφηκε', '#e74c3c'); } }); }); c.querySelectorAll('.route-item').forEach(function(el) { el.addEventListener('click', function() { var route = all.find(function(r) { return r.id === el.dataset.id; }); if (route) loadRouteDirect(route); hideRouteDropdown(); }); }); } catch(e) { c.innerHTML = '<div style="color:#e74c3c;padding:10px;">Σφάλμα</div>'; } }
+        async function showRoutesList() { var c = document.getElementById('routesList'); try { var saved = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); var dbr = []; try { dbr = await getAllRoutesFromDB(); } catch(e) {} var all = [], seen = {}; for (var i = 0; i < dbr.length; i++) { all.push(dbr[i]); seen[dbr[i].id] = true; } for (var j = 0; j < saved.length; j++) { if (!seen[saved[j].id]) { all.push(saved[j]); seen[saved[j].id] = true; } } all.sort(function(a, b) { return (a.name || '').localeCompare(b.name || '', 'el'); }); if (all.length === 0) { c.innerHTML = '<div style="color:#999;padding:10px;text-align:center;">📭 Δεν υπάρχουν διαδρομές</div>'; return; } var html = ''; for (var k = 0; k < all.length; k++) { var r = all[k]; var pc = r.photoCount || (r.photoIds ? r.photoIds.length : 0); var wpCount = r.waypoints ? r.waypoints.length : 0; html += '<div class="route-item" data-id="' + r.id + '" style="display:flex;justify-content:space-between;align-items:center;padding:6px 7px;border-bottom:1px solid #f0f0f0;cursor:pointer;border-radius:5px;gap:5px;"><div style="flex:1;min-width:0;"><div style="font-weight:600;color:#2c5f2d;font-size:12px;">📍 ' + (r.name || 'Χωρίς όνομα') + (pc > 0 ? ' <span style="font-size:9px;color:#8e44ad;">📸' + pc + '</span>' : '') + (wpCount > 0 ? ' <span style="font-size:9px;color:#2980b9;">📍' + wpCount + '</span>' : '') + '</div><div style="font-size:9px;color:#888;">' + (r.startName || 'Αφετηρία') + ' → ' + (r.endName || 'Προορισμός') + ' · ' + (r.distance ? r.distance.toFixed(1) + 'km' : '') + ' · ' + (r.date ? new Date(r.date).toLocaleDateString('el') : '') + '</div></div><div style="display:flex;gap:3px;"><button class="load-btn" data-id="' + r.id + '" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">📂</button><button class="delete-btn" data-id="' + r.id + '" style="background:#b22222;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">✖</button></div></div>'; } c.innerHTML = html; c.querySelectorAll('.load-btn').forEach(function(b) { b.addEventListener('click', function(e) { e.stopPropagation(); var route = all.find(function(r) { return r.id === b.dataset.id; }); if (route) loadRouteDirect(route); hideRouteDropdown(); }); }); c.querySelectorAll('.delete-btn').forEach(function(b) { b.addEventListener('click', async function(e) { e.stopPropagation(); var id = this.dataset.id; if (confirm('Διαγραφή;')) { try { var fr = await getRouteFromDB(id); if (fr && fr.photoIds) { for (var p = 0; p < fr.photoIds.length; p++) await deletePhotoFromDB(fr.photoIds[p]); } await deleteRouteFromDB(id); } catch(e) {} var s = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); s = s.filter(function(r) { return r.id !== id; }); localStorage.setItem('athos_saved_routes', JSON.stringify(s)); showRoutesList(); showToast('🗑️ Διαγράφηκε', '#e74c3c'); } }); }); c.querySelectorAll('.route-item').forEach(function(el) { el.addEventListener('click', function() { var route = all.find(function(r) { return r.id === el.dataset.id; }); if (route) loadRouteDirect(route); hideRouteDropdown(); }); }); } catch(e) { c.innerHTML = '<div style="color:#e74c3c;padding:10px;">Σφάλμα</div>'; } }
         function showRouteDropdown() { showRoutesList(); document.getElementById('routeDropdownContainer').classList.add('active'); }
         function hideRouteDropdown() { document.getElementById('routeDropdownContainer').classList.remove('active'); }
 
@@ -854,18 +1063,11 @@
         resetInfo(); updatePhotoList(); updateWaypointsPanel();
         openDatabase().then(function() { console.log('✅ Athos Maps DB έτοιμη'); }).catch(function(e) { console.warn('⚠️ IndexedDB:', e); });
         initMap();
-        
-        // Αυτόματη ενεργοποίηση GPS στο ξεκίνημα (είμαστε σε mode πλοήγησης)
-        setTimeout(function() {
-            if (!isDesignMode && !isLocationTracking) {
-                locateUser(true);
-            }
-        }, 1500);
-        
         document.addEventListener('visibilitychange', function() { if (!document.hidden) { setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); updateWatermarkPosition(); if (!initialLocateDone && !userBlueDot && !isDesignMode) setTimeout(function() { locateUser(true); }, 500); } });
         console.log('🚀 Athos Maps - Path Finder');
         console.log('🧭 Αυτόματο GPS στην Πλοήγηση');
         console.log('✏️ Mode Σχεδίασης χωρίς αυτόματο κεντράρισμα');
+        console.log('💾 Αποθήκευση/Φόρτωση σημείων διορθωμένη');
         console.log('🔄 Pinch rotate | 📐 Map 200% | 🔐 GPX προστασία');
     </script>
 </body>
