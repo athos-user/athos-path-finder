@@ -21,10 +21,15 @@
         #mapContainer {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             width: 100%; height: 100%; z-index: 1; overflow: hidden;
-            transform-origin: center center;
-            will-change: transform;
+            background: #f0f2f5;
         }
-        #map { width: 100%; height: 100%; }
+        
+        #map {
+            width: 140%; height: 140%;
+            position: absolute;
+            top: -20%; left: -20%;
+            transform-origin: center center;
+        }
         
         .watermark {
             position: fixed; z-index: 400; pointer-events: none; user-select: none;
@@ -152,10 +157,6 @@
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #eee; cursor: grab;
         }
-        #routeDropdownContainer .routes-header .drag-handle {
-            display: flex; align-items: center; gap: 4px; font-size: 9px; color: #888;
-            cursor: grab; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.04);
-        }
         
         #sosContainer {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -223,10 +224,8 @@
         #gpxCodeModal .modal-content input:focus { outline: none; border-color: #1a7a3a; }
         #gpxCodeModal .modal-content input.error { border-color: #e74c3c; animation: shake 0.5s; }
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            50% { transform: translateX(8px); }
-            75% { transform: translateX(-4px); }
+            0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); } 75% { transform: translateX(-4px); }
         }
         #gpxCodeModal .modal-content .buttons { display: flex; gap: 8px; margin-top: 16px; }
         #gpxCodeModal .modal-content .buttons button {
@@ -269,7 +268,7 @@
             touch-action: manipulation;
         }
         .compass-indicator:active { transform: scale(0.9); background: #e3f2fd; }
-        .compass-indicator .arrow { display: inline-block; transition: transform 0.5s ease-out; }
+        .compass-indicator .arrow { display: inline-block; transition: transform 0.3s ease-out; }
         .compass-indicator .north-mark {
             position: absolute; top: 2px; font-size: 8px;
             color: #e74c3c; font-weight: 700; pointer-events: none;
@@ -289,8 +288,6 @@
         }
         @media (max-width: 600px) {
             .info-panel { bottom: 60px; font-size: 13px; padding: 8px 10px; min-width: 240px; }
-            .info-panel .main-info { font-size: 14px; }
-            .info-panel .main-info .dist { font-size: 16px; }
             .compass-indicator { bottom: 110px; right: 8px; width: 40px; height: 40px; font-size: 20px; }
             #waypointsPanel { bottom: 150px; max-height: 240px; }
         }
@@ -301,7 +298,7 @@
 
     <div class="watermark" id="watermark">🏔️ Athos Maps</div>
     
-    <div class="compass-indicator" id="compassIndicator" title="Πατήστε για επαναφορά στον Βορρά">
+    <div class="compass-indicator" id="compassIndicator" title="Πατήστε για επαναφορά στον Βορρά | 2 δάχτυλα για περιστροφή">
         <span class="north-mark">N</span>
         <span class="arrow" id="compassArrow">🧭</span>
     </div>
@@ -340,15 +337,15 @@
     <div id="helpModal">
         <div class="help-content">
             <h2>🧭 Athos Maps - Βοήθεια</h2>
-            <div class="section"><h3>📍 GPS & Πλοήγηση</h3><p>Πατήστε <kbd>📍 GPS</kbd> για στίγμα. Το βέλος της μπλε κουκίδας δείχνει την κατεύθυνση κίνησης. Το GPS ενεργοποιείται/απενεργοποιείται <strong>ΜΟΝΟ</strong> από το κουμπί.</p></div>
-            <div class="section"><h3>🔄 Περιστροφή Χάρτη</h3><p><strong>Κινητό:</strong> Περιστρέψτε τον χάρτη με <strong>2 δάχτυλα</strong> (pinch rotate).<br><strong>Desktop:</strong> Κρατήστε <kbd>Ctrl</kbd> + scroll.<br>Πατήστε την <strong>πυξίδα 🧭</strong> για επαναφορά στον Βορρά.</p></div>
-            <div class="section photo"><h3>📸 Φωτογραφίες</h3><p><kbd>📸</kbd> ή κλικ στον χάρτη → <kbd>📸</kbd>. Αποθηκεύονται μόνιμα στη βάση δεδομένων (IndexedDB) και παραμένουν μετά το κλείσιμο.</p></div>
-            <div class="section info"><h3>🗺️ Διαδρομές</h3><p>Κλικ στον χάρτη: <kbd>🚩 Start</kbd>, <kbd>🏁 End</kbd>, <kbd>📍 Ενδιάμεσα</kbd>. <kbd>💾</kbd> αποθήκευση, <kbd>🗺️</kbd> λίστα, <kbd>📤</kbd> εξαγωγή GPX.</p></div>
-            <div class="section"><h3>📍 Σημεία</h3><p><kbd>📍 Σημ.</kbd> εμφανίζει όλα τα σημεία. ✏️ μετονομασία, ✖ διαγραφή, 📸 φωτογραφία. Το πάνελ είναι μετακινούμενο.</p></div>
-            <div class="section offline"><h3>📥 Offline Χάρτης</h3><p><kbd>📥 Offline</kbd> κατεβάζει tiles της ορατής περιοχής. <strong>Παραμένουν</strong> μετά το κλείσιμο! <kbd>🗂️</kbd> καθαρισμός cache.</p></div>
-            <div class="section warning"><h3>🚨 Alert & SOS</h3><p><kbd>🚨</kbd> ειδοποίηση όταν απομακρυνθείτε από τη διαδρομή. <kbd>🆘 SOS</kbd> αποστολή θέσης μέσω SMS/Email/112.</p></div>
-            <div class="section info"><h3>📤 Εξαγωγή GPX</h3><p>Προστατεύεται με κωδικό. Το αρχείο υπογράφεται από <strong>Athos Maps</strong>.</p></div>
-            <div class="section"><h3>📌 Γενικά</h3><p>• Όλα τα πάνελ είναι <strong>μετακινούμενα</strong> (⠿ μετακίνηση)<br>• Πυξίδα 🧭 με ένδειξη Βορρά (N)<br>• Υδατογράφημα "Athos Maps"<br>• 💡 Wake Lock για ανοιχτή οθόνη<br>• <a href="https://agionorosroutes.blogspot.com/" target="_blank">agionorosroutes.blogspot.com</a></p></div>
+            <div class="section"><h3>📍 GPS & Πλοήγηση</h3><p>Πατήστε <kbd>📍 GPS</kbd> για στίγμα. Το βέλος δείχνει κατεύθυνση. Το GPS ενεργοποιείται/απενεργοποιείται ΜΟΝΟ από το κουμπί.</p></div>
+            <div class="section"><h3>🔄 Περιστροφή Χάρτη</h3><p><strong>Κινητό:</strong> Περιστρέψτε με <strong>2 δάχτυλα</strong> (pinch rotate).<br><strong>Desktop:</strong> <kbd>Ctrl</kbd> + scroll.<br>Πατήστε την <strong>πυξίδα 🧭</strong> για επαναφορά στον Βορρά.</p></div>
+            <div class="section photo"><h3>📸 Φωτογραφίες</h3><p><kbd>📸</kbd> ή κλικ → <kbd>📸</kbd>. Αποθηκεύονται μόνιμα (IndexedDB).</p></div>
+            <div class="section info"><h3>🗺️ Διαδρομές</h3><p>Κλικ: <kbd>🚩 Start</kbd>, <kbd>🏁 End</kbd>, <kbd>📍 Ενδιάμεσα</kbd>. <kbd>💾</kbd> αποθήκευση, <kbd>🗺️</kbd> λίστα.</p></div>
+            <div class="section"><h3>📍 Σημεία</h3><p><kbd>📍 Σημ.</kbd> για λίστα. ✏️ ✖ 📸 σε κάθε σημείο. Μετακινούμενο πάνελ.</p></div>
+            <div class="section offline"><h3>📥 Offline Χάρτης</h3><p><kbd>📥 Offline</kbd> για λήψη tiles. Παραμένουν μετά το κλείσιμο!</p></div>
+            <div class="section warning"><h3>🚨 Alert & SOS</h3><p><kbd>🚨</kbd> ειδοποίηση απόκλισης. <kbd>🆘 SOS</kbd> αποστολή θέσης.</p></div>
+            <div class="section info"><h3>📤 Εξαγωγή GPX</h3><p>Προστατεύεται με κωδικό. Υπογραφή <strong>Athos Maps</strong>.</p></div>
+            <div class="section"><h3>📌 Γενικά</h3><p>• Πάνελ: μετακινούμενα (⠿)<br>• Πυξίδα 🧭 με Βορρά (N)<br>• Υδατογράφημα<br>• <a href="https://agionorosroutes.blogspot.com/" target="_blank">agionorosroutes.blogspot.com</a></p></div>
             <button id="closeHelpBtn">✅ Κατάλαβα, ευχαριστώ!</button>
         </div>
     </div>
@@ -435,7 +432,7 @@
     <script>
         // ============================================================
         //  ATHOS MAPS - PATH FINDER - ΤΕΛΙΚΗ ΕΚΔΟΣΗ
-        //  Pinch rotate με 2 δάχτυλα | Ctrl+scroll σε desktop
+        //  Pinch rotate χωρίς κενά (map 140% + buffer tiles)
         //  Προστατευμένη εξαγωγή GPX | IndexedDB | Offline χάρτης
         // ============================================================
         
@@ -473,6 +470,7 @@
         var initialPinchAngle = 0;
         var initialMapRotation = 0;
         var isPinchRotating = false;
+        var rotationFixInterval = null;
         
         function generateRouteId() { return 'route_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6); }
         function getColorIcon(color) { return L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-' + color + '.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }); }
@@ -525,10 +523,11 @@
         function projectPoint(ll, z) { var n = Math.pow(2, z); return { x: Math.floor((ll.lng + 180) / 360 * n), y: Math.floor((1 - Math.log(Math.tan(ll.lat * Math.PI / 180) + 1 / Math.cos(ll.lat * Math.PI / 180)) / Math.PI) / 2 * n) }; }
 
         // ============================================================
-        //  PINCH ROTATE - ΠΕΡΙΣΤΡΟΦΗ ΜΕ 2 ΔΑΧΤΥΛΑ
+        //  PINCH ROTATE - ΜΕ ΔΙΟΡΘΩΣΗ ΚΕΝΩΝ (MAP 140%)
         // ============================================================
         function setupPinchRotate() {
             var mapContainer = document.getElementById('mapContainer');
+            var mapElement = document.getElementById('map');
             if (!mapContainer) return;
             
             mapContainer.addEventListener('touchstart', function(e) {
@@ -553,80 +552,54 @@
                 if (isPinchRotating) {
                     isPinchRotating = false;
                     setTimeout(function() {
-                        if (map) {
-                            map.invalidateSize({ animate: false });
-                            mapContainer.style.width = '100%';
-                            mapContainer.style.height = '100%';
-                            mapContainer.style.overflow = 'hidden';
-                            mapContainer.style.left = '0';
-                            mapContainer.style.top = '0';
-                        }
-                    }, 150);
+                        if (map) map.invalidateSize({ animate: false });
+                    }, 200);
                 }
             });
             
-            // Desktop: Ctrl + scroll = rotate
             mapContainer.addEventListener('wheel', function(e) {
                 if (e.ctrlKey || e.metaKey) {
                     e.preventDefault();
                     var delta = e.deltaY > 0 ? -3 : 3;
                     var newRotation = mapRotation + delta;
                     applyMapRotation(newRotation);
+                    setTimeout(function() {
+                        if (map) map.invalidateSize({ animate: false });
+                    }, 200);
                 }
             }, { passive: false });
         }
         
         function getTouchAngle(e) {
-            var touch1 = e.touches[0];
-            var touch2 = e.touches[1];
-            var angle = Math.atan2(
-                touch2.clientY - touch1.clientY,
-                touch2.clientX - touch1.clientX
-            ) * 180 / Math.PI;
-            return angle;
+            var t1 = e.touches[0];
+            var t2 = e.touches[1];
+            return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * 180 / Math.PI;
         }
         
         function applyMapRotation(angle) {
             mapRotation = angle % 360;
-            var mapContainer = document.getElementById('mapContainer');
-            if (mapContainer) {
-                mapContainer.style.transition = 'none';
-                mapContainer.style.transform = 'rotate(' + mapRotation + 'deg)';
-                mapContainer.style.width = '100%';
-                mapContainer.style.height = '100%';
-                mapContainer.style.overflow = 'hidden';
-                mapContainer.style.left = '0';
-                mapContainer.style.top = '0';
+            var mapElement = document.getElementById('map');
+            if (mapElement) {
+                mapElement.style.transition = 'none';
+                mapElement.style.transform = 'rotate(' + mapRotation + 'deg)';
+                if (map) map.invalidateSize({ animate: false });
                 updateCompassForRotation(mapRotation);
             }
         }
         
         function updateCompassForRotation(rotation) {
             var arrow = document.getElementById('compassArrow');
-            if (arrow) {
-                arrow.style.transform = 'rotate(' + (-rotation) + 'deg)';
-            }
+            if (arrow) arrow.style.transform = 'rotate(' + (-rotation) + 'deg)';
         }
         
         function resetRotation() {
             mapRotation = 0;
-            var mapContainer = document.getElementById('mapContainer');
-            if (mapContainer) {
-                mapContainer.style.transition = 'transform 0.5s ease-out';
-                mapContainer.style.transform = 'rotate(0deg)';
-                mapContainer.style.width = '100%';
-                mapContainer.style.height = '100%';
-                mapContainer.style.overflow = 'hidden';
-                mapContainer.style.left = '0';
-                mapContainer.style.top = '0';
-                
-                setTimeout(function() {
-                    if (map) map.invalidateSize({ animate: false });
-                    mapContainer.style.width = '100%';
-                    mapContainer.style.height = '100%';
-                }, 550);
+            var mapElement = document.getElementById('map');
+            if (mapElement) {
+                mapElement.style.transition = 'transform 0.5s ease-out';
+                mapElement.style.transform = 'rotate(0deg)';
+                setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 550);
             }
-            
             document.getElementById('compassArrow').style.transform = 'rotate(0deg)';
             showToast('🧭 Ο χάρτης επανήλθε στον Βορρά', '#888');
         }
@@ -645,31 +618,69 @@
         //  ΧΑΡΤΗΣ
         // ============================================================
         function initMap() {
-            var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, crossOrigin: true });
-            map = L.map('map', { layers: [osm], zoomControl: true, tap: true, tapTolerance: 15, renderer: L.canvas() }).setView([40.16, 24.32], 10);
+            var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                maxZoom: 19, crossOrigin: true,
+                updateWhenIdle: false,
+                updateWhenZooming: false,
+                keepBuffer: 6
+            });
+            
+            map = L.map('map', { 
+                layers: [osm], zoomControl: true, tap: true, tapTolerance: 15, 
+                renderer: L.canvas(), maxBoundsViscosity: 0.5
+            }).setView([40.16, 24.32], 10);
             
             setupPinchRotate();
             
-            setTimeout(function() { map.invalidateSize(); }, 300);
+            setTimeout(function() { map.invalidateSize({ animate: false }); }, 300);
+            
             map.on('click', function(e) { isMapInteracting = true; showClickPopup(e); });
             map.on('dragstart', function() { isMapInteracting = true; });
             map.on('dragend', function() { setTimeout(function() { isMapInteracting = false; }, 1000); });
             map.on('zoomstart', function() { isMapInteracting = true; });
-            map.on('zoomend', function() { setTimeout(function() { isMapInteracting = false; }, 500); });
-            window.addEventListener('resize', function() { setTimeout(function() { map.invalidateSize(); updateWatermarkPosition(); }, 200); });
-            window.addEventListener('orientationchange', function() { setTimeout(function() { map.invalidateSize(); updateWatermarkPosition(); }, 400); });
+            map.on('zoomend', function() { 
+                setTimeout(function() { 
+                    isMapInteracting = false; 
+                    if (mapRotation !== 0) map.invalidateSize({ animate: false });
+                }, 500); 
+            });
+            
+            window.addEventListener('resize', function() { 
+                setTimeout(function() { map.invalidateSize({ animate: false }); updateWatermarkPosition(); }, 200); 
+            });
+            window.addEventListener('orientationchange', function() { 
+                setTimeout(function() { map.invalidateSize({ animate: false }); updateWatermarkPosition(); }, 400); 
+            });
+            
             registerServiceWorker();
-            setTimeout(function() { var has = loadLastRouteState(); setTimeout(function() { locateUser(true); }, has ? 1000 : 800); }, 500);
-            try { var st = localStorage.getItem('athos_off_route_threshold'); if (st) { OFF_ROUTE_THRESHOLD = parseInt(st); document.getElementById('offRouteThresholdInput').value = OFF_ROUTE_THRESHOLD; } } catch(e) {}
+            
+            setTimeout(function() { 
+                var has = loadLastRouteState(); 
+                setTimeout(function() { locateUser(true); }, has ? 1000 : 800); 
+            }, 500);
+            
+            try { 
+                var st = localStorage.getItem('athos_off_route_threshold'); 
+                if (st) { OFF_ROUTE_THRESHOLD = parseInt(st); document.getElementById('offRouteThresholdInput').value = OFF_ROUTE_THRESHOLD; } 
+            } catch(e) {}
+            
             setTimeout(function() {
                 makeDraggable(document.getElementById('routeInfo'), '.drag-area');
                 makeDraggable(document.getElementById('waypointsPanel'), '.panel-header');
                 makeDraggable(document.getElementById('routeDropdownContainer'), '.routes-header');
                 makeDraggable(document.getElementById('sosContainer'), '.sos-header');
             }, 500);
+            
             updateWatermarkPosition();
             map.on('move', updateWatermarkPosition);
             map.on('zoom', updateWatermarkPosition);
+            
+            // Περιοδική διόρθωση όταν είναι περιστραμμένο
+            rotationFixInterval = setInterval(function() {
+                if (mapRotation !== 0 && map && !isPinchRotating) {
+                    map.invalidateSize({ animate: false });
+                }
+            }, 2000);
         }
 
         function updateWatermarkPosition() {
@@ -742,7 +753,7 @@
         function sendSosEmail() { window.location.href = 'mailto:athosmaps.gr@gmail.com?subject=🆘 SOS Athos Maps&body=' + encodeURIComponent(genSosMsg()); closeSosDialog(); }
         function call112() { if (confirm('Κλήση 112;')) window.location.href = 'tel:112'; }
 
-        // Προστατευμένη εξαγωγή GPX
+        // GPX
         function openGpxCodeModal() { if (!lastMainGeometry) { alert('Δεν υπάρχει διαδρομή για εξαγωγή.'); return; } document.getElementById('gpxCodeInput').value = ''; document.getElementById('gpxCodeInput').classList.remove('error'); document.getElementById('gpxCodeModal').classList.add('active'); setTimeout(function() { document.getElementById('gpxCodeInput').focus(); }, 200); }
         function closeGpxCodeModal() { document.getElementById('gpxCodeModal').classList.remove('active'); }
         function confirmGpxExport() { var input = document.getElementById('gpxCodeInput'); if (input.value.trim() === GPX_EXPORT_CODE) { closeGpxCodeModal(); performGpxExport(); } else { input.classList.add('error'); input.value = ''; input.placeholder = 'Λάθος κωδικός!'; showToast('❌ Λάθος κωδικός', '#e74c3c'); setTimeout(function() { input.classList.remove('error'); input.placeholder = '••••••••'; }, 1500); } }
@@ -806,9 +817,10 @@
         resetInfo(); updatePhotoList(); updateWaypointsPanel();
         openDatabase().then(function() { console.log('✅ Athos Maps DB έτοιμη'); }).catch(function(e) { console.warn('⚠️ IndexedDB:', e); });
         initMap();
-        document.addEventListener('visibilitychange', function() { if (!document.hidden) { setTimeout(function() { if (map) map.invalidateSize(); }, 200); updateWatermarkPosition(); if (!initialLocateDone && !userBlueDot) setTimeout(function() { locateUser(true); }, 500); } });
+        document.addEventListener('visibilitychange', function() { if (!document.hidden) { setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); updateWatermarkPosition(); if (!initialLocateDone && !userBlueDot) setTimeout(function() { locateUser(true); }, 500); } });
         console.log('🚀 Athos Maps - Path Finder');
-        console.log('🔄 Pinch rotate με 2 δάχτυλα | Ctrl+scroll σε desktop');
+        console.log('🔄 Pinch rotate (2 δάχτυλα) | Ctrl+scroll (desktop)');
+        console.log('📐 Map 140% + buffer 6 tiles - χωρίς κενά');
         console.log('🔐 Εξαγωγή GPX προστατεύεται με κωδικό');
     </script>
 </body>
