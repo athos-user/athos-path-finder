@@ -64,6 +64,7 @@
         .controls select { padding: 3px 4px; font-size: 9px; min-height: 28px; }
         #clearBtn { background: #b22222; }
         #locateBtn { background: #27ae60; }
+        #locateBtn.active { background: #2196F3; }
         #photoBtn { background: #8e44ad; }
         #saveRouteBtn { background: #2980b9; }
         #exportGpxBtn { background: #1a7a3a; }
@@ -83,15 +84,6 @@
         #offRouteThresholdInput { width: 42px; min-width: 38px; padding: 3px; font-size: 9px; text-align: center; }
         .controls .logo-link { display: flex; align-items: center; padding: 0 3px; text-decoration: none; }
         .controls .logo-link img { height: 20px; width: auto; max-width: 80px; object-fit: contain; border-radius: 3px; }
-        
-        #modeIndicator {
-            position: fixed; top: 46px; left: 50%; transform: translateX(-50%);
-            z-index: 1001; background: #2c5f2d; color: white;
-            padding: 3px 12px; border-radius: 0 0 10px 10px;
-            font-size: 10px; font-weight: 600; text-align: center;
-            pointer-events: none; transition: all 0.3s;
-        }
-        #modeIndicator.design-mode { background: #e67e22; }
         
         @media (max-width: 360px) {
             .controls button, .controls select, .controls input { font-size: 8px; padding: 3px 4px; min-height: 24px; min-width: 24px; }
@@ -312,8 +304,6 @@
 
     <div class="watermark" id="watermark">🏔️ Athos Maps</div>
     
-    <div id="modeIndicator">🧭 Πλοήγηση</div>
-    
     <div class="compass-indicator" id="compassIndicator" title="Πατήστε για επαναφορά στον Βορρά | 2 δάχτυλα για περιστροφή">
         <span class="north-mark">N</span>
         <span class="arrow" id="compassArrow">🧭</span>
@@ -353,12 +343,12 @@
     <div id="helpModal">
         <div class="help-content">
             <h2>🧭 Athos Maps - Βοήθεια</h2>
-            <div class="section"><h3>🔄 Modes</h3><p><kbd>🧭 Πλοήγηση</kbd> (default): GPS tracking, αυτόματο κεντράρισμα.<br><kbd>✏️ Σχεδίαση</kbd>: χωρίς αυτόματο κεντράρισμα για δημιουργία διαδρομών.</p></div>
-            <div class="section"><h3>📍 GPS & Πλοήγηση</h3><p>Πατήστε <kbd>📍 GPS</kbd> για στίγμα. Το βέλος δείχνει κατεύθυνση. Το GPS ενεργοποιείται/απενεργοποιείται ΜΟΝΟ από το κουμπί.</p></div>
-            <div class="section"><h3>🔄 Περιστροφή Χάρτη</h3><p><strong>Κινητό:</strong> Περιστρέψτε με <strong>2 δάχτυλα</strong> (pinch rotate).<br><strong>Desktop:</strong> <kbd>Ctrl</kbd> + scroll.<br>Πατήστε την <strong>πυξίδα 🧭</strong> για επαναφορά στον Βορρά.</p></div>
+            <div class="section"><h3>🔄 Modes</h3><p><kbd>🧭 Πλοήγηση</kbd>: GPS αυτόματα ενεργό, αυτόματο κεντράρισμα.<br><kbd>✏️ Σχεδίαση</kbd>: χωρίς αυτόματο κεντράρισμα για δημιουργία διαδρομών.</p></div>
+            <div class="section"><h3>📍 GPS</h3><p>Στην Πλοήγηση το GPS ενεργοποιείται <strong>αυτόματα</strong>. Το κουμπί <kbd>📍 GPS</kbd> χρησιμεύει για διακοπή/επανεκκίνηση.</p></div>
+            <div class="section"><h3>🔄 Περιστροφή</h3><p><strong>Κινητό:</strong> 2 δάχτυλα (pinch rotate).<br><strong>Desktop:</strong> <kbd>Ctrl</kbd> + scroll.<br>Πυξίδα 🧭 για επαναφορά στον Βορρά.</p></div>
             <div class="section photo"><h3>📸 Φωτογραφίες</h3><p><kbd>📸</kbd> ή κλικ → <kbd>📸</kbd>. Αποθηκεύονται μόνιμα (IndexedDB).</p></div>
             <div class="section info"><h3>🗺️ Διαδρομές</h3><p>Κλικ: <kbd>🚩 Start</kbd>, <kbd>🏁 End</kbd>, <kbd>📍 Ενδιάμεσα</kbd>. <kbd>💾</kbd> αποθήκευση, <kbd>🗺️</kbd> λίστα.</p></div>
-            <div class="section"><h3>📍 Σημεία</h3><p><kbd>📍 Σημ.</kbd> για λίστα. ✏️ ✖ 📸 σε κάθε σημείο. Μετακινούμενο πάνελ.</p></div>
+            <div class="section"><h3>📍 Σημεία</h3><p><kbd>📍 Σημ.</kbd> για λίστα. ✏️ ✖ 📸 σε κάθε σημείο.</p></div>
             <div class="section offline"><h3>📥 Offline Χάρτης</h3><p><kbd>📥 Offline</kbd> για λήψη tiles. Παραμένουν μετά το κλείσιμο!</p></div>
             <div class="section warning"><h3>🚨 Alert & SOS</h3><p><kbd>🚨</kbd> ειδοποίηση απόκλισης. <kbd>🆘 SOS</kbd> αποστολή θέσης.</p></div>
             <div class="section info"><h3>📤 Εξαγωγή GPX</h3><p>Προστατεύεται με κωδικό. Υπογραφή <strong>Athos Maps</strong>.</p></div>
@@ -369,7 +359,7 @@
 
     <div class="controls">
         <button id="modeToggleBtn" title="Εναλλαγή: Πλοήγηση / Σχεδίαση">🧭 Πλοήγηση</button>
-        <button id="locateBtn" title="Εντοπισμός GPS">📍 GPS</button>
+        <button id="locateBtn" title="Διακοπή/Επανεκκίνηση GPS">📍 GPS</button>
         <button id="sosBtn" title="Αποστολή SOS" style="background:#e74c3c;">🆘 SOS</button>
         <button id="photoBtn" title="Λήψη φωτογραφίας">📸</button>
         <button id="showRoutesBtn" title="Αποθηκευμένες διαδρομές">🗺️</button>
@@ -450,9 +440,7 @@
     <script>
         // ============================================================
         //  ATHOS MAPS - PATH FINDER - ΤΕΛΙΚΗ ΕΚΔΟΣΗ
-        //  ΔΥΟ MODES: 🧭 Πλοήγηση & ✏️ Σχεδίαση
-        //  Map 200% + keepBuffer 10 = ΧΩΡΙΣ ΚΕΝΑ
-        //  Pinch rotate | Προστασία GPX | IndexedDB | Offline
+        //  Αυτόματο GPS στην Πλοήγηση | Χωρίς περιττή ένδειξη
         // ============================================================
         
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
@@ -547,26 +535,27 @@
         function toggleMode() {
             isDesignMode = !isDesignMode;
             var btn = document.getElementById('modeToggleBtn');
-            var indicator = document.getElementById('modeIndicator');
             
             if (isDesignMode) {
                 btn.innerHTML = '✏️ Σχεδίαση';
                 btn.classList.add('design-mode');
                 btn.title = 'Εναλλαγή σε Πλοήγηση';
-                indicator.innerHTML = '✏️ Λειτουργία Σχεδίασης';
-                indicator.classList.add('design-mode');
                 if (isLocationTracking) stopLocationTracking();
+                document.getElementById('locateBtn').classList.remove('active');
                 showToast('✏️ Mode Σχεδίασης - Ο χάρτης δεν κεντράρει αυτόματα', '#e67e22');
             } else {
                 btn.innerHTML = '🧭 Πλοήγηση';
                 btn.classList.remove('design-mode');
                 btn.title = 'Εναλλαγή σε Σχεδίαση';
-                indicator.innerHTML = '🧭 Πλοήγηση';
-                indicator.classList.remove('design-mode');
+                // ΑΥΤΟΜΑΤΗ ΕΝΕΡΓΟΠΟΙΗΣΗ GPS
+                if (!isLocationTracking) {
+                    locateUser(true);
+                }
+                document.getElementById('locateBtn').classList.add('active');
                 if (routeLines.length > 0) {
                     map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60], animate: true, duration: 1 });
                 }
-                showToast('🧭 Mode Πλοήγησης - Ο χάρτης κεντράρει αυτόματα', '#2c5f2d');
+                showToast('🧭 Mode Πλοήγησης - GPS ενεργοποιήθηκε αυτόματα', '#2c5f2d');
             }
         }
 
@@ -575,7 +564,6 @@
         // ============================================================
         function setupPinchRotate() {
             var mapContainer = document.getElementById('mapContainer');
-            var mapElement = document.getElementById('map');
             if (!mapContainer) return;
             
             mapContainer.addEventListener('touchstart', function(e) {
@@ -706,12 +694,52 @@
         }
 
         // Εντοπισμός
-        function locateUser(zl) { if (isLocationTracking) { stopLocationTracking(); return; } document.getElementById('statusText').innerHTML = '⏳ GPS...'; if (navigator.geolocation) { if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } document.getElementById('locateBtn').innerHTML = '⏹️ Διακοπή'; var bb = document.getElementById('bottomLocateBtn'); if (bb) bb.innerHTML = '⏹️ Διακοπή'; isLocationTracking = true; isMapInteracting = false; locationWatchId = navigator.geolocation.watchPosition(function(pos) { var lat = pos.coords.latitude, lng = pos.coords.longitude; lastKnownPosition = { lat: lat, lng: lng }; var heading = calculateHeadingFromHistory(lat, lng); updateBlueDot(lat, lng, heading); document.getElementById('statusText').innerHTML = '📍 ' + lat.toFixed(4) + ', ' + lng.toFixed(4); initialLocateDone = true; try { localStorage.setItem('athos_last_location', JSON.stringify({ lat: lat, lng: lng })); } catch(e) {} }, function() { document.getElementById('locateBtn').innerHTML = '📍 GPS'; if (bb) bb.innerHTML = '📍 GPS'; isLocationTracking = false; locateByIP(zl); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }); } else locateByIP(zl); }
-        function stopLocationTracking() { if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } isLocationTracking = false; document.getElementById('locateBtn').innerHTML = '📍 GPS'; var bb = document.getElementById('bottomLocateBtn'); if (bb) bb.innerHTML = '📍 GPS'; document.getElementById('statusText').innerHTML = 'Πατήστε GPS'; }
-        function locateByIP(zl) { fetch('https://ipapi.co/json/').then(function(r) { return r.json(); }).then(function(d) { if (d.latitude) { lastKnownPosition = { lat: d.latitude, lng: d.longitude }; updateBlueDot(d.latitude, d.longitude); if (zl !== false) map.flyTo([d.latitude, d.longitude], 13, { duration: 1 }); } initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; isLocationTracking = false; }).catch(function() { var s = null; try { s = JSON.parse(localStorage.getItem('athos_last_location')); } catch(e) {} if (s && s.lat) { updateBlueDot(s.lat, s.lng); if (zl !== false) map.flyTo([s.lat, s.lng], 13, { duration: 1 }); } else updateBlueDot(38.0, 23.7); initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; isLocationTracking = false; }); }
+        function locateUser(zl) { 
+            if (isLocationTracking) { stopLocationTracking(); return; } 
+            document.getElementById('statusText').innerHTML = '⏳ GPS...'; 
+            if (navigator.geolocation) { 
+                if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } 
+                document.getElementById('locateBtn').innerHTML = '📍 GPS ✓'; 
+                document.getElementById('locateBtn').classList.add('active');
+                var bb = document.getElementById('bottomLocateBtn'); 
+                if (bb) bb.innerHTML = '📍 GPS ✓'; 
+                isLocationTracking = true; isMapInteracting = false; 
+                locationWatchId = navigator.geolocation.watchPosition(
+                    function(pos) { 
+                        var lat = pos.coords.latitude, lng = pos.coords.longitude; 
+                        lastKnownPosition = { lat: lat, lng: lng }; 
+                        var heading = calculateHeadingFromHistory(lat, lng); 
+                        updateBlueDot(lat, lng, heading); 
+                        document.getElementById('statusText').innerHTML = '📍 ' + lat.toFixed(4) + ', ' + lng.toFixed(4); 
+                        initialLocateDone = true; 
+                        try { localStorage.setItem('athos_last_location', JSON.stringify({ lat: lat, lng: lng })); } catch(e) {} 
+                    }, 
+                    function() { 
+                        document.getElementById('locateBtn').innerHTML = '📍 GPS'; 
+                        document.getElementById('locateBtn').classList.remove('active');
+                        if (bb) bb.innerHTML = '📍 GPS'; 
+                        isLocationTracking = false; 
+                        locateByIP(zl); 
+                    }, 
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+                ); 
+            } else locateByIP(zl); 
+        }
+        
+        function stopLocationTracking() { 
+            if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } 
+            isLocationTracking = false; 
+            document.getElementById('locateBtn').innerHTML = '📍 GPS'; 
+            document.getElementById('locateBtn').classList.remove('active');
+            var bb = document.getElementById('bottomLocateBtn'); 
+            if (bb) bb.innerHTML = '📍 GPS'; 
+            document.getElementById('statusText').innerHTML = 'Πατήστε GPS'; 
+        }
+        
+        function locateByIP(zl) { fetch('https://ipapi.co/json/').then(function(r) { return r.json(); }).then(function(d) { if (d.latitude) { lastKnownPosition = { lat: d.latitude, lng: d.longitude }; updateBlueDot(d.latitude, d.longitude); if (zl !== false) map.flyTo([d.latitude, d.longitude], 13, { duration: 1 }); } initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; document.getElementById('locateBtn').classList.remove('active'); isLocationTracking = false; }).catch(function() { var s = null; try { s = JSON.parse(localStorage.getItem('athos_last_location')); } catch(e) {} if (s && s.lat) { updateBlueDot(s.lat, s.lng); if (zl !== false) map.flyTo([s.lat, s.lng], 13, { duration: 1 }); } else updateBlueDot(38.0, 23.7); initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; document.getElementById('locateBtn').classList.remove('active'); isLocationTracking = false; }); }
         function calculateHeadingFromHistory(lat, lng) { positionHistory.push({ lat: lat, lng: lng }); if (positionHistory.length > 10) positionHistory.shift(); if (positionHistory.length < 2) return null; return calculateHeading(positionHistory[positionHistory.length - 2], positionHistory[positionHistory.length - 1]); }
 
-        // Σημεία & Φωτογραφίες
+        // Σημεία & Φωτογραφίες (παραμένουν ίδια)
         function showClickPopup(e) { var c = document.createElement('div'); c.innerHTML = '<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🚩 Start</button><button id="setEndBtn" style="background:#b22222;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📍 Ενδιάμεσο</button><button id="photoHereBtn" style="background:#8e44ad;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📸</button>'; var p = L.popup().setLatLng(e.latlng).setContent(c).openOn(map); setTimeout(function() { document.getElementById('setStartBtn')?.addEventListener('click', function() { setStartPoint(e.latlng); map.closePopup(); }); document.getElementById('setEndBtn')?.addEventListener('click', function() { setEndPoint(e.latlng); map.closePopup(); }); document.getElementById('addWpBtn')?.addEventListener('click', function() { addWaypoint(e.latlng); map.closePopup(); }); document.getElementById('photoHereBtn')?.addEventListener('click', function() { map.closePopup(); takePhoto(e.latlng); }); }, 100); }
         function setStartPoint(ll) { if (startMarker) map.removeLayer(startMarker); startPoint = ll; startName = prompt('Όνομα:', 'Αφετηρία') || 'Αφετηρία'; startMarker = L.marker(ll, { icon: getColorIcon('green'), draggable: true }).addTo(map).bindPopup('🚩 ' + startName); startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); }); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Αφετηρία: ' + startName, 'start'); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
         function setEndPoint(ll) { if (endMarker) map.removeLayer(endMarker); endPoint = ll; endName = prompt('Όνομα:', 'Προορισμός') || 'Προορισμός'; endMarker = L.marker(ll, { icon: getColorIcon('red'), draggable: true }).addTo(map).bindPopup('🏁 ' + endName); endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); }); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Προορισμός: ' + endName, 'end'); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
@@ -826,12 +854,19 @@
         resetInfo(); updatePhotoList(); updateWaypointsPanel();
         openDatabase().then(function() { console.log('✅ Athos Maps DB έτοιμη'); }).catch(function(e) { console.warn('⚠️ IndexedDB:', e); });
         initMap();
-        document.addEventListener('visibilitychange', function() { if (!document.hidden) { setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); updateWatermarkPosition(); if (!initialLocateDone && !userBlueDot) setTimeout(function() { locateUser(true); }, 500); } });
+        
+        // Αυτόματη ενεργοποίηση GPS στο ξεκίνημα (είμαστε σε mode πλοήγησης)
+        setTimeout(function() {
+            if (!isDesignMode && !isLocationTracking) {
+                locateUser(true);
+            }
+        }, 1500);
+        
+        document.addEventListener('visibilitychange', function() { if (!document.hidden) { setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); updateWatermarkPosition(); if (!initialLocateDone && !userBlueDot && !isDesignMode) setTimeout(function() { locateUser(true); }, 500); } });
         console.log('🚀 Athos Maps - Path Finder');
-        console.log('🧭 Mode Πλοήγησης (default) | ✏️ Mode Σχεδίασης');
-        console.log('🔄 Pinch rotate (2 δάχτυλα) | Ctrl+scroll');
-        console.log('📐 Map 200% + keepBuffer 10 = ΧΩΡΙΣ ΚΕΝΑ');
-        console.log('🔐 Εξαγωγή GPX προστατεύεται με κωδικό');
+        console.log('🧭 Αυτόματο GPS στην Πλοήγηση');
+        console.log('✏️ Mode Σχεδίασης χωρίς αυτόματο κεντράρισμα');
+        console.log('🔄 Pinch rotate | 📐 Map 200% | 🔐 GPX προστασία');
     </script>
 </body>
 </html>
