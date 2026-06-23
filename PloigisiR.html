@@ -25,10 +25,13 @@
         }
         
         #map {
-            width: 140%; height: 140%;
+            width: 200%; 
+            height: 200%;
             position: absolute;
-            top: -20%; left: -20%;
+            top: -50%; 
+            left: -50%;
             transform-origin: center center;
+            background: #f0f2f5;
         }
         
         .watermark {
@@ -432,8 +435,8 @@
     <script>
         // ============================================================
         //  ATHOS MAPS - PATH FINDER - ΤΕΛΙΚΗ ΕΚΔΟΣΗ
-        //  Pinch rotate χωρίς κενά (map 140% + buffer tiles)
-        //  Προστατευμένη εξαγωγή GPX | IndexedDB | Offline χάρτης
+        //  Map 200% + keepBuffer 10 = ΧΩΡΙΣ ΚΕΝΑ
+        //  Pinch rotate | Προστασία GPX | IndexedDB | Offline
         // ============================================================
         
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
@@ -470,7 +473,6 @@
         var initialPinchAngle = 0;
         var initialMapRotation = 0;
         var isPinchRotating = false;
-        var rotationFixInterval = null;
         
         function generateRouteId() { return 'route_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6); }
         function getColorIcon(color) { return L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-' + color + '.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }); }
@@ -523,7 +525,7 @@
         function projectPoint(ll, z) { var n = Math.pow(2, z); return { x: Math.floor((ll.lng + 180) / 360 * n), y: Math.floor((1 - Math.log(Math.tan(ll.lat * Math.PI / 180) + 1 / Math.cos(ll.lat * Math.PI / 180)) / Math.PI) / 2 * n) }; }
 
         // ============================================================
-        //  PINCH ROTATE - ΜΕ ΔΙΟΡΘΩΣΗ ΚΕΝΩΝ (MAP 140%)
+        //  PINCH ROTATE - MAP 200% + KEEPBUFFER 10 = ΧΩΡΙΣ ΚΕΝΑ
         // ============================================================
         function setupPinchRotate() {
             var mapContainer = document.getElementById('mapContainer');
@@ -622,12 +624,12 @@
                 maxZoom: 19, crossOrigin: true,
                 updateWhenIdle: false,
                 updateWhenZooming: false,
-                keepBuffer: 6
+                keepBuffer: 10
             });
             
             map = L.map('map', { 
                 layers: [osm], zoomControl: true, tap: true, tapTolerance: 15, 
-                renderer: L.canvas(), maxBoundsViscosity: 0.5
+                renderer: L.canvas(), maxBoundsViscosity: 0.5, zoomAnimation: false
             }).setView([40.16, 24.32], 10);
             
             setupPinchRotate();
@@ -676,7 +678,7 @@
             map.on('zoom', updateWatermarkPosition);
             
             // Περιοδική διόρθωση όταν είναι περιστραμμένο
-            rotationFixInterval = setInterval(function() {
+            setInterval(function() {
                 if (mapRotation !== 0 && map && !isPinchRotating) {
                     map.invalidateSize({ animate: false });
                 }
@@ -819,8 +821,8 @@
         initMap();
         document.addEventListener('visibilitychange', function() { if (!document.hidden) { setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); updateWatermarkPosition(); if (!initialLocateDone && !userBlueDot) setTimeout(function() { locateUser(true); }, 500); } });
         console.log('🚀 Athos Maps - Path Finder');
-        console.log('🔄 Pinch rotate (2 δάχτυλα) | Ctrl+scroll (desktop)');
-        console.log('📐 Map 140% + buffer 6 tiles - χωρίς κενά');
+        console.log('🔄 Pinch rotate (2 δάχτυλα) | Ctrl+scroll');
+        console.log('📐 Map 200% + keepBuffer 10 = ΧΩΡΙΣ ΚΕΝΑ');
         console.log('🔐 Εξαγωγή GPX προστατεύεται με κωδικό');
     </script>
 </body>
