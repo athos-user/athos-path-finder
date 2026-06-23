@@ -343,11 +343,11 @@
     <div id="helpModal">
         <div class="help-content">
             <h2>🧭 Athos Maps - Βοήθεια</h2>
-            <div class="section"><h3>🔄 Modes</h3><p><kbd>🧭 Πλοήγηση</kbd>: GPS αυτόματα ενεργό, αυτόματο κεντράρισμα.<br><kbd>✏️ Σχεδίαση</kbd>: χωρίς αυτόματο κεντράρισμα για δημιουργία διαδρομών.</p></div>
-            <div class="section"><h3>📍 GPS</h3><p>Στην Πλοήγηση το GPS ενεργοποιείται <strong>αυτόματα</strong>. Το κουμπί <kbd>📍 GPS</kbd> χρησιμεύει για διακοπή/επανεκκίνηση.</p></div>
+            <div class="section"><h3>🔄 Modes</h3><p><kbd>🧭 Πλοήγηση</kbd>: GPS αυτόματα ενεργό, αυτόματο κεντράρισμα. Το κλικ στον χάρτη ανοίγει μόνο 📸.<br><kbd>✏️ Σχεδίαση</kbd>: χωρίς αυτόματο κεντράρισμα, πλήρη εργαλεία σχεδίασης.</p></div>
+            <div class="section"><h3>📍 GPS</h3><p>Στην Πλοήγηση το GPS ενεργοποιείται <strong>αυτόματα</strong>. Το κουμπί <kbd>📍 GPS</kbd> για διακοπή/επανεκκίνηση.</p></div>
             <div class="section"><h3>🔄 Περιστροφή</h3><p><strong>Κινητό:</strong> 2 δάχτυλα (pinch rotate).<br><strong>Desktop:</strong> <kbd>Ctrl</kbd> + scroll.<br>Πυξίδα 🧭 για επαναφορά στον Βορρά.</p></div>
             <div class="section photo"><h3>📸 Φωτογραφίες</h3><p><kbd>📸</kbd> ή κλικ → <kbd>📸</kbd>. Αποθηκεύονται μόνιμα (IndexedDB).</p></div>
-            <div class="section info"><h3>🗺️ Διαδρομές</h3><p>Κλικ: <kbd>🚩 Start</kbd>, <kbd>🏁 End</kbd>, <kbd>📍 Ενδιάμεσα</kbd>. <kbd>💾</kbd> αποθήκευση, <kbd>🗺️</kbd> λίστα.</p></div>
+            <div class="section info"><h3>🗺️ Διαδρομές</h3><p>Στη Σχεδίαση: <kbd>🚩 Start</kbd>, <kbd>🏁 End</kbd>, <kbd>📍 Ενδιάμεσα</kbd>. <kbd>💾</kbd> αποθήκευση.</p></div>
             <div class="section"><h3>📍 Σημεία</h3><p><kbd>📍 Σημ.</kbd> για λίστα. ✏️ ✖ 📸 σε κάθε σημείο.</p></div>
             <div class="section offline"><h3>📥 Offline Χάρτης</h3><p><kbd>📥 Offline</kbd> για λήψη tiles. Παραμένουν μετά το κλείσιμο!</p></div>
             <div class="section warning"><h3>🚨 Alert & SOS</h3><p><kbd>🚨</kbd> ειδοποίηση απόκλισης. <kbd>🆘 SOS</kbd> αποστολή θέσης.</p></div>
@@ -440,8 +440,8 @@
     <script>
         // ============================================================
         //  ATHOS MAPS - PATH FINDER - ΤΕΛΙΚΗ ΕΚΔΟΣΗ
-        //  Διόρθωση αποθήκευσης/φόρτωσης σημείων
-        //  Αυτόματο GPS στην Πλοήγηση
+        //  Πλοήγηση: μόνο 📸 | Σχεδίαση: πλήρη εργαλεία
+        //  Αυτόματο GPS | Αποθήκευση/Φόρτωση σημείων
         // ============================================================
         
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
@@ -652,7 +652,6 @@
             window.addEventListener('orientationchange', function() { setTimeout(function() { map.invalidateSize({ animate: false }); updateWatermarkPosition(); }, 400); });
             registerServiceWorker();
             
-            // Αυτόματη ενεργοποίηση GPS κατά την εκκίνηση
             setTimeout(function() { 
                 var has = loadLastRouteState(); 
                 setTimeout(function() { 
@@ -750,7 +749,26 @@
         function calculateHeadingFromHistory(lat, lng) { positionHistory.push({ lat: lat, lng: lng }); if (positionHistory.length > 10) positionHistory.shift(); if (positionHistory.length < 2) return null; return calculateHeading(positionHistory[positionHistory.length - 2], positionHistory[positionHistory.length - 1]); }
 
         // Σημεία & Φωτογραφίες
-        function showClickPopup(e) { var c = document.createElement('div'); c.innerHTML = '<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🚩 Start</button><button id="setEndBtn" style="background:#b22222;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📍 Ενδιάμεσο</button><button id="photoHereBtn" style="background:#8e44ad;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📸</button>'; var p = L.popup().setLatLng(e.latlng).setContent(c).openOn(map); setTimeout(function() { document.getElementById('setStartBtn')?.addEventListener('click', function() { setStartPoint(e.latlng); map.closePopup(); }); document.getElementById('setEndBtn')?.addEventListener('click', function() { setEndPoint(e.latlng); map.closePopup(); }); document.getElementById('addWpBtn')?.addEventListener('click', function() { addWaypoint(e.latlng); map.closePopup(); }); document.getElementById('photoHereBtn')?.addEventListener('click', function() { map.closePopup(); takePhoto(e.latlng); }); }, 100); }
+        function showClickPopup(e) { 
+            var c = document.createElement('div');
+            
+            if (isDesignMode) {
+                c.innerHTML = '<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🚩 Start</button><button id="setEndBtn" style="background:#b22222;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📍 Ενδιάμεσο</button><button id="photoHereBtn" style="background:#8e44ad;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📸</button>';
+            } else {
+                c.innerHTML = '<button id="photoHereBtn" style="background:#8e44ad;color:white;border:none;padding:6px 12px;border-radius:5px;margin:2px;cursor:pointer;font-size:11px;">📸 Λήψη φωτογραφίας</button>';
+            }
+            
+            var p = L.popup().setLatLng(e.latlng).setContent(c).openOn(map); 
+            setTimeout(function() { 
+                if (isDesignMode) {
+                    document.getElementById('setStartBtn')?.addEventListener('click', function() { setStartPoint(e.latlng); map.closePopup(); }); 
+                    document.getElementById('setEndBtn')?.addEventListener('click', function() { setEndPoint(e.latlng); map.closePopup(); }); 
+                    document.getElementById('addWpBtn')?.addEventListener('click', function() { addWaypoint(e.latlng); map.closePopup(); }); 
+                }
+                document.getElementById('photoHereBtn')?.addEventListener('click', function() { map.closePopup(); takePhoto(e.latlng); }); 
+            }, 100); 
+        }
+        
         function setStartPoint(ll) { if (startMarker) map.removeLayer(startMarker); startPoint = ll; startName = prompt('Όνομα:', 'Αφετηρία') || 'Αφετηρία'; startMarker = L.marker(ll, { icon: getColorIcon('green'), draggable: true }).addTo(map).bindPopup('🚩 ' + startName); startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); }); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Αφετηρία: ' + startName, 'start'); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
         function setEndPoint(ll) { if (endMarker) map.removeLayer(endMarker); endPoint = ll; endName = prompt('Όνομα:', 'Προορισμός') || 'Προορισμός'; endMarker = L.marker(ll, { icon: getColorIcon('red'), draggable: true }).addTo(map).bindPopup('🏁 ' + endName); endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); }); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Προορισμός: ' + endName, 'end'); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
         function addWaypoint(ll) { var n = prompt('Όνομα:', 'Σημείο ' + (waypoints.length + 1)) || 'Σημείο ' + (waypoints.length); waypoints.push(ll); waypointNames.push(n); waypointPhotos.push(null); var idx = waypoints.length - 1; var m = L.marker(ll, { icon: getColorIcon('blue'), draggable: true }).addTo(map); updateWaypointPopup(m, idx); m.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); }); markers.push(m); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Σημείο: ' + n, 'waypoint_' + idx); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
@@ -871,7 +889,6 @@
             } catch(e) { return false; } 
         }
 
-        // ΔΙΟΡΘΩΜΕΝΗ saveRoute
         async function saveRoute() { 
             if (!lastMainGeometry || lastMainGeometry.length < 2) { alert('Δεν υπάρχει διαδρομή.'); return; } 
             var name = prompt('Όνομα:', 'Διαδρομή ' + new Date().toLocaleDateString('el')); 
@@ -924,7 +941,6 @@
             } catch(e) { showSaveStatus('❌ Σφάλμα', 'error', e.message); showToast('❌ ' + e.message, '#e74c3c'); } 
         }
 
-        // ΔΙΟΡΘΩΜΕΝΗ loadRouteDirect
         async function loadRouteDirect(route) { 
             if (!route.geometry || route.geometry.length < 2) { alert('Μη έγκυρη διαδρομή.'); return; } 
             showSaveStatus('Φόρτωση...', '', 'Ανάκτηση δεδομένων...'); 
@@ -944,7 +960,6 @@
                 routeLines.push(L.polyline(ll, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map)); 
                 map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60] }); 
                 
-                // Φόρτωση ΑΦΕΤΗΡΙΑΣ
                 if (rd.startPoint) {
                     startPoint = { lat: rd.startPoint.lat, lng: rd.startPoint.lng };
                     if (startMarker) map.removeLayer(startMarker);
@@ -958,7 +973,6 @@
                     startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); });
                 }
                 
-                // Φόρτωση ΠΡΟΟΡΙΣΜΟΥ
                 if (rd.endPoint) {
                     endPoint = { lat: rd.endPoint.lat, lng: rd.endPoint.lng };
                     if (endMarker) map.removeLayer(endMarker);
@@ -972,7 +986,6 @@
                     endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); });
                 }
                 
-                // Φόρτωση ΕΝΔΙΑΜΕΣΩΝ ΣΗΜΕΙΩΝ
                 if (rd.waypoints && rd.waypoints.length > 0) {
                     waypoints = []; waypointNames = []; waypointPhotos = []; markers = [];
                     for (var i = 0; i < rd.waypoints.length; i++) { 
@@ -988,7 +1001,6 @@
                     updateWaypointsPanel(); 
                 }
                 
-                // Φόρτωση φωτογραφιών
                 if (rd.photoIds && rd.photoIds.length > 0) { 
                     routePhotos = []; photoMarkers = []; 
                     for (var j = 0; j < rd.photoIds.length; j++) { 
@@ -1065,10 +1077,8 @@
         initMap();
         document.addEventListener('visibilitychange', function() { if (!document.hidden) { setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); updateWatermarkPosition(); if (!initialLocateDone && !userBlueDot && !isDesignMode) setTimeout(function() { locateUser(true); }, 500); } });
         console.log('🚀 Athos Maps - Path Finder');
-        console.log('🧭 Αυτόματο GPS στην Πλοήγηση');
-        console.log('✏️ Mode Σχεδίασης χωρίς αυτόματο κεντράρισμα');
-        console.log('💾 Αποθήκευση/Φόρτωση σημείων διορθωμένη');
-        console.log('🔄 Pinch rotate | 📐 Map 200% | 🔐 GPX προστασία');
+        console.log('🧭 Πλοήγηση: μόνο 📸 | ✏️ Σχεδίαση: πλήρη εργαλεία');
+        console.log('📍 Αυτόματο GPS | 💾 Σημεία σωστά | 🔐 GPX προστασία');
     </script>
 </body>
 </html>
