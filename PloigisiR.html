@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Athos Maps - Path Finder</title>
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Athos%20Maps%20-%20%CE%86%CE%B3%CE%B9%CE%BF%20%CE%8C%CF%81%CE%BF%CF%82%22%2C%22short_name%22%3A%22Athos%20Maps%22%2C%22description%22%3A%22%CE%A0%CE%BB%CE%BF%CE%AE%CE%B3%CE%B7%CF%83%CE%B7%20%CE%BA%CE%B1%CE%B9%20%CF%83%CF%87%CE%B5%CE%B4%CE%AF%CE%B1%CF%83%CE%B7%20%CE%B4%CE%B9%CE%B1%CE%B4%CF%81%CE%BF%CE%BC%CF%8E%CE%BD%20%CF%83%CF%84%CE%BF%20%CE%86%CE%B3%CE%B9%CE%BF%20%CE%8C%CF%81%CE%BF%CF%82%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23e8ebe4%22%2C%22theme_color%22%3A%22%232c5f2d%22%2C%22orientation%22%3A%22any%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20100%20100'%3E%253Ccircle%20cx%3D'50'%20cy%3D'50'%20r%3D'50'%20fill%3D'%232c5f2d'%2F%253E%253Ctext%20x%3D'50'%20y%3D'65'%20text-anchor%3D'middle'%20fill%3D'white'%20font-size%3D'60'%3E%F0%9F%8F%94%EF%B8%8F%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22100x100%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="120x120" href="https://lh3.googleusercontent.com/pw/AP1GczMG4Fr3JFPmmtwGKfBLt53uxZgGjQ2ObqELVwjSlh8MnkExGbRtoZyrRK3bN1yDnfoeODhdxCXr5ojpmnDTEsMcefjMqBirD-gwS49TH5p2eLsIcSoExtHdMnbdyeiXxY8DUWej4AXxkxjOlytV0IM0lg=w120-h120-s-no-gm?authuser=2">
+    
+    <!-- PWA Manifest με το νέο εικονίδιο -->
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Athos%20Maps%20-%20%CE%86%CE%B3%CE%B9%CE%BF%20%CE%8C%CF%81%CE%BF%CF%82%22%2C%22short_name%22%3A%22Athos%20Maps%22%2C%22description%22%3A%22%CE%A0%CE%BB%CE%BF%CE%AE%CE%B3%CE%B7%CF%83%CE%B7%20%CE%BA%CE%B1%CE%B9%20%CF%83%CF%87%CE%B5%CE%B4%CE%AF%CE%B1%CF%83%CE%B7%20%CE%B4%CE%B9%CE%B1%CE%B4%CF%81%CE%BF%CE%BC%CF%8E%CE%BD%20%CF%83%CF%84%CE%BF%20%CE%86%CE%B3%CE%B9%CE%BF%20%CE%8C%CF%81%CE%BF%CF%82%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23e8ebe4%22%2C%22theme_color%22%3A%22%232c5f2d%22%2C%22orientation%22%3A%22any%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Flh3.googleusercontent.com%2Fpw%2FAP1GczMG4Fr3JFPmmtwGKfBLt53uxZgGjQ2ObqELVwjSlh8MnkExGbRtoZyrRK3bN1yDnfoeODhdxCXr5ojpmnDTEsMcefjMqBirD-gwS49TH5p2eLsIcSoExtHdMnbdyeiXxY8DUWej4AXxkxjOlytV0IM0lg%3Dw120-h120-s-no-gm%22%2C%22sizes%22%3A%22120x120%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
     
     <meta name="theme-color" content="#2c5f2d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Athos Maps">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%232c5f2d'/%3E%3Ctext x='50' y='65' text-anchor='middle' fill='white' font-size='60'%3E🏔️%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/pw/AP1GczMG4Fr3JFPmmtwGKfBLt53uxZgGjQ2ObqELVwjSlh8MnkExGbRtoZyrRK3bN1yDnfoeODhdxCXr5ojpmnDTEsMcefjMqBirD-gwS49TH5p2eLsIcSoExtHdMnbdyeiXxY8DUWej4AXxkxjOlytV0IM0lg=w120-h120-s-no-gm?authuser=2">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -26,7 +29,6 @@
             background: #e8ebe4;
             position: fixed; top: 0; left: 0;
             touch-action: manipulation;
-            /* PWA safe areas */
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
         
@@ -51,6 +53,7 @@
             text-align: center; display: none; cursor: pointer;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             animation: slideUp 0.5s ease-out;
+            max-width: 90%;
         }
         @keyframes slideUp {
             from { transform: translateX(-50%) translateY(100px); opacity: 0; }
@@ -491,7 +494,7 @@
     <script>
         // ============================================================
         //  ATHOS MAPS - PATH FINDER - PWA ΕΚΔΟΣΗ
-        //  Διπλό tile layer | PWA με δυνατότητα εγκατάστασης
+        //  Νέο εικονίδιο | GitHub Pages έτοιμο
         // ============================================================
         
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
@@ -544,39 +547,11 @@
         function showSaveStatus(m, type, d) { var s = document.getElementById('saveStatus'); s.style.display = 'block'; s.className = type || ''; document.getElementById('saveStatusText').textContent = m; document.getElementById('saveStatusDetail').textContent = d || ''; document.getElementById('saveSpinner').style.display = (type === 'success' || type === 'error') ? 'none' : 'block'; if (type === 'success' || type === 'error') setTimeout(function() { s.style.display = 'none'; }, 3000); }
         function hideSaveStatus() { document.getElementById('saveStatus').style.display = 'none'; }
 
-        // ============================================================
-        //  PWA - ΔΙΑΧΕΙΡΙΣΗ ΕΓΚΑΤΑΣΤΑΣΗΣ
-        // ============================================================
-        window.addEventListener('beforeinstallprompt', function(e) {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('installBanner').style.display = 'block';
-        });
-        
-        document.getElementById('installBtn')?.addEventListener('click', function() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(function(choiceResult) {
-                    if (choiceResult.outcome === 'accepted') {
-                        showToast('✅ Εγκατάσταση επιτυχής!', '#27ae60');
-                    }
-                    deferredPrompt = null;
-                    document.getElementById('installBanner').style.display = 'none';
-                });
-            }
-        });
-        
-        document.getElementById('installBanner')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.style.display = 'none';
-            }
-        });
-        
-        window.addEventListener('appinstalled', function() {
-            document.getElementById('installBanner').style.display = 'none';
-            deferredPrompt = null;
-            console.log('PWA installed');
-        });
+        // PWA
+        window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; document.getElementById('installBanner').style.display = 'block'; });
+        document.getElementById('installBtn')?.addEventListener('click', function() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(function(choiceResult) { if (choiceResult.outcome === 'accepted') { showToast('✅ Εγκατάσταση επιτυχής!', '#27ae60'); } deferredPrompt = null; document.getElementById('installBanner').style.display = 'none'; }); } });
+        document.getElementById('installBanner')?.addEventListener('click', function(e) { if (e.target === this) { this.style.display = 'none'; } });
+        window.addEventListener('appinstalled', function() { document.getElementById('installBanner').style.display = 'none'; deferredPrompt = null; });
 
         // IndexedDB
         function openDatabase() { return new Promise(function(resolve, reject) { if (db) { resolve(db); return; } var r = indexedDB.open(DB_NAME, DB_VERSION); r.onupgradeneeded = function(e) { var d = e.target.result; if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos', { keyPath: 'id' }); if (!d.objectStoreNames.contains('routes')) d.createObjectStore('routes', { keyPath: 'id' }); }; r.onsuccess = function(e) { db = e.target.result; resolve(db); }; r.onerror = function(e) { reject(e.target.error); }; }); }
@@ -595,7 +570,7 @@
         function makeDraggable(el, hs) { if (!el) return; var d = { isDragging: false, sx: 0, sy: 0, ox: 0, oy: 0 }; var h = hs ? el.querySelector(hs) : el; if (!h) return; function sd(cx, cy) { if (cx === undefined) return; var r = el.getBoundingClientRect(); d.isDragging = true; d.sx = cx; d.sy = cy; d.ox = r.left; d.oy = r.top; el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px'; el.style.bottom = 'auto'; el.style.right = 'auto'; el.style.transform = 'none'; el.style.cursor = 'grabbing'; document.body.style.userSelect = 'none'; el.style.zIndex = '9999'; } function md(cx, cy) { if (!d.isDragging || cx === undefined) return; var nx = d.ox + cx - d.sx, ny = d.oy + cy - d.sy; var r = el.getBoundingClientRect(); nx = Math.max(10, Math.min(window.innerWidth - r.width - 10, nx)); ny = Math.max(10, Math.min(window.innerHeight - r.height - 10, ny)); el.style.left = nx + 'px'; el.style.top = ny + 'px'; } function ed() { if (!d.isDragging) return; d.isDragging = false; el.style.cursor = ''; document.body.style.userSelect = ''; el.style.zIndex = ''; } h.addEventListener('mousedown', function(e) { if (e.target.closest('button,input,select,textarea')) return; sd(e.clientX, e.clientY); e.preventDefault(); }); document.addEventListener('mousemove', function(e) { if (!d.isDragging) return; md(e.clientX, e.clientY); e.preventDefault(); }); document.addEventListener('mouseup', function(e) { if (d.isDragging) { ed(); e.preventDefault(); } }); h.addEventListener('touchstart', function(e) { if (e.target.closest('button,input,select,textarea')) return; var t = e.touches[0]; sd(t.clientX, t.clientY); e.preventDefault(); }, { passive: false }); document.addEventListener('touchmove', function(e) { if (!d.isDragging) return; var t = e.touches[0]; md(t.clientX, t.clientY); e.preventDefault(); }, { passive: false }); document.addEventListener('touchend', function(e) { if (d.isDragging) { ed(); e.preventDefault(); } }, { passive: false }); }
 
         // Service Worker
-        function registerServiceWorker() { if ('serviceWorker' in navigator) { var sw = 'var CACHE_NAME="'+CACHE_NAME+'";var APP_CACHE="athos-app-v1";self.addEventListener("install",function(e){self.skipWaiting();e.waitUntil(caches.open(APP_CACHE).then(function(cache){return cache.addAll(["/"])}))});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(key){return key!==CACHE_NAME&&key!==APP_CACHE}).map(function(key){return caches.delete(key)}))}));self.clients.claim()});self.addEventListener("fetch",function(e){if(e.request.url.includes("tile.openstreetmap")){e.respondWith(caches.match(e.request).then(function(c){if(c)return c;return fetch(e.request).then(function(n){if(n&&n.status===200){var r=n.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(e.request,r)})}return n}).catch(function(){return new Response("Offline",{status:503})})}))}else{e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request)}))}})'; navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).then(function(reg){console.log('✅ Service Worker registered')}).catch(function(e){console.log('SW registration failed:',e)}); } }
+        function registerServiceWorker() { if ('serviceWorker' in navigator) { var sw = 'var CACHE_NAME="'+CACHE_NAME+'";var APP_CACHE="athos-app-v1";self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(key){return key!==CACHE_NAME&&key!==APP_CACHE}).map(function(key){return caches.delete(key)}))}));self.clients.claim()});self.addEventListener("fetch",function(e){if(e.request.url.includes("tile.openstreetmap")){e.respondWith(caches.match(e.request).then(function(c){if(c)return c;return fetch(e.request).then(function(n){if(n&&n.status===200){var r=n.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(e.request,r)})}return n}).catch(function(){return new Response("Offline",{status:503})})}))}});'; navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){}); } }
         function clearOfflineCache() { if (!confirm('🗂️ Καθαρισμός cache;\nΌλα τα tiles θα διαγραφούν.')) return; if ('caches' in window) { caches.delete(CACHE_NAME).then(function(s) { if (s) showToast('🗂️ Cache καθαρίστηκε', '#6c3483'); caches.open(CACHE_NAME); }); } }
 
         // Wake Lock
@@ -620,50 +595,33 @@
         function cancelTileDownload() { downloadCancelRequested = true; if (currentDownloadController) currentDownloadController.abort(); }
         function projectPoint(ll, z) { var n = Math.pow(2, z); return { x: Math.floor((ll.lng + 180) / 360 * n), y: Math.floor((1 - Math.log(Math.tan(ll.lat * Math.PI / 180) + 1 / Math.cos(ll.lat * Math.PI / 180)) / Math.PI) / 2 * n) }; }
 
-        // ============================================================
-        //  MODE ΔΙΑΧΕΙΡΙΣΗ
-        // ============================================================
+        // Mode διαχείριση
         function toggleMode() {
             isDesignMode = !isDesignMode;
             var btn = document.getElementById('modeToggleBtn');
-            
             if (isDesignMode) {
-                btn.innerHTML = '✏️ Σχεδίαση';
-                btn.classList.add('design-mode');
-                btn.title = 'Εναλλαγή σε Πλοήγηση';
+                btn.innerHTML = '✏️ Σχεδίαση'; btn.classList.add('design-mode'); btn.title = 'Εναλλαγή σε Πλοήγηση';
                 if (isLocationTracking) stopLocationTracking();
                 document.getElementById('locateBtn').classList.remove('active');
                 document.getElementById('locateBtn').innerHTML = '📍 GPS';
                 showToast('✏️ Mode Σχεδίασης', '#e67e22');
             } else {
-                btn.innerHTML = '🧭 Πλοήγηση';
-                btn.classList.remove('design-mode');
-                btn.title = 'Εναλλαγή σε Σχεδίαση';
+                btn.innerHTML = '🧭 Πλοήγηση'; btn.classList.remove('design-mode'); btn.title = 'Εναλλαγή σε Σχεδίαση';
                 if (!isLocationTracking) locateUser(true);
                 setTimeout(function() {
-                    if (lastKnownPosition) {
-                        map.flyTo([lastKnownPosition.lat, lastKnownPosition.lng], 16, { duration: 1 });
-                    } else if (userBlueDot) {
-                        var pos = userBlueDot.getLatLng();
-                        map.flyTo([pos.lat, pos.lng], 16, { duration: 1 });
-                    } else if (routeLines.length > 0) {
-                        map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60], animate: true, duration: 1 });
-                    }
+                    if (lastKnownPosition) { map.flyTo([lastKnownPosition.lat, lastKnownPosition.lng], 16, { duration: 1 }); }
+                    else if (userBlueDot) { var pos = userBlueDot.getLatLng(); map.flyTo([pos.lat, pos.lng], 16, { duration: 1 }); }
+                    else if (routeLines.length > 0) { map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60], animate: true, duration: 1 }); }
                 }, 500);
                 showToast('🧭 Mode Πλοήγησης - GPS & ζουμ', '#2c5f2d');
             }
         }
 
-        // Επαναφόρτωση χάρτη
         function reloadMap() {
             if (!map) return;
             showToast('🔄 Επαναφόρτωση χάρτη...', '#e67e22');
             tileErrorCount = 0;
-            if (useFallback && mainTiles && fallbackTiles) {
-                useFallback = false;
-                if (map.hasLayer(fallbackTiles)) map.removeLayer(fallbackTiles);
-                if (!map.hasLayer(mainTiles)) map.addLayer(mainTiles);
-            }
+            if (useFallback && mainTiles && fallbackTiles) { useFallback = false; if (map.hasLayer(fallbackTiles)) map.removeLayer(fallbackTiles); if (!map.hasLayer(mainTiles)) map.addLayer(mainTiles); }
             map.invalidateSize({ animate: false });
             setTimeout(function() { map.invalidateSize({ animate: false }); }, 300);
             setTimeout(function() { map.invalidateSize({ animate: false }); }, 1000);
@@ -671,60 +629,39 @@
         }
 
         // Pinch rotate
-        function setupPinchRotate() {
-            var mapContainer = document.getElementById('mapContainer');
-            if (!mapContainer) return;
-            mapContainer.addEventListener('touchstart', function(e) { if (e.touches.length === 2) { isPinchRotating = true; initialPinchAngle = getTouchAngle(e); initialMapRotation = mapRotation; } }, { passive: false });
-            mapContainer.addEventListener('touchmove', function(e) { if (e.touches.length === 2 && isPinchRotating) { e.preventDefault(); var currentAngle = getTouchAngle(e); var angleDiff = currentAngle - initialPinchAngle; var newRotation = initialMapRotation + angleDiff; applyMapRotation(newRotation); } }, { passive: false });
-            mapContainer.addEventListener('touchend', function(e) { if (isPinchRotating) { isPinchRotating = false; setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); } });
-            mapContainer.addEventListener('wheel', function(e) { if (e.ctrlKey || e.metaKey) { e.preventDefault(); var delta = e.deltaY > 0 ? -3 : 3; var newRotation = mapRotation + delta; applyMapRotation(newRotation); setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); } }, { passive: false });
-        }
+        function setupPinchRotate() { var mc = document.getElementById('mapContainer'); if (!mc) return; mc.addEventListener('touchstart', function(e) { if (e.touches.length === 2) { isPinchRotating = true; initialPinchAngle = getTouchAngle(e); initialMapRotation = mapRotation; } }, { passive: false }); mc.addEventListener('touchmove', function(e) { if (e.touches.length === 2 && isPinchRotating) { e.preventDefault(); var ca = getTouchAngle(e); applyMapRotation(initialMapRotation + ca - initialPinchAngle); } }, { passive: false }); mc.addEventListener('touchend', function(e) { if (isPinchRotating) { isPinchRotating = false; setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); } }); mc.addEventListener('wheel', function(e) { if (e.ctrlKey || e.metaKey) { e.preventDefault(); applyMapRotation(mapRotation + (e.deltaY > 0 ? -3 : 3)); setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 200); } }, { passive: false }); }
         function getTouchAngle(e) { var t1 = e.touches[0], t2 = e.touches[1]; return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * 180 / Math.PI; }
-        function applyMapRotation(angle) { mapRotation = angle % 360; var mapElement = document.getElementById('map'); if (mapElement) { mapElement.style.transition = 'none'; mapElement.style.transform = 'rotate(' + mapRotation + 'deg)'; if (map) map.invalidateSize({ animate: false }); updateCompassForRotation(mapRotation); } }
+        function applyMapRotation(angle) { mapRotation = angle % 360; var me = document.getElementById('map'); if (me) { me.style.transition = 'none'; me.style.transform = 'rotate(' + mapRotation + 'deg)'; if (map) map.invalidateSize({ animate: false }); updateCompassForRotation(mapRotation); } }
         function updateCompassForRotation(rotation) { var arrow = document.getElementById('compassArrow'); if (arrow) arrow.style.transform = 'rotate(' + (-rotation) + 'deg)'; }
-        function resetRotation() { mapRotation = 0; var mapElement = document.getElementById('map'); if (mapElement) { mapElement.style.transition = 'transform 0.5s ease-out'; mapElement.style.transform = 'rotate(0deg)'; setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 550); } document.getElementById('compassArrow').style.transform = 'rotate(0deg)'; showToast('🧭 Ο χάρτης επανήλθε στον Βορρά', '#888'); }
+        function resetRotation() { mapRotation = 0; var me = document.getElementById('map'); if (me) { me.style.transition = 'transform 0.5s ease-out'; me.style.transform = 'rotate(0deg)'; setTimeout(function() { if (map) map.invalidateSize({ animate: false }); }, 550); } document.getElementById('compassArrow').style.transform = 'rotate(0deg)'; showToast('🧭 Ο χάρτης επανήλθε στον Βορρά', '#888'); }
         function calculateHeading(p1, p2) { if (!p1 || !p2) return null; var lat1 = p1.lat * Math.PI / 180, lat2 = p2.lat * Math.PI / 180, dLng = (p2.lng - p1.lng) * Math.PI / 180; return ((Math.atan2(Math.sin(dLng) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng)) * 180 / Math.PI) + 360) % 360; }
 
         // Χάρτης
         function initMap() {
             mainTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, crossOrigin: true, keepBuffer: 2, errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' });
             fallbackTiles = L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', { maxZoom: 19, crossOrigin: true, keepBuffer: 2, errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' });
-            
             map = L.map('map', { layers: [mainTiles], zoomControl: true, tap: true, tapTolerance: 15, renderer: L.canvas(), maxBoundsViscosity: 0.5, zoomAnimation: false, fadeAnimation: true }).setView([40.16, 24.32], 10);
-            
             mainTiles.on('tileerror', function(e) { tileErrorCount++; if (tileErrorCount > 10 && !useFallback) { useFallback = true; map.removeLayer(mainTiles); map.addLayer(fallbackTiles); showToast('🔄 Εναλλαγή σε backup χάρτη', '#e67e22'); } });
             fallbackTiles.on('tileerror', function(e) { console.warn('Fallback tile error'); });
             mainTiles.on('load', function() { document.getElementById('mapLoading').style.display = 'none'; });
             fallbackTiles.on('load', function() { document.getElementById('mapLoading').style.display = 'none'; });
-            
             setInterval(function() { if (useFallback) { tileErrorCount = Math.max(0, tileErrorCount - 1); if (tileErrorCount <= 5) { useFallback = false; if (map.hasLayer(fallbackTiles)) map.removeLayer(fallbackTiles); if (!map.hasLayer(mainTiles)) map.addLayer(mainTiles); map.invalidateSize({ animate: false }); } } }, 30000);
-            
             setupPinchRotate();
             setTimeout(function() { map.invalidateSize({ animate: false }); }, 300);
             setTimeout(function() { map.invalidateSize({ animate: false }); }, 1000);
             setTimeout(function() { map.invalidateSize({ animate: false }); document.getElementById('mapLoading').style.display = 'none'; }, 3000);
-            
             map.on('click', function(e) { isMapInteracting = true; showClickPopup(e); });
             map.on('dragstart', function() { isMapInteracting = true; });
             map.on('dragend', function() { setTimeout(function() { isMapInteracting = false; }, 1000); });
             map.on('zoomstart', function() { isMapInteracting = true; });
             map.on('zoomend', function() { setTimeout(function() { isMapInteracting = false; if (mapRotation !== 0) map.invalidateSize({ animate: false }); }, 500); });
-            
             window.addEventListener('resize', function() { setTimeout(function() { map.invalidateSize({ animate: false }); updateWatermarkPosition(); }, 200); });
             window.addEventListener('orientationchange', function() { setTimeout(function() { map.invalidateSize({ animate: false }); updateWatermarkPosition(); }, 400); });
-            
             registerServiceWorker();
-            
             setTimeout(function() { var has = loadLastRouteState(); setTimeout(function() { if (!isDesignMode && !isLocationTracking) locateUser(true); }, has ? 1000 : 800); }, 500);
-            
             try { var st = localStorage.getItem('athos_off_route_threshold'); if (st) { OFF_ROUTE_THRESHOLD = parseInt(st); document.getElementById('offRouteThresholdInput').value = OFF_ROUTE_THRESHOLD; } } catch(e) {}
-            
             setTimeout(function() { makeDraggable(document.getElementById('routeInfo'), '.drag-area'); makeDraggable(document.getElementById('waypointsPanel'), '.panel-header'); makeDraggable(document.getElementById('routeDropdownContainer'), '.routes-header'); makeDraggable(document.getElementById('sosContainer'), '.sos-header'); }, 500);
-            
-            updateWatermarkPosition();
-            map.on('move', updateWatermarkPosition);
-            map.on('zoom', updateWatermarkPosition);
-            
+            updateWatermarkPosition(); map.on('move', updateWatermarkPosition); map.on('zoom', updateWatermarkPosition);
             document.addEventListener('visibilitychange', function() { if (!document.hidden && map) { setTimeout(function() { map.invalidateSize({ animate: false }); }, 500); } });
         }
 
@@ -835,8 +772,8 @@
         resetInfo(); updatePhotoList(); updateWaypointsPanel();
         openDatabase().then(function() { console.log('✅ Athos Maps DB έτοιμη'); }).catch(function(e) { console.warn('⚠️ IndexedDB:', e); });
         initMap();
-        console.log('🚀 Athos Maps - PWA έκδοση');
-        console.log('📲 Μπορείτε να την εγκαταστήσετε στην αρχική οθόνη!');
+        console.log('🚀 Athos Maps - PWA με νέο εικονίδιο');
+        console.log('📲 Έτοιμο για GitHub Pages!');
     </script>
 </body>
 </html>
