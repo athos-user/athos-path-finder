@@ -11,100 +11,63 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { 
-            height: 100%; 
-            width: 100%; 
-            overflow: hidden;
+            height: 100%; width: 100%; overflow: hidden;
             font-family: 'Segoe UI', Roboto, sans-serif;
             background: #f0f2f5;
-            position: fixed;
-            top: 0;
-            left: 0;
+            position: fixed; top: 0; left: 0;
             touch-action: manipulation;
         }
         
         #mapContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            overflow: hidden;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%; z-index: 1; overflow: hidden;
         }
         #map { width: 100%; height: 100%; }
         
-        /* ΥΔΑΤΟΓΡΑΦΗΜΑ */
+        /* ΥΔΑΤΟΓΡΑΦΗΜΑ - ΠΙΟ ΟΡΑΤΟ, ΣΤΟ ΚΕΝΤΡΟ-ΔΕΞΙΑ */
         .watermark {
             position: fixed;
-            z-index: 500;
+            z-index: 400;
             pointer-events: none;
             user-select: none;
-            /* Τοποθέτηση στο δεξιό μισό του χάρτη, λίγο δεξιά από το κέντρο */
             top: 50%;
-            left: 65%;
+            left: 68%;
             transform: translate(-50%, -50%);
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
-            color: rgba(44, 95, 45, 0.12);
-            letter-spacing: 3px;
+            color: rgba(44, 95, 45, 0.18);
+            letter-spacing: 4px;
             white-space: nowrap;
-            text-shadow: none;
+            text-shadow: 0 1px 3px rgba(255,255,255,0.3);
             font-family: 'Segoe UI', Roboto, sans-serif;
-            transition: opacity 0.5s;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.05);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(44, 95, 45, 0.08);
         }
         @media (max-width: 600px) {
-            .watermark {
-                font-size: 16px;
-                left: 62%;
-                letter-spacing: 2px;
-            }
+            .watermark { font-size: 16px; left: 62%; letter-spacing: 2px; padding: 4px 10px; }
         }
         @media (min-width: 1200px) {
-            .watermark {
-                font-size: 28px;
-                letter-spacing: 4px;
-            }
+            .watermark { font-size: 28px; left: 70%; letter-spacing: 5px; }
         }
         
         /* ... όλα τα υπόλοιπα styles παραμένουν ίδια ... */
         .controls {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            background: rgba(255,255,255,0.94);
-            padding: 4px 5px;
-            border-bottom: 2px solid #2c5f2d;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 3px;
-            justify-content: center;
-            align-items: center;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: rgba(255,255,255,0.94); padding: 4px 5px;
+            border-bottom: 2px solid #2c5f2d; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; align-items: center;
         }
         .controls button, .controls select, .controls input {
-            padding: 4px 6px;
-            font-size: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            min-height: 28px;
-            touch-action: manipulation;
-            background: white;
-            white-space: nowrap;
-            line-height: 1.1;
+            padding: 4px 6px; font-size: 10px; border-radius: 6px;
+            border: 1px solid #ccc; min-height: 28px;
+            touch-action: manipulation; background: white; white-space: nowrap; line-height: 1.1;
         }
         .controls button {
-            background: #2c5f2d;
-            color: white;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            min-width: 30px;
-            font-size: 10px;
-            padding: 4px 7px;
+            background: #2c5f2d; color: white; font-weight: 600;
+            border: none; cursor: pointer; min-width: 30px; font-size: 10px; padding: 4px 7px;
         }
         .controls button:active { transform: scale(0.95); }
         .controls input[type="file"] { max-width: 70px; padding: 2px 4px; font-size: 9px; }
@@ -127,7 +90,6 @@
         #offRouteThresholdInput { width: 42px; min-width: 38px; padding: 3px; font-size: 9px; text-align: center; }
         .controls .logo-link { display: flex; align-items: center; padding: 0 3px; text-decoration: none; }
         .controls .logo-link img { height: 20px; width: auto; max-width: 80px; object-fit: contain; border-radius: 3px; }
-        
         @media (max-width: 360px) {
             .controls button, .controls select, .controls input { font-size: 8px; padding: 3px 4px; min-height: 24px; min-width: 24px; }
             .controls input[type="file"] { max-width: 55px; }
@@ -137,142 +99,91 @@
         .photo-marker { background: white; border-radius: 50%; width: 32px; height: 32px; border: 3px solid #8e44ad; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer; }
         .photo-marker img { width: 100%; height: 100%; object-fit: cover; }
         
-        .blue-dot {
-            background: #2196F3; border-radius: 50%; width: 18px; height: 18px;
-            border: 2px solid white; box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3), 0 2px 10px rgba(0,0,0,0.3);
-            display: block; position: relative; transition: transform 0.4s ease-out;
-        }
-        .blue-dot::after {
-            content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 9px solid #2196F3;
-        }
-        .blue-dot-glow {
-            background: rgba(33, 150, 243, 0.15); border-radius: 50%; width: 36px; height: 36px;
-            position: absolute; top: -9px; left: -9px; animation: pulse-glow 2s infinite;
-        }
+        .blue-dot { background: #2196F3; border-radius: 50%; width: 18px; height: 18px; border: 2px solid white; box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3), 0 2px 10px rgba(0,0,0,0.3); display: block; position: relative; transition: transform 0.4s ease-out; }
+        .blue-dot::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 9px solid #2196F3; }
+        .blue-dot-glow { background: rgba(33, 150, 243, 0.15); border-radius: 50%; width: 36px; height: 36px; position: absolute; top: -9px; left: -9px; animation: pulse-glow 2s infinite; }
         @keyframes pulse-glow { 0% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.3); opacity: 0.2; } 100% { transform: scale(1); opacity: 0.6; } }
         
-        .info-panel {
-            position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%);
-            z-index: 900; background: rgba(255,255,255,0.95); padding: 10px 14px;
-            border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            font-size: 14px; max-width: 95%; width: auto; min-width: 260px;
-            text-align: center; cursor: grab; touch-action: none; user-select: none;
-            border: 1px solid #e0e0e0;
-        }
+        .info-panel { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); z-index: 900; background: rgba(255,255,255,0.95); padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); font-size: 14px; max-width: 95%; width: auto; min-width: 260px; text-align: center; cursor: grab; touch-action: none; user-select: none; border: 1px solid #e0e0e0; }
         .info-panel:active { cursor: grabbing; }
-        .info-panel .drag-area {
-            display: flex; justify-content: center; align-items: center; gap: 4px;
-            padding: 2px 0 4px 0; margin-bottom: 4px; font-size: 9px; color: #aaa;
-            cursor: grab; border-bottom: 1px solid #f0f0f0;
-        }
-        .info-panel .drag-area:active { cursor: grabbing; }
-        .info-panel .drag-area .dots { letter-spacing: 3px; font-size: 14px; }
+        .info-panel .drag-area { display: flex; justify-content: center; align-items: center; gap: 4px; padding: 2px 0 4px 0; margin-bottom: 4px; font-size: 9px; color: #aaa; cursor: grab; border-bottom: 1px solid #f0f0f0; }
         .info-panel .main-info { font-size: 15px; font-weight: 700; color: #2c5f2d; margin: 2px 0; }
         .info-panel .main-info .dist { font-size: 18px; }
         .info-panel .sub-info { font-size: 12px; color: #555; margin: 2px 0; }
         .info-panel .status-line { font-size: 11px; color: #2c5f2d; font-weight: 600; margin: 3px 0; background: #f0f8f0; padding: 3px 8px; border-radius: 6px; display: inline-block; }
-        .info-panel hr { margin: 4px 0; border: 0.5px solid #e0e0e0; }
         
-        #waypointsPanel {
-            position: fixed; bottom: 160px; left: 50%; transform: translateX(-50%);
-            z-index: 950; background: rgba(255,255,255,0.97); padding: 8px 12px;
-            border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-            max-height: 280px; overflow-y: auto; display: none; font-size: 11px;
-            min-width: 290px; width: 92%; max-width: 460px;
-            border: 2px solid #2980b9; cursor: default; touch-action: none; user-select: none;
-        }
+        #waypointsPanel { position: fixed; bottom: 160px; left: 50%; transform: translateX(-50%); z-index: 950; background: rgba(255,255,255,0.97); padding: 8px 12px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); max-height: 280px; overflow-y: auto; display: none; font-size: 11px; min-width: 290px; width: 92%; max-width: 460px; border: 2px solid #2980b9; cursor: default; touch-action: none; user-select: none; }
         #waypointsPanel.active { display: block; }
-        #waypointsPanel .panel-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 5px; padding-bottom: 4px; border-bottom: 1px solid #ddd; cursor: grab;
-        }
-        #waypointsPanel .panel-header:active { cursor: grabbing; }
-        #waypointsPanel .panel-header .drag-handle {
-            display: flex; align-items: center; gap: 4px; font-size: 9px; color: #888;
-            cursor: grab; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.04);
-        }
+        #waypointsPanel .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding-bottom: 4px; border-bottom: 1px solid #ddd; cursor: grab; }
+        #waypointsPanel .panel-header .drag-handle { display: flex; align-items: center; gap: 4px; font-size: 9px; color: #888; cursor: grab; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.04); }
         
-        #routeDropdownContainer {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 1100; background: rgba(255,255,255,0.97); padding: 12px 14px;
-            border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);
-            display: none; max-height: 70vh; min-width: 300px; width: 92%;
-            max-width: 520px; overflow-y: auto; border: 2px solid #8e44ad;
-            cursor: default; touch-action: none; user-select: none;
-        }
+        #routeDropdownContainer { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1100; background: rgba(255,255,255,0.97); padding: 12px 14px; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.35); display: none; max-height: 70vh; min-width: 300px; width: 92%; max-width: 520px; overflow-y: auto; border: 2px solid #8e44ad; cursor: default; touch-action: none; user-select: none; }
         #routeDropdownContainer.active { display: block; }
-        #routeDropdownContainer .routes-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #eee; cursor: grab;
-        }
         
-        #sosContainer {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 3000; background: rgba(255,255,255,0.97); padding: 14px 18px;
-            border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.4);
-            display: none; max-width: 380px; width: 92%; max-height: 85vh;
-            overflow-y: auto; border: 2px solid #e74c3c;
-            cursor: default; touch-action: none; user-select: none;
-        }
+        #sosContainer { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3000; background: rgba(255,255,255,0.97); padding: 14px 18px; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.4); display: none; max-width: 380px; width: 92%; max-height: 85vh; overflow-y: auto; border: 2px solid #e74c3c; cursor: default; touch-action: none; user-select: none; }
         
-        #offRouteAlert {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 4000; background: #e74c3c; color: white; padding: 16px 22px;
-            border-radius: 16px; box-shadow: 0 8px 30px rgba(231, 76, 60, 0.5);
-            display: none; text-align: center; font-size: 14px; font-weight: 600; max-width: 85%;
-        }
-        #offRouteAlert button { display: block; margin: 8px auto 0; padding: 8px 20px; border-radius: 10px; border: 2px solid white; background: transparent; color: white; font-size: 13px; cursor: pointer; font-weight: 600; }
+        #offRouteAlert { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 4000; background: #e74c3c; color: white; padding: 16px 22px; border-radius: 16px; box-shadow: 0 8px 30px rgba(231, 76, 60, 0.5); display: none; text-align: center; font-size: 14px; font-weight: 600; max-width: 85%; }
         
-        #tileProgress {
-            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-            z-index: 1500; background: rgba(0,0,0,0.88); color: white; padding: 12px 20px;
-            border-radius: 14px; text-align: center; display: none; min-width: 200px; font-size: 13px;
-        }
+        #tileProgress { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 1500; background: rgba(0,0,0,0.88); color: white; padding: 12px 20px; border-radius: 14px; text-align: center; display: none; min-width: 200px; font-size: 13px; }
         #tileProgress .bar { width: 100%; height: 5px; background: #444; border-radius: 3px; margin-top: 6px; overflow: hidden; }
         #tileProgress .bar .fill { height: 100%; background: #2ecc71; border-radius: 3px; width: 0%; transition: width 0.3s; }
         
-        #saveStatus {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 9999; background: rgba(0,0,0,0.9); color: white;
-            padding: 20px 30px; border-radius: 16px; text-align: center;
-            display: none; font-size: 14px; max-width: 85%;
-        }
-        #saveStatus .spinner {
-            width: 40px; height: 40px; border: 4px solid #333;
-            border-top: 4px solid #2ecc71; border-radius: 50%;
-            animation: spin 1s linear infinite; margin: 10px auto;
-        }
+        #saveStatus { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: rgba(0,0,0,0.9); color: white; padding: 20px 30px; border-radius: 16px; text-align: center; display: none; font-size: 14px; max-width: 85%; }
+        #saveStatus .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid #2ecc71; border-radius: 50%; animation: spin 1s linear infinite; margin: 10px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #saveStatus.success { background: rgba(39, 174, 96, 0.95); }
         #saveStatus.error { background: rgba(231, 76, 60, 0.95); }
         
-        .compass-indicator {
-            position: fixed; bottom: 130px; right: 12px; z-index: 2000;
-            background: rgba(255,255,255,0.9); border-radius: 50%; width: 38px; height: 38px;
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #2196F3; cursor: pointer;
+        /* ΒΟΗΘΕΙΑ - MODAL */
+        #helpModal {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 5000; background: rgba(0,0,0,0.7);
+            display: none; align-items: center; justify-content: center;
+        }
+        #helpModal.active { display: flex; }
+        #helpModal .help-content {
+            background: white; border-radius: 16px; padding: 20px;
+            max-width: 500px; width: 92%; max-height: 80vh;
+            overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            font-size: 13px; line-height: 1.6;
+        }
+        #helpModal .help-content h2 {
+            color: #2c5f2d; font-size: 18px; margin-bottom: 12px;
+            text-align: center; border-bottom: 2px solid #2c5f2d; padding-bottom: 8px;
+        }
+        #helpModal .help-content h3 {
+            color: #2c5f2d; font-size: 14px; margin: 12px 0 6px 0;
+            border-left: 3px solid #2c5f2d; padding-left: 8px;
+        }
+        #helpModal .help-content .section {
+            margin-bottom: 10px; padding: 8px; background: #f9faf9;
+            border-radius: 8px; border-left: 3px solid #27ae60;
+        }
+        #helpModal .help-content .section.warning { border-left-color: #e74c3c; background: #fff5f5; }
+        #helpModal .help-content .section.info { border-left-color: #2980b9; background: #f5f9ff; }
+        #helpModal .help-content .section.photo { border-left-color: #8e44ad; background: #fdf5ff; }
+        #helpModal .help-content .section.offline { border-left-color: #d35400; background: #fff9f5; }
+        #helpModal .help-content kbd {
+            background: #2c5f2d; color: white; padding: 2px 6px;
+            border-radius: 4px; font-size: 11px; font-weight: 600;
+        }
+        #helpModal .help-content button {
+            display: block; margin: 15px auto 0; padding: 10px 30px;
+            background: #2c5f2d; color: white; border: none;
+            border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: 600;
         }
         
+        .compass-indicator { position: fixed; bottom: 130px; right: 12px; z-index: 2000; background: rgba(255,255,255,0.9); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #2196F3; cursor: pointer; }
         .leaflet-control-zoom { z-index: 800 !important; margin-top: 55px !important; }
         .leaflet-control-attribution { display: none; }
-        
-        .bottom-bar {
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
-            background: white; padding: 4px 8px; display: none; gap: 4px;
-            border-top: 1px solid #ddd; justify-content: center;
-        }
+        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 500; background: white; padding: 4px 8px; display: none; gap: 4px; border-top: 1px solid #ddd; justify-content: center; }
         .bottom-bar button { padding: 6px 10px; font-size: 11px; border-radius: 8px; border: none; background: #2c5f2d; color: white; font-weight: 600; cursor: pointer; flex: 1; min-width: 44px; }
-        
         @media (max-width: 600px) {
             .info-panel { bottom: 60px; font-size: 13px; padding: 8px 10px; min-width: 240px; }
             .info-panel .main-info { font-size: 14px; }
             .info-panel .main-info .dist { font-size: 16px; }
-            .info-panel .sub-info { font-size: 11px; }
-            .info-panel .status-line { font-size: 10px; }
             .compass-indicator { bottom: 110px; right: 8px; width: 34px; height: 34px; font-size: 18px; }
             #waypointsPanel { bottom: 150px; max-height: 240px; }
-            #tileProgress { bottom: 85px; }
         }
     </style>
 </head>
@@ -281,8 +192,8 @@
         <div id="map"></div>
     </div>
 
-    <!-- ΥΔΑΤΟΓΡΑΦΗΜΑ ATHOS MAPS -->
-    <div class="watermark" id="watermark">Athos Maps</div>
+    <!-- ΥΔΑΤΟΓΡΑΦΗΜΑ ATHOS MAPS - ΠΙΟ ΟΡΑΤΟ -->
+    <div class="watermark" id="watermark">🏔️ Athos Maps</div>
 
     <div class="compass-indicator" id="compassIndicator" title="Κατεύθυνση">
         <span class="arrow" id="compassArrow">🧭</span>
@@ -305,6 +216,70 @@
         <div id="saveStatusText">Αποθήκευση...</div>
         <div class="spinner" id="saveSpinner"></div>
         <div id="saveStatusDetail" style="font-size:10px; color:#aaa; margin-top:5px;"></div>
+    </div>
+
+    <!-- MODAL ΒΟΗΘΕΙΑΣ -->
+    <div id="helpModal">
+        <div class="help-content">
+            <h2>🧭 Athos Maps - Βοήθεια</h2>
+            
+            <div class="section">
+                <h3>📍 GPS & Πλοήγηση</h3>
+                <p>Πατήστε <kbd>📍 GPS</kbd> για ενεργοποίηση στίγματος. Η μπλε κουκίδα δείχνει τη θέση σας σε πραγματικό χρόνο. Το GPS ενεργοποιείται/απενεργοποιείται <strong>ΜΟΝΟ</strong> από το κουμπί. Πατώντας στον χάρτη δεν σταματά η παρακολούθηση.</p>
+            </div>
+            
+            <div class="section photo">
+                <h3>📸 Φωτογραφίες</h3>
+                <p>Πατήστε <kbd>📸</kbd> για λήψη φωτογραφίας στη θέση σας ή κάντε κλικ στον χάρτη και επιλέξτε <kbd>📸</kbd> για φωτογραφία σε συγκεκριμένο σημείο. Οι φωτογραφίες αποθηκεύονται με συμπίεση στη βάση δεδομένων (IndexedDB) και παραμένουν ακόμα και μετά το κλείσιμο.</p>
+            </div>
+            
+            <div class="section info">
+                <h3>🗺️ Διαδρομές</h3>
+                <p>Κάντε κλικ στον χάρτη για να ορίσετε <kbd>🚩 Start</kbd> (αφετηρία), <kbd>🏁 End</kbd> (προορισμό) και <kbd>📍 Ενδιάμεσα</kbd> σημεία. Η διαδρομή υπολογίζεται αυτόματα. Πατήστε <kbd>💾</kbd> για αποθήκευση, <kbd>🗺️</kbd> για να δείτε τις αποθηκευμένες διαδρομές, <kbd>📤</kbd> για εξαγωγή GPX.</p>
+            </div>
+            
+            <div class="section">
+                <h3>📍 Σημεία Διαδρομής</h3>
+                <p>Πατήστε <kbd>📍 Σημ.</kbd> για να δείτε όλα τα σημεία. Μπορείτε να μετονομάσετε (✏️), να διαγράψετε (✖) ή να προσθέσετε φωτογραφία (📸) σε κάθε σημείο. Το πάνελ είναι μετακινούμενο.</p>
+            </div>
+            
+            <div class="section offline">
+                <h3>📥 Offline Χάρτης</h3>
+                <p>Πατήστε <kbd>📥 Offline</kbd> για λήψη των tiles της ορατής περιοχής. Τα tiles αποθηκεύονται <strong>μόνιμα</strong> στην cache του browser (Cache API) και παραμένουν ακόμα και μετά το κλείσιμο της εφαρμογής. Πατήστε <kbd>🗂️</kbd> για καθαρισμό της cache.</p>
+            </div>
+            
+            <div class="section warning">
+                <h3>🚨 Alert Απόκλισης</h3>
+                <p>Πατήστε <kbd>🚨</kbd> για ενεργοποίηση ειδοποίησης όταν απομακρυνθείτε από την ενεργή διαδρομή. Το όριο απόκλισης (σε μέτρα) μπορείτε να το αλλάξετε στο πεδίο δίπλα. Προεπιλογή: 200 μέτρα.</p>
+            </div>
+            
+            <div class="section">
+                <h3>💡 Wake Lock</h3>
+                <p>Πατήστε <kbd>💡</kbd> για να αποτρέψετε το σβήσιμο της οθόνης κατά την πλοήγηση. Η οθόνη θα παραμένει ανοιχτή όσο είναι ενεργό.</p>
+            </div>
+            
+            <div class="section warning">
+                <h3>🆘 SOS</h3>
+                <p>Πατήστε <kbd>🆘 SOS</kbd> για άμεση αποστολή της θέσης σας μέσω SMS, Email ή απευθείας κλήση στο 112. Συμπληρώστε τα στοιχεία σας για καλύτερη βοήθεια.</p>
+            </div>
+            
+            <div class="section info">
+                <h3>📤 Εξαγωγή & Εισαγωγή GPX</h3>
+                <p>Πατήστε <kbd>📤</kbd> για εξαγωγή της τρέχουσας διαδρομής σε αρχείο GPX. Χρησιμοποιήστε το πεδίο <kbd>Φόρτωση</kbd> για εισαγωγή αρχείων GPX/KML. Τα αρχεία φέρουν την υπογραφή <strong>"Athos Maps"</strong>.</p>
+            </div>
+            
+            <div class="section">
+                <h3>📌 Γενικές Πληροφορίες</h3>
+                <p>• Όλα τα πάνελ είναι <strong>μετακινούμενα</strong> (draggable) - πιάστε τα από την ένδειξη "⠿ μετακίνηση".</p>
+                <p>• Η <strong>πυξίδα</strong> 🧭 δείχνει τον προσανατολισμό σας.</p>
+                <p>• Το <strong>υδατογράφημα</strong> "Athos Maps" εμφανίζεται διακριτικά στον χάρτη.</p>
+                <p>• Ιστοσελίδα: <a href="https://agionorosroutes.blogspot.com/" target="_blank">agionorosroutes.blogspot.com</a></p>
+                <p>• Οι φωτογραφίες συμπιέζονται αυτόματα για εξοικονόμηση χώρου.</p>
+                <p>• Η ταχύτητα περπατήματος επηρεάζει τον υπολογισμό χρόνου.</p>
+            </div>
+            
+            <button id="closeHelpBtn">✅ Κατάλαβα, ευχαριστώ!</button>
+        </div>
     </div>
 
     <div class="controls">
@@ -336,9 +311,9 @@
     <div id="routeDropdownContainer">
         <div class="routes-header">
             <div class="drag-handle"><span class="dots">⠿</span> <span>μετακίνηση</span></div>
-            <span style="font-weight:600;color:#2c5f2d;font-size:14px;">🗺️ Αποθηκευμένες Διαδρομές</span>
+            <span style="font-weight:600;color:#2c5f2d;font-size:14px;">🗺️ Διαδρομές</span>
             <div style="display:flex;gap:4px;">
-                <button id="saveRouteFromListBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;">💾 Αποθ.</button>
+                <button id="saveRouteFromListBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;">💾</button>
                 <button id="hideRoutesBtn" style="background:#888;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;">✕</button>
             </div>
         </div>
@@ -397,6 +372,7 @@
         // ============================================================
         //  ATHOS MAPS - PATH FINDER
         //  Με υδατογράφημα, IndexedDB, offline χάρτη, draggable panels
+        //  Πλήρης βοήθεια με modal
         // ============================================================
         
         var ORS_API_KEY = '5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e';
@@ -432,264 +408,46 @@
         var db = null;
         
         function generateRouteId() { return 'route_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6); }
-
-        function getColorIcon(color) {
-            return L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-' + color + '.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
-                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-            });
-        }
-
-        function formatTime(hours) {
-            if (hours === null || isNaN(hours) || hours < 0) return '-';
-            var totalMinutes = Math.round(hours * 60);
-            var h = Math.floor(totalMinutes / 60), m = totalMinutes % 60;
-            if (h === 0 && m === 0) return '<1 λεπτό';
-            if (h === 0) return m + ' λεπτά';
-            if (m === 0) return h + ' ώρα' + (h !== 1 ? 'ες' : '');
-            return h + ' ώρα' + (h !== 1 ? 'ες' : '') + ' ' + m + ' λεπτά';
-        }
-
-        function computeDistanceFromCoords(coords) {
-            if (!coords || coords.length < 2) return 0;
-            var total = 0;
-            for (var i = 1; i < coords.length; i++) {
-                total += L.latLng(coords[i-1][1], coords[i-1][0]).distanceTo(L.latLng(coords[i][1], coords[i][0]));
-            }
-            return total / 1000;
-        }
-
-        function showToast(message, color) {
-            var toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;bottom:150px;left:50%;transform:translateX(-50%);background:' + (color || 'rgba(0,0,0,0.85)') + ';color:white;padding:10px 18px;border-radius:14px;z-index:9999;font-size:14px;text-align:center;max-width:90%;';
-            toast.innerHTML = message;
-            document.body.appendChild(toast);
-            setTimeout(function() { toast.remove(); }, 3500);
-        }
-
-        function showSaveStatus(message, type, detail) {
-            var statusEl = document.getElementById('saveStatus');
-            var textEl = document.getElementById('saveStatusText');
-            var spinnerEl = document.getElementById('saveSpinner');
-            var detailEl = document.getElementById('saveStatusDetail');
-            statusEl.style.display = 'block';
-            statusEl.className = type || '';
-            textEl.textContent = message;
-            detailEl.textContent = detail || '';
-            if (type === 'success' || type === 'error') {
-                spinnerEl.style.display = 'none';
-                setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
-            } else {
-                spinnerEl.style.display = 'block';
-            }
-        }
-
+        function getColorIcon(color) { return L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-' + color + '.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }); }
+        function formatTime(hours) { if (hours === null || isNaN(hours) || hours < 0) return '-'; var m = Math.round(hours * 60); var h = Math.floor(m / 60); m = m % 60; if (h === 0 && m === 0) return '<1 λεπτό'; if (h === 0) return m + ' λεπτά'; if (m === 0) return h + ' ώρα' + (h !== 1 ? 'ες' : ''); return h + ' ώρα' + (h !== 1 ? 'ες' : '') + ' ' + m + ' λεπτά'; }
+        function computeDistanceFromCoords(coords) { if (!coords || coords.length < 2) return 0; var t = 0; for (var i = 1; i < coords.length; i++) t += L.latLng(coords[i-1][1], coords[i-1][0]).distanceTo(L.latLng(coords[i][1], coords[i][0])); return t / 1000; }
+        function showToast(m, c) { var t = document.createElement('div'); t.style.cssText = 'position:fixed;bottom:150px;left:50%;transform:translateX(-50%);background:' + (c || 'rgba(0,0,0,0.85)') + ';color:white;padding:10px 18px;border-radius:14px;z-index:9999;font-size:14px;text-align:center;max-width:90%;'; t.innerHTML = m; document.body.appendChild(t); setTimeout(function() { t.remove(); }, 3500); }
+        function showSaveStatus(m, type, d) { var s = document.getElementById('saveStatus'); s.style.display = 'block'; s.className = type || ''; document.getElementById('saveStatusText').textContent = m; document.getElementById('saveStatusDetail').textContent = d || ''; document.getElementById('saveSpinner').style.display = (type === 'success' || type === 'error') ? 'none' : 'block'; if (type === 'success' || type === 'error') setTimeout(function() { s.style.display = 'none'; }, 3000); }
         function hideSaveStatus() { document.getElementById('saveStatus').style.display = 'none'; }
 
         // ============================================================
         //  INDEXEDDB
         // ============================================================
-        function openDatabase() {
-            return new Promise(function(resolve, reject) {
-                if (db) { resolve(db); return; }
-                var request = indexedDB.open(DB_NAME, DB_VERSION);
-                request.onupgradeneeded = function(event) {
-                    var database = event.target.result;
-                    if (!database.objectStoreNames.contains('photos')) database.createObjectStore('photos', { keyPath: 'id' });
-                    if (!database.objectStoreNames.contains('routes')) database.createObjectStore('routes', { keyPath: 'id' });
-                };
-                request.onsuccess = function(event) { db = event.target.result; resolve(db); };
-                request.onerror = function(event) { reject(event.target.error); };
-            });
-        }
-        
-        function storePhotoInDB(photoData) {
-            return openDatabase().then(function(database) {
-                return new Promise(function(resolve, reject) {
-                    var transaction = database.transaction(['photos'], 'readwrite');
-                    var store = transaction.objectStore('photos');
-                    var photo = {
-                        id: photoData.id || generateRouteId(),
-                        image: photoData.image, lat: photoData.lat, lng: photoData.lng,
-                        note: photoData.note || '', filename: photoData.filename || 'photo.jpg',
-                        timestamp: photoData.timestamp || new Date().toISOString(),
-                        thumbnail: photoData.thumbnail || null
-                    };
-                    var request = store.put(photo);
-                    request.onsuccess = function() { resolve(photo.id); };
-                    request.onerror = function(e) { reject(e.target.error); };
-                });
-            });
-        }
-        
-        function getPhotoFromDB(photoId) {
-            return openDatabase().then(function(database) {
-                return new Promise(function(resolve, reject) {
-                    var transaction = database.transaction(['photos'], 'readonly');
-                    var store = transaction.objectStore('photos');
-                    var request = store.get(photoId);
-                    request.onsuccess = function() { resolve(request.result); };
-                    request.onerror = function(e) { reject(e.target.error); };
-                });
-            });
-        }
-        
-        function deletePhotoFromDB(photoId) {
-            return openDatabase().then(function(database) {
-                return new Promise(function(resolve, reject) {
-                    var transaction = database.transaction(['photos'], 'readwrite');
-                    var store = transaction.objectStore('photos');
-                    var request = store.delete(photoId);
-                    request.onsuccess = function() { resolve(); };
-                    request.onerror = function(e) { reject(e.target.error); };
-                });
-            });
-        }
-        
-        function storeRouteInDB(routeData) {
-            return openDatabase().then(function(database) {
-                return new Promise(function(resolve, reject) {
-                    var transaction = database.transaction(['routes'], 'readwrite');
-                    var store = transaction.objectStore('routes');
-                    var request = store.put(routeData);
-                    request.onsuccess = function() { resolve(); };
-                    request.onerror = function(e) { reject(e.target.error); };
-                });
-            });
-        }
-        
-        function getRouteFromDB(routeId) {
-            return openDatabase().then(function(database) {
-                return new Promise(function(resolve, reject) {
-                    var transaction = database.transaction(['routes'], 'readonly');
-                    var store = transaction.objectStore('routes');
-                    var request = store.get(routeId);
-                    request.onsuccess = function() { resolve(request.result); };
-                    request.onerror = function(e) { reject(e.target.error); };
-                });
-            });
-        }
-        
-        function getAllRoutesFromDB() {
-            return openDatabase().then(function(database) {
-                return new Promise(function(resolve, reject) {
-                    var transaction = database.transaction(['routes'], 'readonly');
-                    var store = transaction.objectStore('routes');
-                    var request = store.getAll();
-                    request.onsuccess = function() { resolve(request.result || []); };
-                    request.onerror = function(e) { reject(e.target.error); };
-                });
-            });
-        }
-        
-        function deleteRouteFromDB(routeId) {
-            return openDatabase().then(function(database) {
-                return new Promise(function(resolve, reject) {
-                    var transaction = database.transaction(['routes'], 'readwrite');
-                    var store = transaction.objectStore('routes');
-                    var request = store.delete(routeId);
-                    request.onsuccess = function() { resolve(); };
-                    request.onerror = function(e) { reject(e.target.error); };
-                });
-            });
-        }
+        function openDatabase() { return new Promise(function(resolve, reject) { if (db) { resolve(db); return; } var r = indexedDB.open(DB_NAME, DB_VERSION); r.onupgradeneeded = function(e) { var d = e.target.result; if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos', { keyPath: 'id' }); if (!d.objectStoreNames.contains('routes')) d.createObjectStore('routes', { keyPath: 'id' }); }; r.onsuccess = function(e) { db = e.target.result; resolve(db); }; r.onerror = function(e) { reject(e.target.error); }; }); }
+        function storePhotoInDB(p) { return openDatabase().then(function(d) { return new Promise(function(resolve, reject) { var t = d.transaction(['photos'], 'readwrite'); var s = t.objectStore('photos'); var req = s.put({ id: p.id || generateRouteId(), image: p.image, lat: p.lat, lng: p.lng, note: p.note || '', filename: p.filename || 'photo.jpg', timestamp: p.timestamp || new Date().toISOString(), thumbnail: p.thumbnail || null }); req.onsuccess = function() { resolve(p.id); }; req.onerror = function(e) { reject(e.target.error); }; }); }); }
+        function getPhotoFromDB(id) { return openDatabase().then(function(d) { return new Promise(function(resolve, reject) { var t = d.transaction(['photos'], 'readonly'); var s = t.objectStore('photos'); var req = s.get(id); req.onsuccess = function() { resolve(req.result); }; req.onerror = function(e) { reject(e.target.error); }; }); }); }
+        function deletePhotoFromDB(id) { return openDatabase().then(function(d) { return new Promise(function(resolve, reject) { var t = d.transaction(['photos'], 'readwrite'); var s = t.objectStore('photos'); var req = s.delete(id); req.onsuccess = function() { resolve(); }; req.onerror = function(e) { reject(e.target.error); }; }); }); }
+        function storeRouteInDB(r) { return openDatabase().then(function(d) { return new Promise(function(resolve, reject) { var t = d.transaction(['routes'], 'readwrite'); var s = t.objectStore('routes'); var req = s.put(r); req.onsuccess = function() { resolve(); }; req.onerror = function(e) { reject(e.target.error); }; }); }); }
+        function getRouteFromDB(id) { return openDatabase().then(function(d) { return new Promise(function(resolve, reject) { var t = d.transaction(['routes'], 'readonly'); var s = t.objectStore('routes'); var req = s.get(id); req.onsuccess = function() { resolve(req.result); }; req.onerror = function(e) { reject(e.target.error); }; }); }); }
+        function getAllRoutesFromDB() { return openDatabase().then(function(d) { return new Promise(function(resolve, reject) { var t = d.transaction(['routes'], 'readonly'); var s = t.objectStore('routes'); var req = s.getAll(); req.onsuccess = function() { resolve(req.result || []); }; req.onerror = function(e) { reject(e.target.error); }; }); }); }
+        function deleteRouteFromDB(id) { return openDatabase().then(function(d) { return new Promise(function(resolve, reject) { var t = d.transaction(['routes'], 'readwrite'); var s = t.objectStore('routes'); var req = s.delete(id); req.onsuccess = function() { resolve(); }; req.onerror = function(e) { reject(e.target.error); }; }); }); }
 
         // ============================================================
-        //  ΣΥΜΠΙΕΣΗ ΕΙΚΟΝΑΣ
+        //  ΣΥΜΠΙΕΣΗ
         // ============================================================
-        function compressImage(dataUrl, maxWidth, maxHeight, quality) {
-            return new Promise(function(resolve) {
-                if (!dataUrl || !dataUrl.startsWith('data:image')) { resolve(dataUrl); return; }
-                var img = new Image();
-                img.onload = function() {
-                    var width = img.width, height = img.height;
-                    if (width <= maxWidth && height <= maxHeight && dataUrl.length < 200000) { resolve(dataUrl); return; }
-                    var ratio = Math.min(maxWidth / width, maxHeight / height, 1);
-                    var canvas = document.createElement('canvas');
-                    canvas.width = Math.round(width * ratio);
-                    canvas.height = Math.round(height * ratio);
-                    var ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    resolve(canvas.toDataURL('image/jpeg', quality || 0.7));
-                };
-                img.onerror = function() { resolve(dataUrl); };
-                img.src = dataUrl;
-            });
-        }
-        
-        function createThumbnail(dataUrl) { return compressImage(dataUrl, 150, 150, 0.5); }
+        function compressImage(dataUrl, mw, mh, q) { return new Promise(function(resolve) { if (!dataUrl || !dataUrl.startsWith('data:image')) { resolve(dataUrl); return; } var img = new Image(); img.onload = function() { if (img.width <= mw && img.height <= mh && dataUrl.length < 200000) { resolve(dataUrl); return; } var ratio = Math.min(mw / img.width, mh / img.height, 1); var c = document.createElement('canvas'); c.width = Math.round(img.width * ratio); c.height = Math.round(img.height * ratio); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); resolve(c.toDataURL('image/jpeg', q || 0.7)); }; img.onerror = function() { resolve(dataUrl); }; img.src = dataUrl; }); }
+        function createThumbnail(d) { return compressImage(d, 150, 150, 0.5); }
 
         // ============================================================
         //  DRAGGABLE
         // ============================================================
-        function makeDraggable(element, handleSelector) {
-            if (!element) return;
-            var dragData = { isDragging: false, startX: 0, startY: 0, origX: 0, origY: 0 };
-            var handle = handleSelector ? element.querySelector(handleSelector) : element;
-            if (!handle) return;
-            function startDrag(clientX, clientY) {
-                if (clientX === undefined || clientY === undefined) return;
-                var rect = element.getBoundingClientRect();
-                dragData.isDragging = true; dragData.startX = clientX; dragData.startY = clientY;
-                dragData.origX = rect.left; dragData.origY = rect.top;
-                element.style.position = 'fixed'; element.style.left = rect.left + 'px'; element.style.top = rect.top + 'px';
-                element.style.bottom = 'auto'; element.style.right = 'auto'; element.style.transform = 'none';
-                element.style.cursor = 'grabbing'; document.body.style.userSelect = 'none'; element.style.zIndex = '9999';
-            }
-            function moveDrag(clientX, clientY) {
-                if (!dragData.isDragging || clientX === undefined || clientY === undefined) return;
-                var dx = clientX - dragData.startX, dy = clientY - dragData.startY;
-                var newX = dragData.origX + dx, newY = dragData.origY + dy;
-                var rect = element.getBoundingClientRect();
-                newX = Math.max(10, Math.min(window.innerWidth - rect.width - 10, newX));
-                newY = Math.max(10, Math.min(window.innerHeight - rect.height - 10, newY));
-                element.style.left = newX + 'px'; element.style.top = newY + 'px';
-            }
-            function endDrag() {
-                if (!dragData.isDragging) return;
-                dragData.isDragging = false; element.style.cursor = ''; document.body.style.userSelect = ''; element.style.zIndex = '';
-            }
-            handle.addEventListener('mousedown', function(e) { if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('textarea')) return; startDrag(e.clientX, e.clientY); e.preventDefault(); });
-            document.addEventListener('mousemove', function(e) { if (!dragData.isDragging) return; moveDrag(e.clientX, e.clientY); e.preventDefault(); });
-            document.addEventListener('mouseup', function(e) { if (dragData.isDragging) { endDrag(); e.preventDefault(); } });
-            handle.addEventListener('touchstart', function(e) { if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('textarea')) return; var touch = e.touches[0]; startDrag(touch.clientX, touch.clientY); e.preventDefault(); }, { passive: false });
-            document.addEventListener('touchmove', function(e) { if (!dragData.isDragging) return; var touch = e.touches[0]; moveDrag(touch.clientX, touch.clientY); e.preventDefault(); }, { passive: false });
-            document.addEventListener('touchend', function(e) { if (dragData.isDragging) { endDrag(); e.preventDefault(); } }, { passive: false });
-        }
+        function makeDraggable(el, hs) { if (!el) return; var d = { isDragging: false, sx: 0, sy: 0, ox: 0, oy: 0 }; var h = hs ? el.querySelector(hs) : el; if (!h) return; function sd(cx, cy) { if (cx === undefined) return; var r = el.getBoundingClientRect(); d.isDragging = true; d.sx = cx; d.sy = cy; d.ox = r.left; d.oy = r.top; el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px'; el.style.bottom = 'auto'; el.style.right = 'auto'; el.style.transform = 'none'; el.style.cursor = 'grabbing'; document.body.style.userSelect = 'none'; el.style.zIndex = '9999'; } function md(cx, cy) { if (!d.isDragging || cx === undefined) return; var nx = d.ox + cx - d.sx, ny = d.oy + cy - d.sy; var r = el.getBoundingClientRect(); nx = Math.max(10, Math.min(window.innerWidth - r.width - 10, nx)); ny = Math.max(10, Math.min(window.innerHeight - r.height - 10, ny)); el.style.left = nx + 'px'; el.style.top = ny + 'px'; } function ed() { if (!d.isDragging) return; d.isDragging = false; el.style.cursor = ''; document.body.style.userSelect = ''; el.style.zIndex = ''; } h.addEventListener('mousedown', function(e) { if (e.target.closest('button,input,select,textarea')) return; sd(e.clientX, e.clientY); e.preventDefault(); }); document.addEventListener('mousemove', function(e) { if (!d.isDragging) return; md(e.clientX, e.clientY); e.preventDefault(); }); document.addEventListener('mouseup', function(e) { if (d.isDragging) { ed(); e.preventDefault(); } }); h.addEventListener('touchstart', function(e) { if (e.target.closest('button,input,select,textarea')) return; var t = e.touches[0]; sd(t.clientX, t.clientY); e.preventDefault(); }, { passive: false }); document.addEventListener('touchmove', function(e) { if (!d.isDragging) return; var t = e.touches[0]; md(t.clientX, t.clientY); e.preventDefault(); }, { passive: false }); document.addEventListener('touchend', function(e) { if (d.isDragging) { ed(); e.preventDefault(); } }, { passive: false }); }
 
         // ============================================================
         //  SERVICE WORKER
         // ============================================================
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                var swCode = 'var CACHE_NAME="'+CACHE_NAME+'";self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(key){return key!==CACHE_NAME}).map(function(key){return caches.delete(key)}))}));self.clients.claim()});self.addEventListener("fetch",function(e){if(e.request.url.includes("tile.openstreetmap.org")){e.respondWith(caches.match(e.request).then(function(c){if(c)return c;return fetch(e.request).then(function(n){if(n&&n.status===200){var r=n.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(e.request,r)})}return n}).catch(function(){return new Response("Offline",{status:503})})}))}})';
-                var blob = new Blob([swCode], { type: 'application/javascript' });
-                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(function(){});
-            }
-        }
-        
-        function clearOfflineCache() {
-            if (!confirm('🗂️ Καθαρισμός cache offline χάρτη;\n\nΌλα τα tiles θα διαγραφούν.')) return;
-            if ('caches' in window) {
-                caches.delete(CACHE_NAME).then(function(s) { if (s) showToast('🗂️ Cache καθαρίστηκε', '#6c3483'); caches.open(CACHE_NAME); });
-            }
-        }
+        function registerServiceWorker() { if ('serviceWorker' in navigator) { var sw = 'var CACHE_NAME="'+CACHE_NAME+'";self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(key){return key!==CACHE_NAME}).map(function(key){return caches.delete(key)}))}));self.clients.claim()});self.addEventListener("fetch",function(e){if(e.request.url.includes("tile.openstreetmap.org")){e.respondWith(caches.match(e.request).then(function(c){if(c)return c;return fetch(e.request).then(function(n){if(n&&n.status===200){var r=n.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(e.request,r)})}return n}).catch(function(){return new Response("Offline",{status:503})})}))}})'; navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){}); } }
+        function clearOfflineCache() { if (!confirm('🗂️ Καθαρισμός cache;\nΌλα τα tiles θα διαγραφούν.')) return; if ('caches' in window) { caches.delete(CACHE_NAME).then(function(s) { if (s) showToast('🗂️ Cache καθαρίστηκε', '#6c3483'); caches.open(CACHE_NAME); }); } }
 
         // ============================================================
         //  WAKE LOCK
         // ============================================================
-        async function requestWakeLock() {
-            if (!('wakeLock' in navigator)) { showToast('⚠️ Μη υποστηριζόμενο', '#e67e22'); return; }
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-                wakeLockEnabled = true;
-                document.getElementById('wakeLockBtn').classList.add('active');
-                document.getElementById('wakeLockBtn').innerHTML = '💡✓';
-                showToast('💡 Οθόνη ανοιχτή', '#27ae60');
-                wakeLock.addEventListener('release', function() { wakeLockEnabled = false; document.getElementById('wakeLockBtn').classList.remove('active'); document.getElementById('wakeLockBtn').innerHTML = '💡'; });
-            } catch (err) { wakeLockEnabled = false; document.getElementById('wakeLockBtn').classList.remove('active'); document.getElementById('wakeLockBtn').innerHTML = '💡'; }
-        }
+        async function requestWakeLock() { if (!('wakeLock' in navigator)) { showToast('⚠️ Μη υποστηριζόμενο', '#e67e22'); return; } try { wakeLock = await navigator.wakeLock.request('screen'); wakeLockEnabled = true; document.getElementById('wakeLockBtn').classList.add('active'); document.getElementById('wakeLockBtn').innerHTML = '💡✓'; showToast('💡 Οθόνη ανοιχτή', '#27ae60'); wakeLock.addEventListener('release', function() { wakeLockEnabled = false; document.getElementById('wakeLockBtn').classList.remove('active'); document.getElementById('wakeLockBtn').innerHTML = '💡'; }); } catch(e) { wakeLockEnabled = false; document.getElementById('wakeLockBtn').classList.remove('active'); document.getElementById('wakeLockBtn').innerHTML = '💡'; } }
         async function releaseWakeLock() { if (wakeLock) { try { await wakeLock.release(); wakeLock = null; } catch(e) {} } wakeLockEnabled = false; document.getElementById('wakeLockBtn').classList.remove('active'); document.getElementById('wakeLockBtn').innerHTML = '💡'; }
         function toggleWakeLock() { wakeLockEnabled ? releaseWakeLock() : requestWakeLock(); }
         document.addEventListener('visibilitychange', async function() { if (document.visibilityState === 'visible' && wakeLockEnabled && !wakeLock) await requestWakeLock(); });
@@ -697,34 +455,11 @@
         // ============================================================
         //  ALERT ΑΠΟΚΛΙΣΗΣ
         // ============================================================
-        function updateOffRouteThreshold() {
-            var val = parseInt(document.getElementById('offRouteThresholdInput').value);
-            if (!isNaN(val) && val >= 50 && val <= 1000) { OFF_ROUTE_THRESHOLD = val; try { localStorage.setItem('athos_off_route_threshold', val); } catch(e) {} }
-        }
-        function toggleOffRouteAlert() {
-            offRouteAlertEnabled = !offRouteAlertEnabled;
-            var btn = document.getElementById('offRouteAlertBtn');
-            if (offRouteAlertEnabled) {
-                updateOffRouteThreshold();
-                btn.classList.add('active'); btn.innerHTML = '🚨✓';
-                offRouteAlertDismissed = false; offRouteAlertShown = false;
-                startOffRouteMonitoring();
-                showToast('🚨 Alert απόκλισης (' + OFF_ROUTE_THRESHOLD + 'μ)', '#27ae60');
-            } else { btn.classList.remove('active'); btn.innerHTML = '🚨'; stopOffRouteMonitoring(); hideOffRouteAlert(); }
-        }
+        function updateOffRouteThreshold() { var v = parseInt(document.getElementById('offRouteThresholdInput').value); if (!isNaN(v) && v >= 50 && v <= 1000) { OFF_ROUTE_THRESHOLD = v; try { localStorage.setItem('athos_off_route_threshold', v); } catch(e) {} } }
+        function toggleOffRouteAlert() { offRouteAlertEnabled = !offRouteAlertEnabled; var b = document.getElementById('offRouteAlertBtn'); if (offRouteAlertEnabled) { updateOffRouteThreshold(); b.classList.add('active'); b.innerHTML = '🚨✓'; offRouteAlertDismissed = false; offRouteAlertShown = false; startOffRouteMonitoring(); showToast('🚨 Alert απόκλισης (' + OFF_ROUTE_THRESHOLD + 'μ)', '#27ae60'); } else { b.classList.remove('active'); b.innerHTML = '🚨'; stopOffRouteMonitoring(); hideOffRouteAlert(); } }
         function startOffRouteMonitoring() { stopOffRouteMonitoring(); offRouteCheckInterval = setInterval(checkOffRoute, 5000); }
         function stopOffRouteMonitoring() { if (offRouteCheckInterval) { clearInterval(offRouteCheckInterval); offRouteCheckInterval = null; } }
-        function checkOffRoute() {
-            if (!offRouteAlertEnabled || offRouteAlertDismissed || !lastMainGeometry || !lastKnownPosition) return;
-            var userPoint = L.latLng(lastKnownPosition.lat, lastKnownPosition.lng);
-            var minDist = Infinity;
-            for (var i = 0; i < lastMainGeometry.length; i++) {
-                var d = userPoint.distanceTo(L.latLng(lastMainGeometry[i][1], lastMainGeometry[i][0]));
-                if (d < minDist) minDist = d;
-            }
-            if (minDist > OFF_ROUTE_THRESHOLD && !offRouteAlertShown) showOffRouteAlert(minDist);
-            else if (minDist <= OFF_ROUTE_THRESHOLD && offRouteAlertShown) hideOffRouteAlert();
-        }
+        function checkOffRoute() { if (!offRouteAlertEnabled || offRouteAlertDismissed || !lastMainGeometry || !lastKnownPosition) return; var up = L.latLng(lastKnownPosition.lat, lastKnownPosition.lng); var md = Infinity; for (var i = 0; i < lastMainGeometry.length; i++) { var d = up.distanceTo(L.latLng(lastMainGeometry[i][1], lastMainGeometry[i][0])); if (d < md) md = d; } if (md > OFF_ROUTE_THRESHOLD && !offRouteAlertShown) showOffRouteAlert(md); else if (md <= OFF_ROUTE_THRESHOLD && offRouteAlertShown) hideOffRouteAlert(); }
         function showOffRouteAlert(d) { document.getElementById('offRouteDistance').textContent = 'Απόσταση: ' + Math.round(d) + 'μ'; document.getElementById('offRouteAlert').style.display = 'block'; offRouteAlertShown = true; if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
         function hideOffRouteAlert() { document.getElementById('offRouteAlert').style.display = 'none'; offRouteAlertShown = false; }
         function dismissOffRouteAlert() { offRouteAlertDismissed = true; hideOffRouteAlert(); }
@@ -732,51 +467,8 @@
         // ============================================================
         //  OFFLINE ΧΑΡΤΗΣ
         // ============================================================
-        async function downloadTiles() {
-            if (isDownloadingTiles) { cancelTileDownload(); return; }
-            var bounds = map.getBounds(); var zoom = Math.min(map.getZoom(), 17); if (zoom < 10) zoom = 10;
-            var tileCount = estimateTileCount(bounds, zoom);
-            if (!confirm('📥 Λήψη offline χάρτη\n\n📍 Ορατή περιοχή\n🔍 Zoom ' + Math.max(zoom - 2, 8) + '-' + zoom + '\n📦 ~' + tileCount + ' tiles\n💾 Μόνιμη cache\n\nΤα tiles παραμένουν μετά το κλείσιμο!')) return;
-            isDownloadingTiles = true; downloadCancelRequested = false;
-            document.getElementById('downloadTilesBtn').classList.add('active'); document.getElementById('downloadTilesBtn').innerHTML = '⏹️ Διακοπή';
-            document.getElementById('tileProgress').style.display = 'block';
-            document.getElementById('tileFill').style.width = '0%'; document.getElementById('tilePercent').textContent = '0%'; document.getElementById('tileStatus').textContent = 'Προετοιμασία...';
-            var tiles = []; var minZoom = Math.max(zoom - 2, 8);
-            for (var z = minZoom; z <= zoom; z++) {
-                var tl = projectPoint(bounds.getNorthWest(), z), br = projectPoint(bounds.getSouthEast(), z);
-                for (var x = Math.min(tl.x, br.x); x <= Math.max(tl.x, br.x); x++)
-                    for (var y = Math.min(tl.y, br.y); y <= Math.max(tl.y, br.y); y++)
-                        tiles.push({ z: z, x: x, y: y });
-            }
-            var total = tiles.length, loaded = 0, errors = 0, skipped = 0;
-            var controller = new AbortController(); currentDownloadController = controller;
-            document.getElementById('tileStatus').textContent = 'Λήψη ' + total + ' tiles...';
-            var cache = await caches.open(CACHE_NAME);
-            for (var i = 0; i < tiles.length; i += 10) {
-                if (downloadCancelRequested) break;
-                var batch = tiles.slice(i, i + 10);
-                await Promise.all(batch.map(async function(t) {
-                    if (downloadCancelRequested) return;
-                    var url = 'https://tile.openstreetmap.org/' + t.z + '/' + t.x + '/' + t.y + '.png';
-                    try {
-                        if (await cache.match(url)) { skipped++; return; }
-                        var resp = await fetch(url, { signal: controller.signal });
-                        if (resp.ok) await cache.put(url, resp.clone()); else errors++;
-                    } catch(e) { if (e.name === 'AbortError') downloadCancelRequested = true; else errors++; }
-                    loaded++;
-                    document.getElementById('tileFill').style.width = Math.round((loaded / total) * 100) + '%';
-                    document.getElementById('tilePercent').textContent = Math.round((loaded / total) * 100) + '%';
-                    document.getElementById('tileStatus').textContent = loaded + '/' + total + ' | Σφάλματα: ' + errors + ' | Cache: ' + skipped;
-                }));
-                if (!downloadCancelRequested) await new Promise(function(r) { setTimeout(r, 100); });
-            }
-            isDownloadingTiles = false; currentDownloadController = null;
-            document.getElementById('downloadTilesBtn').classList.remove('active'); document.getElementById('downloadTilesBtn').innerHTML = '📥 Offline';
-            document.getElementById('tileStatus').textContent = downloadCancelRequested ? '⏹️ Ακυρώθηκε (' + loaded + ')' : '✅ ' + loaded + ' tiles!';
-            if (!downloadCancelRequested) { document.getElementById('tileFill').style.width = '100%'; document.getElementById('tilePercent').textContent = '100%'; showToast('✅ Offline χάρτης έτοιμος!', '#27ae60'); }
-            setTimeout(function() { document.getElementById('tileProgress').style.display = 'none'; }, 3000);
-        }
-        function estimateTileCount(bounds, zoom) { var c = 0; for (var z = Math.max(zoom - 2, 8); z <= zoom; z++) { var tl = projectPoint(bounds.getNorthWest(), z), br = projectPoint(bounds.getSouthEast(), z); c += (Math.abs(br.x - tl.x) + 1) * (Math.abs(br.y - tl.y) + 1); } return c; }
+        async function downloadTiles() { if (isDownloadingTiles) { cancelTileDownload(); return; } var b = map.getBounds(), z = Math.min(map.getZoom(), 17); if (z < 10) z = 10; var tc = estimateTileCount(b, z); if (!confirm('📥 Λήψη offline χάρτη\n\n📍 Ορατή περιοχή\n🔍 Zoom ' + Math.max(z - 2, 8) + '-' + z + '\n📦 ~' + tc + ' tiles\n💾 Μόνιμη cache\n\nΤα tiles παραμένουν μετά το κλείσιμο!')) return; isDownloadingTiles = true; downloadCancelRequested = false; document.getElementById('downloadTilesBtn').classList.add('active'); document.getElementById('downloadTilesBtn').innerHTML = '⏹️ Διακοπή'; document.getElementById('tileProgress').style.display = 'block'; document.getElementById('tileFill').style.width = '0%'; document.getElementById('tilePercent').textContent = '0%'; document.getElementById('tileStatus').textContent = 'Προετοιμασία...'; var tiles = []; for (var zz = Math.max(z - 2, 8); zz <= z; zz++) { var tl = projectPoint(b.getNorthWest(), zz), br = projectPoint(b.getSouthEast(), zz); for (var x = Math.min(tl.x, br.x); x <= Math.max(tl.x, br.x); x++) for (var y = Math.min(tl.y, br.y); y <= Math.max(tl.y, br.y); y++) tiles.push({ z: zz, x: x, y: y }); } var total = tiles.length, loaded = 0, errors = 0, skipped = 0; var ctrl = new AbortController(); currentDownloadController = ctrl; document.getElementById('tileStatus').textContent = 'Λήψη ' + total + ' tiles...'; var cache = await caches.open(CACHE_NAME); for (var i = 0; i < tiles.length; i += 10) { if (downloadCancelRequested) break; await Promise.all(tiles.slice(i, i + 10).map(async function(t) { if (downloadCancelRequested) return; var url = 'https://tile.openstreetmap.org/' + t.z + '/' + t.x + '/' + t.y + '.png'; try { if (await cache.match(url)) { skipped++; return; } var resp = await fetch(url, { signal: ctrl.signal }); if (resp.ok) await cache.put(url, resp.clone()); else errors++; } catch(e) { if (e.name === 'AbortError') downloadCancelRequested = true; else errors++; } loaded++; document.getElementById('tileFill').style.width = Math.round((loaded / total) * 100) + '%'; document.getElementById('tilePercent').textContent = Math.round((loaded / total) * 100) + '%'; document.getElementById('tileStatus').textContent = loaded + '/' + total + ' | ❌' + errors + ' | ✓' + skipped; })); if (!downloadCancelRequested) await new Promise(function(r) { setTimeout(r, 100); }); } isDownloadingTiles = false; currentDownloadController = null; document.getElementById('downloadTilesBtn').classList.remove('active'); document.getElementById('downloadTilesBtn').innerHTML = '📥 Offline'; document.getElementById('tileStatus').textContent = downloadCancelRequested ? '⏹️ Ακυρώθηκε (' + loaded + ')' : '✅ ' + loaded + ' tiles!'; if (!downloadCancelRequested) { document.getElementById('tileFill').style.width = '100%'; document.getElementById('tilePercent').textContent = '100%'; showToast('✅ Offline χάρτης έτοιμος!', '#27ae60'); } setTimeout(function() { document.getElementById('tileProgress').style.display = 'none'; }, 3000); }
+        function estimateTileCount(b, z) { var c = 0; for (var zz = Math.max(z - 2, 8); zz <= z; zz++) { var tl = projectPoint(b.getNorthWest(), zz), br = projectPoint(b.getSouthEast(), zz); c += (Math.abs(br.x - tl.x) + 1) * (Math.abs(br.y - tl.y) + 1); } return c; }
         function cancelTileDownload() { downloadCancelRequested = true; if (currentDownloadController) currentDownloadController.abort(); }
         function projectPoint(ll, z) { var n = Math.pow(2, z); return { x: Math.floor((ll.lng + 180) / 360 * n), y: Math.floor((1 - Math.log(Math.tan(ll.lat * Math.PI / 180) + 1 / Math.cos(ll.lat * Math.PI / 180)) / Math.PI) / 2 * n) }; }
 
@@ -803,266 +495,76 @@
                 makeDraggable(document.getElementById('routeDropdownContainer'), '.routes-header');
                 makeDraggable(document.getElementById('sosContainer'), '.sos-header');
             }, 500);
-            
-            // Αρχική τοποθέτηση υδατογραφήματος
             updateWatermarkPosition();
-            
-            // Ενημέρωση θέσης υδατογραφήματος όταν μετακινείται ο χάρτης
             map.on('move', updateWatermarkPosition);
             map.on('zoom', updateWatermarkPosition);
         }
 
         // ============================================================
-        //  ΥΔΑΤΟΓΡΑΦΗΜΑ - ΕΝΗΜΕΡΩΣΗ ΘΕΣΗΣ
+        //  ΥΔΑΤΟΓΡΑΦΗΜΑ - ΠΙΟ ΟΡΑΤΟ
         // ============================================================
         function updateWatermarkPosition() {
-            var watermark = document.getElementById('watermark');
-            if (!watermark || !map) return;
-            
-            var mapContainer = document.getElementById('mapContainer');
-            var containerWidth = mapContainer.offsetWidth;
-            var containerHeight = mapContainer.offsetHeight;
-            
-            // Το υδατογράφημα στο δεξιό μισό, περίπου στο 65-70% του πλάτους
-            var leftPercent = 68;
-            var topPercent = 50;
-            
-            // Σε μικρές οθόνες, λίγο πιο αριστερά για να φαίνεται
-            if (containerWidth < 400) {
-                leftPercent = 62;
-            } else if (containerWidth > 800) {
-                leftPercent = 70;
-            }
-            
-            watermark.style.left = leftPercent + '%';
-            watermark.style.top = topPercent + '%';
-            
-            // Προσαρμογή μεγέθους γραμματοσειράς ανάλογα με το πλάτος
-            var fontSize = Math.max(14, Math.min(28, containerWidth / 30));
-            watermark.style.fontSize = fontSize + 'px';
-            
-            // Εναλλαγή ορατότητας ανάλογα με το zoom (πιο ορατό σε κοντινό zoom)
+            var wm = document.getElementById('watermark');
+            if (!wm || !map) return;
+            var cw = document.getElementById('mapContainer').offsetWidth;
+            var lp = cw < 400 ? 62 : cw > 800 ? 70 : 68;
+            wm.style.left = lp + '%';
+            wm.style.top = '50%';
+            var fs = Math.max(15, Math.min(30, cw / 28));
+            wm.style.fontSize = fs + 'px';
             var zoom = map.getZoom();
-            var opacity = Math.max(0.06, Math.min(0.15, zoom / 100));
-            watermark.style.opacity = opacity;
+            var opacity = Math.max(0.12, Math.min(0.25, zoom / 80));
+            wm.style.opacity = opacity;
         }
 
-        function createBlueDot(lat, lng) {
-            if (userBlueDot) { map.removeLayer(userBlueDot); userBlueDot = null; }
-            userBlueDot = L.marker([lat, lng], { icon: L.divIcon({ html: '<div class="blue-dot"><div class="blue-dot-glow"></div></div>', className: '', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000 }).addTo(map);
-        }
-
-        function updateBlueDot(lat, lng, heading) {
-            if (!userBlueDot) createBlueDot(lat, lng); else userBlueDot.setLatLng([lat, lng]);
-            if (heading != null) { var el = userBlueDot.getElement(); if (el) { var dot = el.querySelector('.blue-dot'); if (dot) dot.style.transform = 'rotate(' + heading + 'deg)'; } }
-            if (!isMapInteracting && !map.getBounds().contains(L.latLng(lat, lng))) map.panTo([lat, lng], { animate: true, duration: 0.5 });
-        }
-
-        function rotateMap(angle) { if (isRotationPaused || isNaN(angle)) return; mapRotation = angle; var a = document.getElementById('compassArrow'); if (a) a.style.transform = 'rotate(' + (-angle) + 'deg)'; }
+        function createBlueDot(lat, lng) { if (userBlueDot) { map.removeLayer(userBlueDot); userBlueDot = null; } userBlueDot = L.marker([lat, lng], { icon: L.divIcon({ html: '<div class="blue-dot"><div class="blue-dot-glow"></div></div>', className: '', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000 }).addTo(map); }
+        function updateBlueDot(lat, lng, h) { if (!userBlueDot) createBlueDot(lat, lng); else userBlueDot.setLatLng([lat, lng]); if (h != null) { var el = userBlueDot.getElement(); if (el) { var d = el.querySelector('.blue-dot'); if (d) d.style.transform = 'rotate(' + h + 'deg)'; } } if (!isMapInteracting && !map.getBounds().contains(L.latLng(lat, lng))) map.panTo([lat, lng], { animate: true, duration: 0.5 }); }
+        function rotateMap(a) { if (isRotationPaused || isNaN(a)) return; mapRotation = a; var ar = document.getElementById('compassArrow'); if (ar) ar.style.transform = 'rotate(' + (-a) + 'deg)'; }
         function resetRotation() { mapRotation = 0; document.getElementById('compassArrow').style.transform = 'rotate(0deg)'; }
-        function calculateHeading(p1, p2) {
-            if (!p1 || !p2) return null;
-            var lat1 = p1.lat * Math.PI / 180, lat2 = p2.lat * Math.PI / 180, dLng = (p2.lng - p1.lng) * Math.PI / 180;
-            return ((Math.atan2(Math.sin(dLng) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng)) * 180 / Math.PI) + 360) % 360;
-        }
-        function pauseRotation(t) { isRotationPaused = true; if (rotationPauseTimeout) clearTimeout(rotationPauseTimeout); if (t) rotationPauseTimeout = setTimeout(function() { isRotationPaused = false; }, 3000); }
-        function resumeRotation() { isRotationPaused = false; if (rotationPauseTimeout) clearTimeout(rotationPauseTimeout); }
+        function calculateHeading(p1, p2) { if (!p1 || !p2) return null; var lat1 = p1.lat * Math.PI / 180, lat2 = p2.lat * Math.PI / 180, dLng = (p2.lng - p1.lng) * Math.PI / 180; return ((Math.atan2(Math.sin(dLng) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng)) * 180 / Math.PI) + 360) % 360; }
 
         // ============================================================
         //  ΕΝΤΟΠΙΣΜΟΣ
         // ============================================================
-        function locateUser(zoomToLocation) {
-            if (isLocationTracking) { stopLocationTracking(); return; }
-            document.getElementById('statusText').innerHTML = '⏳ GPS...';
-            if (navigator.geolocation) {
-                if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; }
-                document.getElementById('locateBtn').innerHTML = '⏹️ Διακοπή';
-                var bb = document.getElementById('bottomLocateBtn'); if (bb) bb.innerHTML = '⏹️ Διακοπή';
-                isLocationTracking = true; isMapInteracting = false;
-                locationWatchId = navigator.geolocation.watchPosition(
-                    function(pos) { var lat = pos.coords.latitude, lng = pos.coords.longitude; lastKnownPosition = { lat: lat, lng: lng }; updateBlueDot(lat, lng, calculateHeadingFromHistory(lat, lng)); document.getElementById('statusText').innerHTML = '📍 ' + lat.toFixed(4) + ', ' + lng.toFixed(4); initialLocateDone = true; try { localStorage.setItem('athos_last_location', JSON.stringify({ lat: lat, lng: lng })); } catch(e) {} },
-                    function() { document.getElementById('locateBtn').innerHTML = '📍 GPS'; if (bb) bb.innerHTML = '📍 GPS'; isLocationTracking = false; locateByIP(zoomToLocation); },
-                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
-                );
-            } else locateByIP(zoomToLocation);
-        }
+        function locateUser(zl) { if (isLocationTracking) { stopLocationTracking(); return; } document.getElementById('statusText').innerHTML = '⏳ GPS...'; if (navigator.geolocation) { if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } document.getElementById('locateBtn').innerHTML = '⏹️ Διακοπή'; var bb = document.getElementById('bottomLocateBtn'); if (bb) bb.innerHTML = '⏹️ Διακοπή'; isLocationTracking = true; isMapInteracting = false; locationWatchId = navigator.geolocation.watchPosition(function(pos) { var lat = pos.coords.latitude, lng = pos.coords.longitude; lastKnownPosition = { lat: lat, lng: lng }; updateBlueDot(lat, lng, calculateHeadingFromHistory(lat, lng)); document.getElementById('statusText').innerHTML = '📍 ' + lat.toFixed(4) + ', ' + lng.toFixed(4); initialLocateDone = true; try { localStorage.setItem('athos_last_location', JSON.stringify({ lat: lat, lng: lng })); } catch(e) {} }, function() { document.getElementById('locateBtn').innerHTML = '📍 GPS'; if (bb) bb.innerHTML = '📍 GPS'; isLocationTracking = false; locateByIP(zl); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }); } else locateByIP(zl); }
         function stopLocationTracking() { if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } isLocationTracking = false; document.getElementById('locateBtn').innerHTML = '📍 GPS'; var bb = document.getElementById('bottomLocateBtn'); if (bb) bb.innerHTML = '📍 GPS'; document.getElementById('statusText').innerHTML = 'Πατήστε GPS'; }
-        function locateByIP(zoomToLocation) {
-            fetch('https://ipapi.co/json/').then(function(r) { return r.json(); }).then(function(d) {
-                if (d.latitude) { lastKnownPosition = { lat: d.latitude, lng: d.longitude }; updateBlueDot(d.latitude, d.longitude); if (zoomToLocation !== false) map.flyTo([d.latitude, d.longitude], 13, { duration: 1 }); }
-                initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; isLocationTracking = false;
-            }).catch(function() {
-                var s = null; try { s = JSON.parse(localStorage.getItem('athos_last_location')); } catch(e) {}
-                if (s && s.lat) { updateBlueDot(s.lat, s.lng); if (zoomToLocation !== false) map.flyTo([s.lat, s.lng], 13, { duration: 1 }); }
-                else updateBlueDot(38.0, 23.7);
-                initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; isLocationTracking = false;
-            });
-        }
+        function locateByIP(zl) { fetch('https://ipapi.co/json/').then(function(r) { return r.json(); }).then(function(d) { if (d.latitude) { lastKnownPosition = { lat: d.latitude, lng: d.longitude }; updateBlueDot(d.latitude, d.longitude); if (zl !== false) map.flyTo([d.latitude, d.longitude], 13, { duration: 1 }); } initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; isLocationTracking = false; }).catch(function() { var s = null; try { s = JSON.parse(localStorage.getItem('athos_last_location')); } catch(e) {} if (s && s.lat) { updateBlueDot(s.lat, s.lng); if (zl !== false) map.flyTo([s.lat, s.lng], 13, { duration: 1 }); } else updateBlueDot(38.0, 23.7); initialLocateDone = true; document.getElementById('locateBtn').innerHTML = '📍 GPS'; isLocationTracking = false; }); }
         function calculateHeadingFromHistory(lat, lng) { positionHistory.push({ lat: lat, lng: lng }); if (positionHistory.length > 10) positionHistory.shift(); if (positionHistory.length < 2) return null; return calculateHeading(positionHistory[positionHistory.length - 2], positionHistory[positionHistory.length - 1]); }
 
         // ============================================================
         //  ΣΗΜΕΙΑ & ΦΩΤΟΓΡΑΦΙΕΣ
         // ============================================================
-        function showClickPopup(e) {
-            var c = document.createElement('div');
-            c.innerHTML = '<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🚩 Start</button><button id="setEndBtn" style="background:#b22222;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📍 Ενδιάμεσο</button><button id="photoHereBtn" style="background:#8e44ad;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📸</button>';
-            var p = L.popup().setLatLng(e.latlng).setContent(c).openOn(map);
-            setTimeout(function() {
-                document.getElementById('setStartBtn')?.addEventListener('click', function() { setStartPoint(e.latlng); map.closePopup(); });
-                document.getElementById('setEndBtn')?.addEventListener('click', function() { setEndPoint(e.latlng); map.closePopup(); });
-                document.getElementById('addWpBtn')?.addEventListener('click', function() { addWaypoint(e.latlng); map.closePopup(); });
-                document.getElementById('photoHereBtn')?.addEventListener('click', function() { map.closePopup(); takePhoto(e.latlng); });
-            }, 100);
-        }
-
+        function showClickPopup(e) { var c = document.createElement('div'); c.innerHTML = '<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🚩 Start</button><button id="setEndBtn" style="background:#b22222;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📍 Ενδιάμεσο</button><button id="photoHereBtn" style="background:#8e44ad;color:white;border:none;padding:4px 8px;border-radius:5px;margin:2px;cursor:pointer;font-size:10px;">📸</button>'; var p = L.popup().setLatLng(e.latlng).setContent(c).openOn(map); setTimeout(function() { document.getElementById('setStartBtn')?.addEventListener('click', function() { setStartPoint(e.latlng); map.closePopup(); }); document.getElementById('setEndBtn')?.addEventListener('click', function() { setEndPoint(e.latlng); map.closePopup(); }); document.getElementById('addWpBtn')?.addEventListener('click', function() { addWaypoint(e.latlng); map.closePopup(); }); document.getElementById('photoHereBtn')?.addEventListener('click', function() { map.closePopup(); takePhoto(e.latlng); }); }, 100); }
         function setStartPoint(ll) { if (startMarker) map.removeLayer(startMarker); startPoint = ll; startName = prompt('Όνομα:', 'Αφετηρία') || 'Αφετηρία'; startMarker = L.marker(ll, { icon: getColorIcon('green'), draggable: true }).addTo(map).bindPopup('🚩 ' + startName); startMarker.on('dragend', function(e) { startPoint = e.target.getLatLng(); calculateRoute(); saveLastRouteState(); }); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Αφετηρία: ' + startName, 'start'); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
         function setEndPoint(ll) { if (endMarker) map.removeLayer(endMarker); endPoint = ll; endName = prompt('Όνομα:', 'Προορισμός') || 'Προορισμός'; endMarker = L.marker(ll, { icon: getColorIcon('red'), draggable: true }).addTo(map).bindPopup('🏁 ' + endName); endMarker.on('dragend', function(e) { endPoint = e.target.getLatLng(); calculateRoute(); saveLastRouteState(); }); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Προορισμός: ' + endName, 'end'); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
         function addWaypoint(ll) { var n = prompt('Όνομα:', 'Σημείο ' + (waypoints.length + 1)) || 'Σημείο ' + (waypoints.length); waypoints.push(ll); waypointNames.push(n); waypointPhotos.push(null); var idx = waypoints.length - 1; var m = L.marker(ll, { icon: getColorIcon('blue'), draggable: true }).addTo(map); updateWaypointPopup(m, idx); m.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); saveLastRouteState(); }); markers.push(m); if (confirm('Φωτογραφία;')) takePhotoForPoint(ll, 'Σημείο: ' + n, 'waypoint_' + idx); calculateRoute(); updateWaypointsPanel(); saveLastRouteState(); }
-        
-        function updateWaypointPopup(marker, idx) {
-            var name = waypointNames[idx] || 'Σημείο ' + (idx + 1);
-            var ph = waypointPhotos[idx] ? '<img src="' + waypointPhotos[idx] + '" style="width:26px;height:26px;border-radius:50%;border:2px solid #8e44ad;display:block;margin:3px auto;">' : '';
-            marker.setPopupContent('📍 <strong>' + name + '</strong><br>' + ph + '<div style="display:flex;gap:3px;margin-top:4px;"><button onclick="renameWaypoint(' + idx + ')" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">✏️</button><button onclick="removeWaypoint(' + idx + ')" style="background:#b22222;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">✖</button><button onclick="addPhotoToWaypoint(' + idx + ')" style="background:#8e44ad;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">📸</button></div>');
-        }
-        
+        function updateWaypointPopup(marker, idx) { var n = waypointNames[idx] || 'Σημείο ' + (idx + 1); var ph = waypointPhotos[idx] ? '<img src="' + waypointPhotos[idx] + '" style="width:26px;height:26px;border-radius:50%;border:2px solid #8e44ad;display:block;margin:3px auto;">' : ''; marker.setPopupContent('📍 <strong>' + n + '</strong><br>' + ph + '<div style="display:flex;gap:3px;margin-top:4px;"><button onclick="renameWaypoint(' + idx + ')" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">✏️</button><button onclick="removeWaypoint(' + idx + ')" style="background:#b22222;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">✖</button><button onclick="addPhotoToWaypoint(' + idx + ')" style="background:#8e44ad;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">📸</button></div>'); }
         window.renameWaypoint = function(idx) { var nn = prompt('Νέο όνομα:', waypointNames[idx]); if (nn && nn.trim()) { waypointNames[idx] = nn.trim(); if (markers[idx]) updateWaypointPopup(markers[idx], idx); updateWaypointsPanel(); saveLastRouteState(); } };
         window.addPhotoToWaypoint = function(idx) { takePhotoForPoint(waypoints[idx], 'Σημείο: ' + waypointNames[idx], 'waypoint_' + idx); };
         window.removeWaypoint = function(idx) { if (confirm('Διαγραφή;')) { if (markers[idx]) map.removeLayer(markers[idx]); waypoints.splice(idx, 1); waypointNames.splice(idx, 1); waypointPhotos.splice(idx, 1); markers.splice(idx, 1); for (var i = 0; i < markers.length; i++) if (markers[i]) updateWaypointPopup(markers[i], i); updateWaypointsPanel(); calculateRoute(); saveLastRouteState(); } };
-
-        function takePhotoForPoint(position, label, pointKey) {
-            var overlay = document.createElement('div'); overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-            var box = document.createElement('div'); box.style.cssText = 'background:white;border-radius:14px;padding:16px;max-width:280px;width:90%;text-align:center;';
-            box.innerHTML = '<h3>📸 ' + label + '</h3><button id="camPt" style="background:#8e44ad;color:white;border:none;padding:10px;border-radius:8px;font-size:14px;width:100%;margin:5px 0;cursor:pointer;">📷 Κάμερα</button><button id="galPt" style="background:#2980b9;color:white;border:none;padding:10px;border-radius:8px;font-size:14px;width:100%;margin:5px 0;cursor:pointer;">🖼️ Συλλογή</button><button id="canPt" style="background:#888;color:white;border:none;padding:8px;border-radius:8px;font-size:13px;width:100%;cursor:pointer;">✕ Παράλειψη</button>';
-            overlay.appendChild(box); document.body.appendChild(overlay);
-            document.getElementById('camPt').addEventListener('click', function() { document.body.removeChild(overlay); document.getElementById('cameraInput').click(); document.getElementById('cameraInput').onchange = function(e) { if (e.target.files[0]) processPhotoForPoint(e.target.files[0], position, label, pointKey); this.value = ''; }; });
-            document.getElementById('galPt').addEventListener('click', function() { document.body.removeChild(overlay); document.getElementById('galleryInput').click(); document.getElementById('galleryInput').onchange = function(e) { if (e.target.files[0]) processPhotoForPoint(e.target.files[0], position, label, pointKey); this.value = ''; }; });
-            document.getElementById('canPt').addEventListener('click', function() { document.body.removeChild(overlay); });
-        }
-
-        function processPhotoForPoint(file, position, label, pointKey) {
-            var reader = new FileReader();
-            reader.onload = function(ev) {
-                var photo = { image: ev.target.result, lat: position.lat, lng: position.lng, note: label + ' - ' + new Date().toLocaleString('el'), filename: file.name || 'photo.jpg', timestamp: new Date().toISOString() };
-                routePhotos.push(photo); addPhotoMarker(photo); updatePhotoList(); updateInfo();
-                if (pointKey === 'start') startPhoto = ev.target.result;
-                else if (pointKey === 'end') endPhoto = ev.target.result;
-                else if (pointKey && pointKey.startsWith('waypoint_')) { var idx = parseInt(pointKey.split('_')[1]); if (!isNaN(idx) && idx < waypointPhotos.length) { waypointPhotos[idx] = ev.target.result; if (markers[idx]) updateWaypointPopup(markers[idx], idx); } }
-                pointPhotos[pointKey] = ev.target.result; updateWaypointsPanel(); saveLastRouteState();
-            };
-            reader.readAsDataURL(file);
-        }
-
+        function takePhotoForPoint(pos, label, pk) { var ov = document.createElement('div'); ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;'; var bx = document.createElement('div'); bx.style.cssText = 'background:white;border-radius:14px;padding:16px;max-width:280px;width:90%;text-align:center;'; bx.innerHTML = '<h3>📸 ' + label + '</h3><button id="camPt" style="background:#8e44ad;color:white;border:none;padding:10px;border-radius:8px;font-size:14px;width:100%;margin:5px 0;cursor:pointer;">📷 Κάμερα</button><button id="galPt" style="background:#2980b9;color:white;border:none;padding:10px;border-radius:8px;font-size:14px;width:100%;margin:5px 0;cursor:pointer;">🖼️ Συλλογή</button><button id="canPt" style="background:#888;color:white;border:none;padding:8px;border-radius:8px;font-size:13px;width:100%;cursor:pointer;">✕ Παράλειψη</button>'; ov.appendChild(bx); document.body.appendChild(ov); document.getElementById('camPt').addEventListener('click', function() { document.body.removeChild(ov); document.getElementById('cameraInput').click(); document.getElementById('cameraInput').onchange = function(e) { if (e.target.files[0]) processPhotoForPoint(e.target.files[0], pos, label, pk); this.value = ''; }; }); document.getElementById('galPt').addEventListener('click', function() { document.body.removeChild(ov); document.getElementById('galleryInput').click(); document.getElementById('galleryInput').onchange = function(e) { if (e.target.files[0]) processPhotoForPoint(e.target.files[0], pos, label, pk); this.value = ''; }; }); document.getElementById('canPt').addEventListener('click', function() { document.body.removeChild(ov); }); }
+        function processPhotoForPoint(file, pos, label, pk) { var r = new FileReader(); r.onload = function(ev) { var ph = { image: ev.target.result, lat: pos.lat, lng: pos.lng, note: label + ' - ' + new Date().toLocaleString('el'), filename: file.name || 'photo.jpg', timestamp: new Date().toISOString() }; routePhotos.push(ph); addPhotoMarker(ph); updatePhotoList(); updateInfo(); if (pk === 'start') startPhoto = ev.target.result; else if (pk === 'end') endPhoto = ev.target.result; else if (pk && pk.startsWith('waypoint_')) { var idx = parseInt(pk.split('_')[1]); if (!isNaN(idx) && idx < waypointPhotos.length) { waypointPhotos[idx] = ev.target.result; if (markers[idx]) updateWaypointPopup(markers[idx], idx); } } pointPhotos[pk] = ev.target.result; updateWaypointsPanel(); saveLastRouteState(); }; r.readAsDataURL(file); }
         var pendingPhotoPosition = null;
-        function takePhoto(position) {
-            if (position) pendingPhotoPosition = position;
-            var overlay = document.createElement('div'); overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-            var box = document.createElement('div'); box.style.cssText = 'background:white;border-radius:14px;padding:16px;max-width:280px;width:90%;text-align:center;';
-            box.innerHTML = '<h3>📸 Λήψη</h3><button id="cam" style="background:#8e44ad;color:white;border:none;padding:10px;border-radius:8px;font-size:14px;width:100%;margin:5px 0;cursor:pointer;">📷 Κάμερα</button><button id="gal" style="background:#2980b9;color:white;border:none;padding:10px;border-radius:8px;font-size:14px;width:100%;margin:5px 0;cursor:pointer;">🖼️ Συλλογή</button><button id="can" style="background:#888;color:white;border:none;padding:8px;border-radius:8px;font-size:13px;width:100%;cursor:pointer;">✕ Ακύρωση</button>';
-            overlay.appendChild(box); document.body.appendChild(overlay);
-            document.getElementById('cam').addEventListener('click', function() { document.body.removeChild(overlay); document.getElementById('cameraInput').click(); document.getElementById('cameraInput').onchange = function(e) { if (e.target.files[0]) processPhotoFile(e.target.files[0]); this.value = ''; }; });
-            document.getElementById('gal').addEventListener('click', function() { document.body.removeChild(overlay); document.getElementById('galleryInput').click(); document.getElementById('galleryInput').onchange = function(e) { if (e.target.files[0]) processPhotoFile(e.target.files[0]); this.value = ''; }; });
-            document.getElementById('can').addEventListener('click', function() { document.body.removeChild(overlay); pendingPhotoPosition = null; });
-        }
+        function takePhoto(pos) { if (pos) pendingPhotoPosition = pos; var ov = document.createElement('div'); ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;'; var bx = document.createElement('div'); bx.style.cssText = 'background:white;border-radius:14px;padding:16px;max-width:280px;width:90%;text-align:center;'; bx.innerHTML = '<h3>📸 Λήψη</h3><button id="cam" style="background:#8e44ad;color:white;border:none;padding:10px;border-radius:8px;font-size:14px;width:100%;margin:5px 0;cursor:pointer;">📷 Κάμερα</button><button id="gal" style="background:#2980b9;color:white;border:none;padding:10px;border-radius:8px;font-size:14px;width:100%;margin:5px 0;cursor:pointer;">🖼️ Συλλογή</button><button id="can" style="background:#888;color:white;border:none;padding:8px;border-radius:8px;font-size:13px;width:100%;cursor:pointer;">✕ Ακύρωση</button>'; ov.appendChild(bx); document.body.appendChild(ov); document.getElementById('cam').addEventListener('click', function() { document.body.removeChild(ov); document.getElementById('cameraInput').click(); document.getElementById('cameraInput').onchange = function(e) { if (e.target.files[0]) processPhotoFile(e.target.files[0]); this.value = ''; }; }); document.getElementById('gal').addEventListener('click', function() { document.body.removeChild(ov); document.getElementById('galleryInput').click(); document.getElementById('galleryInput').onchange = function(e) { if (e.target.files[0]) processPhotoFile(e.target.files[0]); this.value = ''; }; }); document.getElementById('can').addEventListener('click', function() { document.body.removeChild(ov); pendingPhotoPosition = null; }); }
+        function processPhotoFile(file) { var r = new FileReader(); r.onload = function(ev) { var pos = pendingPhotoPosition || (userBlueDot ? userBlueDot.getLatLng() : map.getCenter()); pendingPhotoPosition = null; var note = prompt('Σημείωση:', ''); routePhotos.push({ image: ev.target.result, lat: pos.lat, lng: pos.lng, note: note || '', filename: file.name, timestamp: new Date().toISOString() }); addPhotoMarker(routePhotos[routePhotos.length - 1]); updatePhotoList(); updateInfo(); saveLastRouteState(); }; r.readAsDataURL(file); }
+        function addPhotoMarker(ph) { var ic = L.divIcon({ className: 'photo-marker', html: '<img src="' + ph.image + '" alt="photo">', iconSize: [32, 32], iconAnchor: [16, 16] }); photoMarkers.push(L.marker([ph.lat, ph.lng], { icon: ic }).addTo(map).bindPopup('<div style="max-width:160px;"><img src="' + ph.image + '" style="max-width:150px;max-height:150px;border-radius:8px;"><div style="font-size:10px;">' + (ph.note || '') + '</div></div>')); }
+        function updatePhotoList() {}
 
-        function processPhotoFile(file) {
-            var reader = new FileReader();
-            reader.onload = function(ev) {
-                var pos = pendingPhotoPosition || (userBlueDot ? userBlueDot.getLatLng() : map.getCenter()); pendingPhotoPosition = null;
-                var note = prompt('Σημείωση:', '');
-                routePhotos.push({ image: ev.target.result, lat: pos.lat, lng: pos.lng, note: note || '', filename: file.name, timestamp: new Date().toISOString() });
-                addPhotoMarker(routePhotos[routePhotos.length - 1]); updatePhotoList(); updateInfo(); saveLastRouteState();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function addPhotoMarker(photo) {
-            var icon = L.divIcon({ className: 'photo-marker', html: '<img src="' + photo.image + '" alt="photo">', iconSize: [32, 32], iconAnchor: [16, 16] });
-            photoMarkers.push(L.marker([photo.lat, photo.lng], { icon: icon }).addTo(map).bindPopup('<div style="max-width:160px;"><img src="' + photo.image + '" style="max-width:150px;max-height:150px;border-radius:8px;"><div style="font-size:10px;">' + (photo.note || '') + '</div></div>'));
-        }
-
-        function updatePhotoList() { /* placeholder - μπορεί να επεκταθεί */ }
-        
         // ============================================================
         //  ΥΠΟΛΟΓΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ
         // ============================================================
-        async function calculateRoute() {
-            if (!startPoint || !endPoint) return;
-            var allPoints = [startPoint].concat(waypoints).concat([endPoint]);
-            for (var i = 0; i < routeLines.length; i++) map.removeLayer(routeLines[i]); routeLines = [];
-            try {
-                var coords = allPoints.map(function(p) { return [p.lng, p.lat]; });
-                var resp = await fetch('https://api.openrouteservice.org/v2/directions/foot-hiking', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': ORS_API_KEY }, body: JSON.stringify({ coordinates: coords, preference: 'recommended', units: 'km', geometry: true, geometry_format: 'geojson' }) });
-                if (!resp.ok) throw new Error('ORS');
-                var data = await resp.json();
-                if (!data.features?.[0]) throw new Error('No route');
-                lastMainGeometry = data.features[0].geometry.coordinates;
-                lastMainDistance = (data.features[0].properties?.summary?.distance || 0) / 1000;
-                var ll = lastMainGeometry.map(function(c) { return [c[1], c[0]]; });
-                routeLines.push(L.polyline(ll, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map));
-                map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60] });
-                updateInfo(); saveLastRouteState(); offRouteAlertDismissed = false;
-            } catch(e) {
-                try { await calculateRouteGraphHopper(allPoints); } catch(e2) { alert('Αποτυχία υπολογισμού.'); }
-            }
-        }
-        
-        async function calculateRouteGraphHopper(allPoints) {
-            var url = 'https://graphhopper.com/api/1/route?key=' + GRAPHHOPPER_API_KEY + '&profile=foot&points_encoded=false&calc_points=true';
-            allPoints.forEach(function(p) { url += '&point=' + p.lat + ',' + p.lng; });
-            var resp = await fetch(url); var data = await resp.json();
-            if (data.paths?.[0]) {
-                lastMainGeometry = data.paths[0].points.coordinates; lastMainDistance = data.paths[0].distance / 1000;
-                routeLines.push(L.polyline(lastMainGeometry.map(function(c) { return [c[1], c[0]]; }), { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map));
-                map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60] });
-                updateInfo(); saveLastRouteState(); offRouteAlertDismissed = false;
-            }
-        }
-
-        function updateInfo() {
-            var speed = parseFloat(document.getElementById('speedSelect').value || 4);
-            if (lastMainDistance !== null) {
-                document.getElementById('dist1').innerText = lastMainDistance.toFixed(2);
-                document.getElementById('time1').innerText = formatTime(lastMainDistance / speed);
-                document.getElementById('difficultyRating').innerText = lastMainDistance > 20 ? 'Δύσκολη' : lastMainDistance > 10 ? 'Μέτρια' : 'Εύκολη';
-            }
-            document.getElementById('photoCount').innerText = routePhotos.length;
-        }
-        
+        async function calculateRoute() { if (!startPoint || !endPoint) return; var allP = [startPoint].concat(waypoints).concat([endPoint]); for (var i = 0; i < routeLines.length; i++) map.removeLayer(routeLines[i]); routeLines = []; try { var coords = allP.map(function(p) { return [p.lng, p.lat]; }); var resp = await fetch('https://api.openrouteservice.org/v2/directions/foot-hiking', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': ORS_API_KEY }, body: JSON.stringify({ coordinates: coords, preference: 'recommended', units: 'km', geometry: true, geometry_format: 'geojson' }) }); if (!resp.ok) throw new Error('ORS'); var data = await resp.json(); if (!data.features?.[0]) throw new Error('No route'); lastMainGeometry = data.features[0].geometry.coordinates; lastMainDistance = (data.features[0].properties?.summary?.distance || 0) / 1000; var ll = lastMainGeometry.map(function(c) { return [c[1], c[0]]; }); routeLines.push(L.polyline(ll, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map)); map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60] }); updateInfo(); saveLastRouteState(); offRouteAlertDismissed = false; } catch(e) { try { await calculateRouteGraphHopper(allP); } catch(e2) { alert('Αποτυχία υπολογισμού.'); } } }
+        async function calculateRouteGraphHopper(allP) { var url = 'https://graphhopper.com/api/1/route?key=' + GRAPHHOPPER_API_KEY + '&profile=foot&points_encoded=false&calc_points=true'; allP.forEach(function(p) { url += '&point=' + p.lat + ',' + p.lng; }); var resp = await fetch(url); var data = await resp.json(); if (data.paths?.[0]) { lastMainGeometry = data.paths[0].points.coordinates; lastMainDistance = data.paths[0].distance / 1000; routeLines.push(L.polyline(lastMainGeometry.map(function(c) { return [c[1], c[0]]; }), { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map)); map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60] }); updateInfo(); saveLastRouteState(); offRouteAlertDismissed = false; } }
+        function updateInfo() { var sp = parseFloat(document.getElementById('speedSelect').value || 4); if (lastMainDistance !== null) { document.getElementById('dist1').innerText = lastMainDistance.toFixed(2); document.getElementById('time1').innerText = formatTime(lastMainDistance / sp); document.getElementById('difficultyRating').innerText = lastMainDistance > 20 ? 'Δύσκολη' : lastMainDistance > 10 ? 'Μέτρια' : 'Εύκολη'; } document.getElementById('photoCount').innerText = routePhotos.length; }
         function resetInfo() { document.getElementById('dist1').innerText = '-'; document.getElementById('time1').innerText = '-'; document.getElementById('difficultyRating').innerText = '-'; document.getElementById('photoCount').innerText = '0'; document.getElementById('statusText').innerHTML = 'Πατήστε GPS'; }
-        
-        function clearAll() {
-            if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
-            if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
-            for (var i = 0; i < markers.length; i++) map.removeLayer(markers[i]); markers = []; waypoints = []; waypointNames = []; waypointPhotos = [];
-            for (var i = 0; i < routeLines.length; i++) map.removeLayer(routeLines[i]); routeLines = [];
-            for (var i = 0; i < photoMarkers.length; i++) map.removeLayer(photoMarkers[i]); photoMarkers = []; routePhotos = [];
-            startPoint = null; endPoint = null; startPhoto = null; endPhoto = null; pointPhotos = {}; lastMainDistance = null; lastMainGeometry = null;
-            if (currentGpxLayer) { map.removeLayer(currentGpxLayer); currentGpxLayer = null; } currentGpxGeometry = null;
-            resetInfo(); document.getElementById('fileInput').value = ''; updatePhotoList(); updateWaypointsPanel(); resetRotation();
-            localStorage.removeItem('athos_last_route_state'); isMapInteracting = false; hideOffRouteAlert(); offRouteAlertDismissed = false;
-            showToast('🗑️ Καθαρίστηκαν όλα', '#e74c3c');
-        }
-
-        function updateWaypointsPanel() {
-            var list = document.getElementById('waypointsList'), countSpan = document.getElementById('waypointCount');
-            if (!list) return;
-            var html = '', total = 0;
-            if (startPoint) { total++; html += '<li style="padding:5px 4px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:5px;">' + (startPhoto ? '<img src="' + startPhoto + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid #8e44ad;">' : '') + '<span style="font-weight:600;font-size:11px;">🚩 ' + startName + '</span></li>'; }
-            for (var i = 0; i < waypoints.length; i++) { total++; html += '<li style="padding:5px 4px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:4px;">' + (waypointPhotos[i] ? '<img src="' + waypointPhotos[i] + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid #8e44ad;">' : '') + '<span style="font-weight:600;font-size:11px;flex:1;">📍 ' + waypointNames[i] + '</span><button onclick="renameWaypoint(' + i + ')" style="background:#2c5f2d;color:white;border:none;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:9px;">✏️</button><button onclick="removeWaypoint(' + i + ')" style="background:#b22222;color:white;border:none;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:9px;">✖</button></li>'; }
-            if (endPoint) { total++; html += '<li style="padding:5px 4px;display:flex;align-items:center;gap:5px;">' + (endPhoto ? '<img src="' + endPhoto + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid #8e44ad;">' : '') + '<span style="font-weight:600;font-size:11px;">🏁 ' + endName + '</span></li>'; }
-            list.innerHTML = html; if (countSpan) countSpan.innerText = total;
-        }
+        function clearAll() { if (startMarker) { map.removeLayer(startMarker); startMarker = null; } if (endMarker) { map.removeLayer(endMarker); endMarker = null; } for (var i = 0; i < markers.length; i++) map.removeLayer(markers[i]); markers = []; waypoints = []; waypointNames = []; waypointPhotos = []; for (var i = 0; i < routeLines.length; i++) map.removeLayer(routeLines[i]); routeLines = []; for (var i = 0; i < photoMarkers.length; i++) map.removeLayer(photoMarkers[i]); photoMarkers = []; routePhotos = []; startPoint = null; endPoint = null; startPhoto = null; endPhoto = null; pointPhotos = {}; lastMainDistance = null; lastMainGeometry = null; if (currentGpxLayer) { map.removeLayer(currentGpxLayer); currentGpxLayer = null; } currentGpxGeometry = null; resetInfo(); document.getElementById('fileInput').value = ''; updatePhotoList(); updateWaypointsPanel(); resetRotation(); localStorage.removeItem('athos_last_route_state'); isMapInteracting = false; hideOffRouteAlert(); offRouteAlertDismissed = false; showToast('🗑️ Καθαρίστηκαν όλα', '#e74c3c'); }
+        function updateWaypointsPanel() { var list = document.getElementById('waypointsList'), cs = document.getElementById('waypointCount'); if (!list) return; var html = '', total = 0; if (startPoint) { total++; html += '<li style="padding:5px 4px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:5px;">' + (startPhoto ? '<img src="' + startPhoto + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid #8e44ad;">' : '') + '<span style="font-weight:600;font-size:11px;">🚩 ' + startName + '</span></li>'; } for (var i = 0; i < waypoints.length; i++) { total++; html += '<li style="padding:5px 4px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:4px;">' + (waypointPhotos[i] ? '<img src="' + waypointPhotos[i] + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid #8e44ad;">' : '') + '<span style="font-weight:600;font-size:11px;flex:1;">📍 ' + waypointNames[i] + '</span><button onclick="renameWaypoint(' + i + ')" style="background:#2c5f2d;color:white;border:none;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:9px;">✏️</button><button onclick="removeWaypoint(' + i + ')" style="background:#b22222;color:white;border:none;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:9px;">✖</button></li>'; } if (endPoint) { total++; html += '<li style="padding:5px 4px;display:flex;align-items:center;gap:5px;">' + (endPhoto ? '<img src="' + endPhoto + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid #8e44ad;">' : '') + '<span style="font-weight:600;font-size:11px;">🏁 ' + endName + '</span></li>'; } list.innerHTML = html; if (cs) cs.innerText = total; }
 
         // ============================================================
         //  SOS
         // ============================================================
         var sosPosition = null;
-        function openSosDialog() {
-            document.getElementById('sosContainer').style.display = 'block';
-            if (userBlueDot) { sosPosition = userBlueDot.getLatLng(); document.getElementById('sosCoords').textContent = sosPosition.lat.toFixed(6) + ', ' + sosPosition.lng.toFixed(6); }
-            else if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(p) { sosPosition = L.latLng(p.coords.latitude, p.coords.longitude); document.getElementById('sosCoords').textContent = p.coords.latitude.toFixed(6) + ', ' + p.coords.longitude.toFixed(6); }, function() {}, { enableHighAccuracy: true, timeout: 10000 });
-            try { var n = localStorage.getItem('sos_user_name'); if (n) document.getElementById('sosName').value = n; } catch(e) {}
-        }
+        function openSosDialog() { document.getElementById('sosContainer').style.display = 'block'; if (userBlueDot) { sosPosition = userBlueDot.getLatLng(); document.getElementById('sosCoords').textContent = sosPosition.lat.toFixed(6) + ', ' + sosPosition.lng.toFixed(6); } else if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(p) { sosPosition = L.latLng(p.coords.latitude, p.coords.longitude); document.getElementById('sosCoords').textContent = p.coords.latitude.toFixed(6) + ', ' + p.coords.longitude.toFixed(6); }, function() {}, { enableHighAccuracy: true, timeout: 10000 }); try { var n = localStorage.getItem('sos_user_name'); if (n) document.getElementById('sosName').value = n; } catch(e) {} }
         function closeSosDialog() { document.getElementById('sosContainer').style.display = 'none'; }
         function genSosMsg() { return '🆘 SOS - Athos Maps\n👤 ' + (document.getElementById('sosName').value || 'Ανώνυμος') + '\n🆘 ' + document.getElementById('sosType').value + '\n📱 ' + (document.getElementById('sosPhone').value || '-') + '\n📍 ' + document.getElementById('sosCoords').textContent + '\n📝 ' + (document.getElementById('sosHistory').value || '-') + '\n🗺️ https://www.google.com/maps?q=' + (sosPosition ? sosPosition.lat + ',' + sosPosition.lng : ''); }
         function sendSosSms() { var m = genSosMsg(), p = document.getElementById('sosPhone').value || '6988321619'; if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) window.location.href = 'sms:' + p + '?body=' + encodeURIComponent(m); else navigator.clipboard.writeText(m).then(function() { showToast('✅ Αντιγράφηκε', '#27ae60'); }); try { localStorage.setItem('sos_user_name', document.getElementById('sosName').value); } catch(e) {} closeSosDialog(); }
@@ -1070,231 +572,30 @@
         function call112() { if (confirm('Κλήση 112;')) window.location.href = 'tel:112'; }
 
         // ============================================================
-        //  GPX - ΜΕ CREATOR="Athos Maps"
+        //  GPX - Athos Maps
         // ============================================================
-        document.getElementById('exportGpxBtn').addEventListener('click', function() {
-            if (!lastMainGeometry) { alert('Δεν υπάρχει διαδρομή.'); return; }
-            var fn = prompt('Όνομα αρχείου:', 'athos_maps_route_' + new Date().toISOString().slice(0,10)); if (!fn) return;
-            var gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Athos Maps" xmlns="http://www.topografix.com/GPX/1/1">\n  <metadata>\n    <name>Διαδρομή</name>\n    <desc>Δημιουργήθηκε από το Athos Maps - agionorosroutes.blogspot.com</desc>\n  </metadata>';
-            if (startPoint) gpx += '\n  <wpt lat="'+startPoint.lat+'" lon="'+startPoint.lng+'"><name>'+startName+'</name><sym>Start</sym></wpt>';
-            for (var i=0;i<waypoints.length;i++) gpx += '\n  <wpt lat="'+waypoints[i].lat+'" lon="'+waypoints[i].lng+'"><name>'+(waypointNames[i]||'Σημείο')+'</name><sym>Waypoint</sym></wpt>';
-            if (endPoint) gpx += '\n  <wpt lat="'+endPoint.lat+'" lon="'+endPoint.lng+'"><name>'+endName+'</name><sym>End</sym></wpt>';
-            for (var j=0;j<routePhotos.length;j++) gpx += '\n  <wpt lat="'+routePhotos[j].lat+'" lon="'+routePhotos[j].lng+'"><name>Φωτογραφία '+(j+1)+'</name><desc>'+(routePhotos[j].note||'')+'</desc></wpt>';
-            gpx += '\n  <trk>\n    <name>Διαδρομή</name>\n    <trkseg>';
-            for (var k=0;k<lastMainGeometry.length;k++) gpx += '\n      <trkpt lat="'+lastMainGeometry[k][1]+'" lon="'+lastMainGeometry[k][0]+'"></trkpt>';
-            gpx += '\n    </trkseg>\n  </trk>\n</gpx>';
-            var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([gpx],{type:'application/gpx+xml'})); a.download = fn+'.gpx';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            showToast('📤 Εξήχθη ως Athos Maps GPX', '#1a7a3a');
-        });
-        
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            var f = e.target.files[0]; if (!f) return;
-            var reader = new FileReader();
-            reader.onload = function(ev) {
-                try {
-                    var geo = toGeoJSON.gpx(new DOMParser().parseFromString(ev.target.result,'text/xml'));
-                    clearAll(); var geom = null;
-                    if (geo.features) for (var i=0;i<geo.features.length;i++) if (geo.features[i].geometry?.type==='LineString') { geom = geo.features[i].geometry.coordinates; break; }
-                    if (geom) {
-                        currentGpxGeometry = geom;
-                        var line = L.polyline(geom.map(function(c){return[c[1],c[0]]}),{color:'#2c5f2d',weight:5,opacity:0.8}).addTo(map);
-                        routeLines.push(line); currentGpxLayer = line; map.fitBounds(line.getBounds(),{padding:[60,60]});
-                        lastMainGeometry = geom; lastMainDistance = computeDistanceFromCoords(geom);
-                        updateInfo(); saveLastRouteState(); showToast('✅ Φορτώθηκε!','#27ae60');
-                    } else alert('Δεν περιέχει διαδρομή.');
-                } catch(err) { alert('Σφάλμα: '+err.message); }
-            };
-            reader.readAsText(f); e.target.value = '';
-        });
+        document.getElementById('exportGpxBtn').addEventListener('click', function() { if (!lastMainGeometry) { alert('Δεν υπάρχει διαδρομή.'); return; } var fn = prompt('Όνομα:', 'athos_maps_route_' + new Date().toISOString().slice(0,10)); if (!fn) return; var gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Athos Maps" xmlns="http://www.topografix.com/GPX/1/1">\n  <metadata>\n    <name>Διαδρομή</name>\n    <desc>Δημιουργήθηκε από το Athos Maps - agionorosroutes.blogspot.com</desc>\n  </metadata>'; if (startPoint) gpx += '\n  <wpt lat="'+startPoint.lat+'" lon="'+startPoint.lng+'"><name>'+startName+'</name><sym>Start</sym></wpt>'; for (var i=0;i<waypoints.length;i++) gpx += '\n  <wpt lat="'+waypoints[i].lat+'" lon="'+waypoints[i].lng+'"><name>'+(waypointNames[i]||'Σημείο')+'</name><sym>Waypoint</sym></wpt>'; if (endPoint) gpx += '\n  <wpt lat="'+endPoint.lat+'" lon="'+endPoint.lng+'"><name>'+endName+'</name><sym>End</sym></wpt>'; for (var j=0;j<routePhotos.length;j++) gpx += '\n  <wpt lat="'+routePhotos[j].lat+'" lon="'+routePhotos[j].lng+'"><name>Φωτογραφία '+(j+1)+'</name><desc>'+(routePhotos[j].note||'')+'</desc></wpt>'; gpx += '\n  <trk>\n    <name>Διαδρομή</name>\n    <trkseg>'; for (var k=0;k<lastMainGeometry.length;k++) gpx += '\n      <trkpt lat="'+lastMainGeometry[k][1]+'" lon="'+lastMainGeometry[k][0]+'"></trkpt>'; gpx += '\n    </trkseg>\n  </trk>\n</gpx>'; var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([gpx],{type:'application/gpx+xml'})); a.download = fn+'.gpx'; document.body.appendChild(a); a.click(); document.body.removeChild(a); showToast('📤 Εξήχθη (Athos Maps)', '#1a7a3a'); });
+        document.getElementById('fileInput').addEventListener('change', function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { try { var geo = toGeoJSON.gpx(new DOMParser().parseFromString(ev.target.result,'text/xml')); clearAll(); var geom = null; if (geo.features) for (var i=0;i<geo.features.length;i++) if (geo.features[i].geometry?.type==='LineString') { geom = geo.features[i].geometry.coordinates; break; } if (geom) { currentGpxGeometry = geom; var line = L.polyline(geom.map(function(c){return[c[1],c[0]]}),{color:'#2c5f2d',weight:5,opacity:0.8}).addTo(map); routeLines.push(line); currentGpxLayer = line; map.fitBounds(line.getBounds(),{padding:[60,60]}); lastMainGeometry = geom; lastMainDistance = computeDistanceFromCoords(geom); updateInfo(); saveLastRouteState(); showToast('✅ Φορτώθηκε!','#27ae60'); } else alert('Δεν περιέχει διαδρομή.'); } catch(err) { alert('Σφάλμα: '+err.message); } }; r.readAsText(f); e.target.value = ''; });
 
         // ============================================================
-        //  ΑΠΟΘΗΚΕΥΣΗ ΤΕΛΕΥΤΑΙΑΣ ΚΑΤΑΣΤΑΣΗΣ
+        //  ΑΠΟΘΗΚΕΥΣΗ
         // ============================================================
-        function saveLastRouteState() {
-            try { localStorage.setItem('athos_last_route_state', JSON.stringify({ geometry: lastMainGeometry, distance: lastMainDistance, startName, endName, startPoint, endPoint, startPhoto, endPhoto, waypoints: waypoints.map(function(p,i){return{lat:p.lat,lng:p.lng,name:waypointNames[i]||'Σημείο',photo:waypointPhotos[i]||null}}), routePhotos: routePhotos.map(function(p){return p.image}) })); } catch(e) {}
-        }
-        
-        function loadLastRouteState() {
-            try {
-                var d = localStorage.getItem('athos_last_route_state'); if (!d) return false;
-                var s = JSON.parse(d); if (!s.geometry) return false;
-                lastMainGeometry = s.geometry; lastMainDistance = s.distance || computeDistanceFromCoords(s.geometry);
-                startName = s.startName || 'Αφετηρία'; endName = s.endName || 'Προορισμός';
-                startPhoto = s.startPhoto || null; endPhoto = s.endPhoto || null;
-                if (s.startPoint) { startPoint = s.startPoint; startMarker = L.marker([startPoint.lat,startPoint.lng],{icon:getColorIcon('green')}).addTo(map).bindPopup('🚩 '+startName); }
-                if (s.endPoint) { endPoint = s.endPoint; endMarker = L.marker([endPoint.lat,endPoint.lng],{icon:getColorIcon('red')}).addTo(map).bindPopup('🏁 '+endName); }
-                if (s.waypoints) { for (var i=0;i<s.waypoints.length;i++) { var w=s.waypoints[i]; waypoints.push(L.latLng(w.lat,w.lng)); waypointNames.push(w.name||'Σημείο'); waypointPhotos.push(w.photo||null); var m=L.marker([w.lat,w.lng],{icon:getColorIcon('blue'),draggable:true}).addTo(map); updateWaypointPopup(m,i); (function(idx){m.on('dragend',function(e){waypoints[idx]=e.target.getLatLng();calculateRoute()})})(i); markers.push(m); } updateWaypointsPanel(); }
-                var ll = s.geometry.map(function(c){return[c[1],c[0]]}); routeLines.push(L.polyline(ll,{color:'#2c5f2d',weight:5,opacity:0.8}).addTo(map));
-                map.fitBounds(routeLines[0].getBounds(),{padding:[60,60]});
-                if (s.routePhotos) { routePhotos = s.routePhotos.map(function(img){return{image:img,lat:s.geometry[0][1],lng:s.geometry[0][0],note:'',filename:'photo.jpg',timestamp:new Date().toISOString()}}); for (var j=0;j<routePhotos.length;j++) addPhotoMarker(routePhotos[j]); updatePhotoList(); }
-                updateInfo(); return true;
-            } catch(e) { return false; }
-        }
+        function saveLastRouteState() { try { localStorage.setItem('athos_last_route_state', JSON.stringify({ geometry: lastMainGeometry, distance: lastMainDistance, startName, endName, startPoint, endPoint, startPhoto, endPhoto, waypoints: waypoints.map(function(p,i){return{lat:p.lat,lng:p.lng,name:waypointNames[i]||'Σημείο',photo:waypointPhotos[i]||null}}), routePhotos: routePhotos.map(function(p){return p.image}) })); } catch(e) {} }
+        function loadLastRouteState() { try { var d = localStorage.getItem('athos_last_route_state'); if (!d) return false; var s = JSON.parse(d); if (!s.geometry) return false; lastMainGeometry = s.geometry; lastMainDistance = s.distance || computeDistanceFromCoords(s.geometry); startName = s.startName || 'Αφετηρία'; endName = s.endName || 'Προορισμός'; startPhoto = s.startPhoto || null; endPhoto = s.endPhoto || null; if (s.startPoint) { startPoint = s.startPoint; startMarker = L.marker([startPoint.lat,startPoint.lng],{icon:getColorIcon('green')}).addTo(map).bindPopup('🚩 '+startName); } if (s.endPoint) { endPoint = s.endPoint; endMarker = L.marker([endPoint.lat,endPoint.lng],{icon:getColorIcon('red')}).addTo(map).bindPopup('🏁 '+endName); } if (s.waypoints) { for (var i=0;i<s.waypoints.length;i++) { var w=s.waypoints[i]; waypoints.push(L.latLng(w.lat,w.lng)); waypointNames.push(w.name||'Σημείο'); waypointPhotos.push(w.photo||null); var m=L.marker([w.lat,w.lng],{icon:getColorIcon('blue'),draggable:true}).addTo(map); updateWaypointPopup(m,i); (function(idx){m.on('dragend',function(e){waypoints[idx]=e.target.getLatLng();calculateRoute()})})(i); markers.push(m); } updateWaypointsPanel(); } var ll = s.geometry.map(function(c){return[c[1],c[0]]}); routeLines.push(L.polyline(ll,{color:'#2c5f2d',weight:5,opacity:0.8}).addTo(map)); map.fitBounds(routeLines[0].getBounds(),{padding:[60,60]}); if (s.routePhotos) { routePhotos = s.routePhotos.map(function(img){return{image:img,lat:s.geometry[0][1],lng:s.geometry[0][0],note:'',filename:'photo.jpg',timestamp:new Date().toISOString()}}); for (var j=0;j<routePhotos.length;j++) addPhotoMarker(routePhotos[j]); updatePhotoList(); } updateInfo(); return true; } catch(e) { return false; } }
 
-        // ============================================================
-        //  ΑΠΟΘΗΚΕΥΣΗ ΔΙΑΔΡΟΜΗΣ ΜΕ INDEXEDDB
-        // ============================================================
-        async function saveRoute() {
-            if (!lastMainGeometry || lastMainGeometry.length < 2) { alert('Δεν υπάρχει διαδρομή για αποθήκευση.'); return; }
-            var name = prompt('Όνομα διαδρομής:', 'Διαδρομή ' + new Date().toLocaleDateString('el'));
-            if (!name) return;
-            
-            showSaveStatus('Αποθήκευση διαδρομής...', '', 'Συμπίεση φωτογραφιών...');
-            
-            try {
-                var routeId = generateRouteId();
-                var photoIds = [], photoThumbnails = [];
-                
-                if (routePhotos.length > 0) {
-                    for (var i = 0; i < routePhotos.length; i++) {
-                        var photo = routePhotos[i];
-                        var photoId = 'photo_' + routeId + '_' + i;
-                        showSaveStatus('Αποθήκευση...', '', 'Φωτογραφία ' + (i + 1) + '/' + routePhotos.length);
-                        var thumbnail = await createThumbnail(photo.image);
-                        var compressed = await compressImage(photo.image, 1920, 1920, 0.7);
-                        await storePhotoInDB({ id: photoId, image: compressed, lat: photo.lat, lng: photo.lng, note: photo.note || '', filename: photo.filename || 'photo.jpg', timestamp: photo.timestamp, thumbnail: thumbnail });
-                        photoIds.push(photoId);
-                        photoThumbnails.push({ id: photoId, thumbnail: thumbnail, lat: photo.lat, lng: photo.lng, note: photo.note || '', timestamp: photo.timestamp });
-                    }
-                }
-                
-                var compressedStartPhoto = startPhoto ? await compressImage(startPhoto, 800, 800, 0.6) : null;
-                var compressedEndPhoto = endPhoto ? await compressImage(endPhoto, 800, 800, 0.6) : null;
-                var compressedWaypointPhotos = [];
-                if (waypointPhotos.length > 0) {
-                    for (var j = 0; j < waypointPhotos.length; j++) {
-                        compressedWaypointPhotos.push(waypointPhotos[j] ? await compressImage(waypointPhotos[j], 800, 800, 0.6) : null);
-                    }
-                }
-                
-                showSaveStatus('Αποθήκευση...', '', 'Αποθήκευση δεδομένων...');
-                
-                var routeData = {
-                    id: routeId, name: name, geometry: lastMainGeometry, distance: lastMainDistance,
-                    date: new Date().toISOString(), startName: startName || 'Αφετηρία', endName: endName || 'Προορισμός',
-                    startPhoto: compressedStartPhoto, endPhoto: compressedEndPhoto,
-                    waypoints: waypoints.map(function(p, i) { return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο', photo: compressedWaypointPhotos[i] || null }; }),
-                    photoIds: photoIds, photoThumbnails: photoThumbnails, photoCount: routePhotos.length,
-                    createdBy: 'Athos Maps'
-                };
-                
-                await storeRouteInDB(routeData);
-                
-                try {
-                    var saved = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]');
-                    var lightRoute = { id: routeId, name: name, geometry: lastMainGeometry, distance: lastMainDistance, date: routeData.date, startName: routeData.startName, endName: routeData.endName, photoIds: photoIds, photoCount: routePhotos.length, hasPhotos: routePhotos.length > 0, waypoints: routeData.waypoints.map(function(w) { return { lat: w.lat, lng: w.lng, name: w.name, photo: null }; }), createdBy: 'Athos Maps' };
-                    var existingIndex = saved.findIndex(function(r) { return r.id === routeId; });
-                    if (existingIndex >= 0) saved[existingIndex] = lightRoute; else saved.push(lightRoute);
-                    localStorage.setItem('athos_saved_routes', JSON.stringify(saved));
-                } catch(storageError) { console.warn('localStorage backup failed:', storageError); }
-                
-                showSaveStatus('✅ Η διαδρομή αποθηκεύτηκε!', 'success', name + ' | 📸 ' + routePhotos.length + ' | 📏 ' + (lastMainDistance ? lastMainDistance.toFixed(1) + ' km' : ''));
-                showToast('✅ Αποθηκεύτηκε: ' + name + ' με ' + routePhotos.length + ' φωτογραφίες', '#2ecc71');
-                if (document.getElementById('routeDropdownContainer').classList.contains('active')) showRoutesList();
-                
-            } catch (error) {
-                console.error('Save error:', error);
-                showSaveStatus('❌ Σφάλμα αποθήκευσης', 'error', error.message || 'Ελέγξτε τον διαθέσιμο χώρο.');
-                showToast('❌ Αποτυχία: ' + (error.message || 'Άγνωστο σφάλμα'), '#e74c3c');
-            }
-        }
+        async function saveRoute() { if (!lastMainGeometry || lastMainGeometry.length < 2) { alert('Δεν υπάρχει διαδρομή.'); return; } var name = prompt('Όνομα:', 'Διαδρομή ' + new Date().toLocaleDateString('el')); if (!name) return; showSaveStatus('Αποθήκευση...', '', 'Συμπίεση φωτογραφιών...'); try { var rid = generateRouteId(); var pids = [], pthumbs = []; if (routePhotos.length > 0) { for (var i = 0; i < routePhotos.length; i++) { var ph = routePhotos[i]; var pid = 'photo_' + rid + '_' + i; showSaveStatus('Αποθήκευση...', '', 'Φωτό ' + (i+1) + '/' + routePhotos.length); var thumb = await createThumbnail(ph.image); var comp = await compressImage(ph.image, 1920, 1920, 0.7); await storePhotoInDB({ id: pid, image: comp, lat: ph.lat, lng: ph.lng, note: ph.note || '', filename: ph.filename || 'photo.jpg', timestamp: ph.timestamp, thumbnail: thumb }); pids.push(pid); pthumbs.push({ id: pid, thumbnail: thumb, lat: ph.lat, lng: ph.lng, note: ph.note || '', timestamp: ph.timestamp }); } } var csp = startPhoto ? await compressImage(startPhoto, 800, 800, 0.6) : null; var cep = endPhoto ? await compressImage(endPhoto, 800, 800, 0.6) : null; var cwp = []; if (waypointPhotos.length > 0) { for (var j = 0; j < waypointPhotos.length; j++) cwp.push(waypointPhotos[j] ? await compressImage(waypointPhotos[j], 800, 800, 0.6) : null); } showSaveStatus('Αποθήκευση...', '', 'Αποθήκευση...'); var rd = { id: rid, name: name, geometry: lastMainGeometry, distance: lastMainDistance, date: new Date().toISOString(), startName: startName || 'Αφετηρία', endName: endName || 'Προορισμός', startPhoto: csp, endPhoto: cep, waypoints: waypoints.map(function(p, i) { return { lat: p.lat, lng: p.lng, name: waypointNames[i] || 'Σημείο', photo: cwp[i] || null }; }), photoIds: pids, photoThumbnails: pthumbs, photoCount: routePhotos.length, createdBy: 'Athos Maps' }; await storeRouteInDB(rd); try { var saved = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); var lr = { id: rid, name: name, geometry: lastMainGeometry, distance: lastMainDistance, date: rd.date, startName: rd.startName, endName: rd.endName, photoIds: pids, photoCount: routePhotos.length, hasPhotos: routePhotos.length > 0, waypoints: rd.waypoints.map(function(w) { return { lat: w.lat, lng: w.lng, name: w.name, photo: null }; }), createdBy: 'Athos Maps' }; var ei = saved.findIndex(function(r) { return r.id === rid; }); if (ei >= 0) saved[ei] = lr; else saved.push(lr); localStorage.setItem('athos_saved_routes', JSON.stringify(saved)); } catch(se) {} showSaveStatus('✅ Αποθηκεύτηκε!', 'success', name + ' | 📸 ' + routePhotos.length + ' | 📏 ' + (lastMainDistance ? lastMainDistance.toFixed(1) + ' km' : '')); showToast('✅ ' + name + ' (' + routePhotos.length + ' φωτό)', '#2ecc71'); if (document.getElementById('routeDropdownContainer').classList.contains('active')) showRoutesList(); } catch(e) { showSaveStatus('❌ Σφάλμα', 'error', e.message); showToast('❌ ' + e.message, '#e74c3c'); } }
 
-        // ============================================================
-        //  ΦΟΡΤΩΣΗ ΔΙΑΔΡΟΜΗΣ ΜΕ INDEXEDDB
-        // ============================================================
-        async function loadRouteDirect(route) {
-            if (!route.geometry || route.geometry.length < 2) { alert('Μη έγκυρη διαδρομή.'); return; }
-            showSaveStatus('Φόρτωση διαδρομής...', '', 'Ανάκτηση δεδομένων...');
-            try {
-                clearAll();
-                var fullRoute = null;
-                if (route.id) { try { fullRoute = await getRouteFromDB(route.id); } catch(e) {} }
-                var routeData = fullRoute || route;
-                lastMainGeometry = routeData.geometry; lastMainDistance = routeData.distance || computeDistanceFromCoords(routeData.geometry);
-                startPhoto = routeData.startPhoto || null; endPhoto = routeData.endPhoto || null;
-                var latlngs = routeData.geometry.map(function(c) { return [c[1], c[0]]; });
-                routeLines.push(L.polyline(latlngs, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map));
-                map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60] });
-                if (routeData.waypoints) {
-                    for (var i = 0; i < routeData.waypoints.length; i++) {
-                        var wp = routeData.waypoints[i];
-                        waypoints.push(L.latLng(wp.lat, wp.lng)); waypointNames.push(wp.name || 'Σημείο'); waypointPhotos.push(wp.photo || null);
-                        var marker = L.marker([wp.lat, wp.lng], { icon: getColorIcon('blue'), draggable: true }).addTo(map);
-                        updateWaypointPopup(marker, i);
-                        (function(idx) { marker.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); }); })(i);
-                        markers.push(marker);
-                    }
-                    updateWaypointsPanel();
-                }
-                if (routeData.photoIds && routeData.photoIds.length > 0) {
-                    routePhotos = []; photoMarkers = [];
-                    for (var j = 0; j < routeData.photoIds.length; j++) {
-                        showSaveStatus('Φόρτωση...', '', 'Φωτογραφία ' + (j + 1) + '/' + routeData.photoIds.length);
-                        try {
-                            var photoData = await getPhotoFromDB(routeData.photoIds[j]);
-                            if (photoData) {
-                                routePhotos.push({ image: photoData.image, lat: photoData.lat, lng: photoData.lng, note: photoData.note || '', filename: photoData.filename, timestamp: photoData.timestamp, dbId: photoData.id });
-                                addPhotoMarker(routePhotos[routePhotos.length - 1]);
-                            }
-                        } catch(e) {
-                            if (routeData.photoThumbnails && routeData.photoThumbnails[j]) {
-                                var thumb = routeData.photoThumbnails[j];
-                                routePhotos.push({ image: thumb.thumbnail, lat: thumb.lat, lng: thumb.lng, note: thumb.note || '(χαμηλή ανάλυση)', filename: 'thumb.jpg', timestamp: thumb.timestamp, dbId: thumb.id });
-                                addPhotoMarker(routePhotos[routePhotos.length - 1]);
-                            }
-                        }
-                    }
-                    updatePhotoList();
-                }
-                var first = routeData.geometry[0], last = routeData.geometry[routeData.geometry.length - 1];
-                startPoint = { lat: first[1], lng: first[0] }; endPoint = { lat: last[1], lng: last[0] };
-                startName = routeData.startName || 'Αφετηρία'; endName = routeData.endName || 'Προορισμός';
-                if (startMarker) map.removeLayer(startMarker);
-                startMarker = L.marker([first[1], first[0]], { icon: getColorIcon('green') }).addTo(map).bindPopup('🚩 ' + startName);
-                if (endMarker) map.removeLayer(endMarker);
-                endMarker = L.marker([last[1], last[0]], { icon: getColorIcon('red') }).addTo(map).bindPopup('🏁 ' + endName);
-                updateInfo(); updateWaypointsPanel(); saveLastRouteState(); offRouteAlertDismissed = false;
-                hideSaveStatus();
-                showToast('✅ Φορτώθηκε: ' + routeData.name + ' | 📸 ' + (routeData.photoIds || []).length, '#2ecc71');
-            } catch (error) {
-                console.error('Load error:', error); hideSaveStatus();
-                showToast('❌ Σφάλμα φόρτωσης: ' + error.message, '#e74c3c');
-            }
-        }
+        async function loadRouteDirect(route) { if (!route.geometry || route.geometry.length < 2) { alert('Μη έγκυρη.'); return; } showSaveStatus('Φόρτωση...', '', 'Ανάκτηση...'); try { clearAll(); var fr = null; if (route.id) { try { fr = await getRouteFromDB(route.id); } catch(e) {} } var rd = fr || route; lastMainGeometry = rd.geometry; lastMainDistance = rd.distance || computeDistanceFromCoords(rd.geometry); startPhoto = rd.startPhoto || null; endPhoto = rd.endPhoto || null; var ll = rd.geometry.map(function(c) { return [c[1], c[0]]; }); routeLines.push(L.polyline(ll, { color: '#2c5f2d', weight: 5, opacity: 0.8 }).addTo(map)); map.fitBounds(routeLines[0].getBounds(), { padding: [60, 60] }); if (rd.waypoints) { for (var i = 0; i < rd.waypoints.length; i++) { var wp = rd.waypoints[i]; waypoints.push(L.latLng(wp.lat, wp.lng)); waypointNames.push(wp.name || 'Σημείο'); waypointPhotos.push(wp.photo || null); var m = L.marker([wp.lat, wp.lng], { icon: getColorIcon('blue'), draggable: true }).addTo(map); updateWaypointPopup(m, i); (function(idx) { m.on('dragend', function(e) { waypoints[idx] = e.target.getLatLng(); calculateRoute(); }); })(i); markers.push(m); } updateWaypointsPanel(); } if (rd.photoIds && rd.photoIds.length > 0) { routePhotos = []; photoMarkers = []; for (var j = 0; j < rd.photoIds.length; j++) { showSaveStatus('Φόρτωση...', '', 'Φωτό ' + (j+1) + '/' + rd.photoIds.length); try { var pd = await getPhotoFromDB(rd.photoIds[j]); if (pd) { routePhotos.push({ image: pd.image, lat: pd.lat, lng: pd.lng, note: pd.note || '', filename: pd.filename, timestamp: pd.timestamp, dbId: pd.id }); addPhotoMarker(routePhotos[routePhotos.length - 1]); } } catch(e) { if (rd.photoThumbnails && rd.photoThumbnails[j]) { var th = rd.photoThumbnails[j]; routePhotos.push({ image: th.thumbnail, lat: th.lat, lng: th.lng, note: th.note || '(thumb)', filename: 'thumb.jpg', timestamp: th.timestamp, dbId: th.id }); addPhotoMarker(routePhotos[routePhotos.length - 1]); } } } updatePhotoList(); } var f = rd.geometry[0], l = rd.geometry[rd.geometry.length - 1]; startPoint = { lat: f[1], lng: f[0] }; endPoint = { lat: l[1], lng: l[0] }; startName = rd.startName || 'Αφετηρία'; endName = rd.endName || 'Προορισμός'; if (startMarker) map.removeLayer(startMarker); startMarker = L.marker([f[1], f[0]], { icon: getColorIcon('green') }).addTo(map).bindPopup('🚩 ' + startName); if (endMarker) map.removeLayer(endMarker); endMarker = L.marker([l[1], l[0]], { icon: getColorIcon('red') }).addTo(map).bindPopup('🏁 ' + endName); updateInfo(); updateWaypointsPanel(); saveLastRouteState(); offRouteAlertDismissed = false; hideSaveStatus(); showToast('✅ ' + rd.name + ' | 📸 ' + (rd.photoIds || []).length, '#2ecc71'); } catch(e) { hideSaveStatus(); showToast('❌ ' + e.message, '#e74c3c'); } }
 
-        // ============================================================
-        //  ΛΙΣΤΑ ΔΙΑΔΡΟΜΩΝ
-        // ============================================================
-        async function showRoutesList() {
-            var container = document.getElementById('routesList');
-            try {
-                var saved = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]');
-                var dbRoutes = [];
-                try { dbRoutes = await getAllRoutesFromDB(); } catch(e) {}
-                var allRoutes = [], seenIds = {};
-                for (var i = 0; i < dbRoutes.length; i++) { allRoutes.push(dbRoutes[i]); seenIds[dbRoutes[i].id] = true; }
-                for (var j = 0; j < saved.length; j++) { if (!seenIds[saved[j].id]) { allRoutes.push(saved[j]); seenIds[saved[j].id] = true; } }
-                allRoutes.sort(function(a, b) { return (a.name || '').localeCompare(b.name || '', 'el'); });
-                if (allRoutes.length === 0) { container.innerHTML = '<div style="color:#999;padding:10px;text-align:center;">📭 Δεν υπάρχουν αποθηκευμένες διαδρομές</div>'; return; }
-                var html = '';
-                for (var k = 0; k < allRoutes.length; k++) {
-                    var r = allRoutes[k];
-                    var pc = r.photoCount || (r.photoIds ? r.photoIds.length : (r.photoThumbnails ? r.photoThumbnails.length : 0));
-                    html += '<div class="route-item" data-id="' + r.id + '" style="display:flex;justify-content:space-between;align-items:center;padding:6px 7px;border-bottom:1px solid #f0f0f0;cursor:pointer;border-radius:5px;gap:5px;">' +
-                        '<div style="flex:1;min-width:0;"><div style="font-weight:600;color:#2c5f2d;font-size:12px;">📍 ' + (r.name || 'Χωρίς όνομα') + (pc > 0 ? ' <span style="font-size:9px;color:#8e44ad;">📸' + pc + '</span>' : '') + '</div>' +
-                        '<div style="font-size:9px;color:#888;">' + (r.startName || 'Αφετηρία') + ' → ' + (r.endName || 'Προορισμός') + ' · ' + (r.distance ? r.distance.toFixed(1) + 'km' : '') + ' · ' + (r.date ? new Date(r.date).toLocaleDateString('el') : '') + (r.createdBy ? ' · ' + r.createdBy : '') + '</div></div>' +
-                        '<div style="display:flex;gap:3px;"><button class="load-btn" data-id="' + r.id + '" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">📂</button><button class="delete-btn" data-id="' + r.id + '" style="background:#b22222;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">✖</button></div></div>';
-                }
-                container.innerHTML = html;
-                container.querySelectorAll('.load-btn').forEach(function(btn) { btn.addEventListener('click', function(e) { e.stopPropagation(); var route = allRoutes.find(function(r) { return r.id === btn.dataset.id; }); if (route) loadRouteDirect(route); hideRouteDropdown(); }); });
-                container.querySelectorAll('.delete-btn').forEach(function(btn) { btn.addEventListener('click', async function(e) { e.stopPropagation(); var id = this.dataset.id; if (confirm('Διαγραφή διαδρομής;')) { try { var fr = await getRouteFromDB(id); if (fr && fr.photoIds) { for (var p = 0; p < fr.photoIds.length; p++) await deletePhotoFromDB(fr.photoIds[p]); } await deleteRouteFromDB(id); } catch(e) {} var s = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); s = s.filter(function(r) { return r.id !== id; }); localStorage.setItem('athos_saved_routes', JSON.stringify(s)); showRoutesList(); showToast('🗑️ Διαγράφηκε', '#e74c3c'); } }); });
-                container.querySelectorAll('.route-item').forEach(function(el) { el.addEventListener('click', function() { var route = allRoutes.find(function(r) { return r.id === el.dataset.id; }); if (route) loadRouteDirect(route); hideRouteDropdown(); }); });
-            } catch(e) { container.innerHTML = '<div style="color:#e74c3c;padding:10px;">Σφάλμα φόρτωσης</div>'; }
-        }
-        
+        async function showRoutesList() { var c = document.getElementById('routesList'); try { var saved = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); var dbr = []; try { dbr = await getAllRoutesFromDB(); } catch(e) {} var all = [], seen = {}; for (var i = 0; i < dbr.length; i++) { all.push(dbr[i]); seen[dbr[i].id] = true; } for (var j = 0; j < saved.length; j++) { if (!seen[saved[j].id]) { all.push(saved[j]); seen[saved[j].id] = true; } } all.sort(function(a, b) { return (a.name || '').localeCompare(b.name || '', 'el'); }); if (all.length === 0) { c.innerHTML = '<div style="color:#999;padding:10px;text-align:center;">📭 Δεν υπάρχουν αποθηκευμένες διαδρομές</div>'; return; } var html = ''; for (var k = 0; k < all.length; k++) { var r = all[k]; var pc = r.photoCount || (r.photoIds ? r.photoIds.length : (r.photoThumbnails ? r.photoThumbnails.length : 0)); html += '<div class="route-item" data-id="' + r.id + '" style="display:flex;justify-content:space-between;align-items:center;padding:6px 7px;border-bottom:1px solid #f0f0f0;cursor:pointer;border-radius:5px;gap:5px;"><div style="flex:1;min-width:0;"><div style="font-weight:600;color:#2c5f2d;font-size:12px;">📍 ' + (r.name || 'Χωρίς όνομα') + (pc > 0 ? ' <span style="font-size:9px;color:#8e44ad;">📸' + pc + '</span>' : '') + '</div><div style="font-size:9px;color:#888;">' + (r.startName || 'Αφετηρία') + ' → ' + (r.endName || 'Προορισμός') + ' · ' + (r.distance ? r.distance.toFixed(1) + 'km' : '') + ' · ' + (r.date ? new Date(r.date).toLocaleDateString('el') : '') + (r.createdBy ? ' · ' + r.createdBy : '') + '</div></div><div style="display:flex;gap:3px;"><button class="load-btn" data-id="' + r.id + '" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">📂</button><button class="delete-btn" data-id="' + r.id + '" style="background:#b22222;color:white;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">✖</button></div></div>'; } c.innerHTML = html; c.querySelectorAll('.load-btn').forEach(function(b) { b.addEventListener('click', function(e) { e.stopPropagation(); var route = all.find(function(r) { return r.id === b.dataset.id; }); if (route) loadRouteDirect(route); hideRouteDropdown(); }); }); c.querySelectorAll('.delete-btn').forEach(function(b) { b.addEventListener('click', async function(e) { e.stopPropagation(); var id = this.dataset.id; if (confirm('Διαγραφή;')) { try { var fr = await getRouteFromDB(id); if (fr && fr.photoIds) { for (var p = 0; p < fr.photoIds.length; p++) await deletePhotoFromDB(fr.photoIds[p]); } await deleteRouteFromDB(id); } catch(e) {} var s = JSON.parse(localStorage.getItem('athos_saved_routes') || '[]'); s = s.filter(function(r) { return r.id !== id; }); localStorage.setItem('athos_saved_routes', JSON.stringify(s)); showRoutesList(); showToast('🗑️ Διαγράφηκε', '#e74c3c'); } }); }); c.querySelectorAll('.route-item').forEach(function(el) { el.addEventListener('click', function() { var route = all.find(function(r) { return r.id === el.dataset.id; }); if (route) loadRouteDirect(route); hideRouteDropdown(); }); }); } catch(e) { c.innerHTML = '<div style="color:#e74c3c;padding:10px;">Σφάλμα</div>'; } }
         function showRouteDropdown() { showRoutesList(); document.getElementById('routeDropdownContainer').classList.add('active'); }
         function hideRouteDropdown() { document.getElementById('routeDropdownContainer').classList.remove('active'); }
+
+        // ============================================================
+        //  ΒΟΗΘΕΙΑ MODAL
+        // ============================================================
+        function openHelpModal() { document.getElementById('helpModal').classList.add('active'); }
+        function closeHelpModal() { document.getElementById('helpModal').classList.remove('active'); }
 
         // ============================================================
         //  EVENTS
@@ -1324,18 +625,20 @@
         document.getElementById('toggleWaypointsBtn')?.addEventListener('click', function() { var p = document.getElementById('waypointsPanel'); p.classList.toggle('active'); if (p.classList.contains('active')) updateWaypointsPanel(); });
         document.getElementById('closeWaypointsBtn')?.addEventListener('click', function() { document.getElementById('waypointsPanel').classList.remove('active'); });
         document.getElementById('compassIndicator')?.addEventListener('click', resetRotation);
-        document.getElementById('helpBtn')?.addEventListener('click', function() { alert('🧭 Athos Maps - Path Finder\n\n📍 GPS\n💡 Wake Lock\n🚨 Alert απόκλισης\n📥 Offline χάρτης\n🗂️ Καθαρισμός cache\n📸 Φωτογραφίες (IndexedDB)\n🆘 SOS\n🗺️ Διαδρομές\n📤 GPX με Athos Maps\n💧 Υδατογράφημα Athos Maps\n\nagionorosroutes.blogspot.com'); });
+        document.getElementById('helpBtn')?.addEventListener('click', openHelpModal);
+        document.getElementById('closeHelpBtn')?.addEventListener('click', closeHelpModal);
+        document.getElementById('helpModal')?.addEventListener('click', function(e) { if (e.target === document.getElementById('helpModal')) closeHelpModal(); });
 
         // ============================================================
         //  ΕΚΚΙΝΗΣΗ
         // ============================================================
         resetInfo(); updatePhotoList(); updateWaypointsPanel();
-        openDatabase().then(function() { console.log('✅ Athos Maps DB έτοιμη'); }).catch(function(e) { console.warn('⚠️ IndexedDB error:', e); });
+        openDatabase().then(function() { console.log('✅ Athos Maps DB έτοιμη'); }).catch(function(e) { console.warn('⚠️ IndexedDB:', e); });
         initMap();
         document.addEventListener('visibilitychange', function() { if (!document.hidden) { setTimeout(function() { if (map) map.invalidateSize(); }, 200); updateWatermarkPosition(); if (!initialLocateDone && !userBlueDot) setTimeout(function() { locateUser(true); }, 500); } });
         console.log('🚀 Athos Maps - Path Finder');
-        console.log('💧 Υδατογράφημα ενεργό');
-        console.log('📤 GPX creator: Athos Maps');
+        console.log('💧 Υδατογράφημα ορατό');
+        console.log('📤 GPX: Athos Maps');
     </script>
 </body>
 </html>
