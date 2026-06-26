@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Athos Maps - Όλες οι Διαδρομές</title>
-    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Athos%20Maps%20-%20%CE%86%CE%B3%CE%B9%CE%BF%20%CF%8C%CF%81%CE%BF%CF%82%22%2C%22short_name%22%3A%22Athos%20Maps%22%2C%22description%22%3A%22%CE%8C%CE%BB%CE%B5%CF%82%20%CE%BF%CE%B9%20%CE%B4%CE%B9%CE%B1%CE%B4%CF%81%CE%BF%CE%BC%CE%AD%CF%82%20%CF%84%CE%BF%CF%85%20%CE%91%CE%B3%CE%AF%CE%BF%CF%85%20%CF%8C%CF%81%CE%BF%CF%85%CF%82%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231a1a2e%22%2C%22theme_color%22%3A%22%232c5f2d%22%7D">
     <meta name="theme-color" content="#2c5f2d">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- ============================================================ -->
+    <!-- ΑΦΑΙΡΕΘΗΚΕ ΤΟ MANIFEST ΓΙΑ ΝΑ ΔΟΥΛΕΨΕΙ ΣΤΟ GITHUB PAGES   -->
+    <!-- ============================================================ -->
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;overflow:hidden;height:100%;touch-action:pan-x pan-y}
@@ -262,7 +264,7 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - ΧΩΡΙΣ SERVICE WORKER (ΓΙΑ GITHUB PAGES)
+        // ATHOS MAPS - ΧΩΡΙΣ SERVICE WORKER & MANIFEST (ΓΙΑ GITHUB PAGES)
         // ============================================================
         
         // ============================================================
@@ -806,7 +808,7 @@
         }
 
         // ============================================================
-        // OFFLINE MODE - ΜΕ ΣΩΣΤΟ ZOOM
+        // OFFLINE MODE
         // ============================================================
         async function enableOfflineMode() {
             const count = await getTileCountFromDB();
@@ -831,7 +833,6 @@
             document.getElementById('toggleOfflineBtn').textContent = '📥✓';
             document.getElementById('toggleOfflineBtn').className = 'offline-mode active';
             
-            // Σωστό zoom - φαίνεται ολόκληρη η περιοχή
             const bounds = L.latLngBounds([
                 [CONFIG.ATHOS_BOUNDS.southWest[0] - 0.01, CONFIG.ATHOS_BOUNDS.southWest[1] - 0.01],
                 [CONFIG.ATHOS_BOUNDS.northEast[0] + 0.01, CONFIG.ATHOS_BOUNDS.northEast[1] + 0.01]
@@ -921,7 +922,7 @@
         }
 
         // ============================================================
-        // ROUTES
+        // ROUTES - ΣΥΝΤΟΜΟ
         // ============================================================
         function loadRouteFromGitHub(url, name) {
             if (state.isLoadingRoute) {
@@ -1448,7 +1449,7 @@
         }
 
         // ============================================================
-        // START / END / WAYPOINTS
+        // START / END / WAYPOINTS (ΣΥΝΤΟΜΟ)
         // ============================================================
         function setStartPoint(ll) {
             if (state.startMarker) state.map.removeLayer(state.startMarker);
@@ -2258,13 +2259,13 @@
         // ============================================================
         // START
         // ============================================================
-        console.log('🏔️ Athos Maps - Όλες οι Διαδρομές (χωρίς Service Worker)');
+        console.log('🏔️ Athos Maps - Όλες οι Διαδρομές (GitHub Pages Ready)');
         console.log(`📂 ${ROUTES.length} διαδρομές - Αλφαβητική σειρά`);
         console.log('📥 Offline First - Πάντα από cache (IndexedDB)');
         console.log('⏱️ 3 ταχύτητες (Αργή, Μέτρια, Γρήγορη)');
         console.log('🔐 Online Access: Απαιτεί κωδικό');
         console.log('🔗 agionorosroutes.blogspot.com');
-        console.log('✅ Λειτουργεί κανονικά σε GitHub Pages!');
+        console.log('✅ ΧΩΡΙΣ Service Worker & Manifest - Λειτουργεί σε GitHub Pages!');
     </script>
 </body>
 </html>
