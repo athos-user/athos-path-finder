@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Athos Maps - Όλες οι Διαδρομές</title>
-    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Athos%20Maps%20-%20%CE%86%CE%B3%CE%B9%CE%BF%20%CF%8C%CF%81%CE%BF%CF%82%22%2C%22short_name%22%3A%22Athos%20Maps%22%2C%22description%22%3A%22%CE%8C%CE%BB%CE%B5%CF%82%20%CE%BF%CE%B9%20%CE%B4%CE%B9%CE%B1%CE%B4%CF%81%CE%BF%CE%BC%CE%AD%CF%82%20%CF%84%CE%BF%CF%85%20%CE%91%CE%B3%CE%AF%CE%BF%CF%85%20%CF%8C%CF%81%CE%BF%CF%85%CF%82%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231a1a2e%22%2C%22theme_color%22%3A%22%232c5f2d%22%7D">
     <meta name="theme-color" content="#2c5f2d">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -13,8 +12,11 @@
         body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;overflow:hidden;height:100%;touch-action:pan-x pan-y}
         #map{height:100vh;width:100vw;z-index:1;background:#1a1a2e}
         
-        .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:3px 6px;display:flex;flex-wrap:wrap;gap:2px;justify-content:center;max-height:58px;overflow:hidden;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d}
-        .header button,.header select{padding:3px 5px;font-size:8px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.1);color:white;cursor:pointer;min-height:20px;transition:all 0.2s;touch-action:manipulation;position:relative}
+        /* ============================================================
+           HEADER - ΜΕΓΑΛΥΤΕΡΑ ΚΟΥΜΠΙΑ, ΚΑΛΥΤΕΡΗ ΔΙΑΤΑΞΗ
+           ============================================================ */
+        .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:3px 5px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;max-height:64px;overflow:hidden;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d;align-items:center}
+        .header button,.header select{padding:4px 7px;font-size:9px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:white;cursor:pointer;min-height:24px;transition:all 0.2s;touch-action:manipulation;position:relative;min-width:28px}
         .header button{background:#2c5f2d;color:white;border:none;font-weight:600}
         .header button:active{transform:scale(0.92)}
         .header button.primary{background:#1a7a3a}
@@ -24,46 +26,51 @@
         .header button.offline-mode{background:#2980b9}
         .header button.offline-mode.active{background:#27ae60;box-shadow:0 0 12px rgba(39,174,96,0.4)}
         .header button.route-btn{background:#8e44ad}
-        .header button .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:3px 8px;border-radius:4px;font-size:8px;white-space:nowrap;pointer-events:none;z-index:9999;margin-bottom:2px}
+        .header button .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:2px 8px;border-radius:4px;font-size:8px;white-space:nowrap;pointer-events:none;z-index:9999;margin-bottom:3px}
         .header button:hover .tooltip,.header button:focus .tooltip{display:block}
-        .header select{background:rgba(255,255,255,0.15);color:white;padding:2px 3px;max-width:100px;font-size:8px}
+        .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:2px 5px;max-width:70px;font-size:8px;border:1px solid rgba(255,255,255,0.08);min-height:24px}
         .header select option{color:#333}
-        .header .badge{font-size:7px;background:rgba(255,255,255,0.15);padding:0 5px;border-radius:8px;display:inline-flex;align-items:center;color:#aaa}
-        .header .badge.has-tiles{background:rgba(39,174,96,0.3);color:#4CAF50}
-        .header .badge.routes-badge{background:rgba(142,68,173,0.3);color:#bb86fc}
-        .header .logo-link{display:flex;align-items:center;padding:0 2px;text-decoration:none}
-        .header .logo-link img{height:18px;width:auto;max-width:80px;object-fit:contain;border-radius:3px}
+        .header .badge{font-size:7px;background:rgba(255,255,255,0.12);padding:0 5px;border-radius:6px;display:inline-flex;align-items:center;color:#aaa;min-height:16px}
+        .header .badge.has-tiles{background:rgba(39,174,96,0.25);color:#4CAF50}
+        .header .badge.routes-badge{background:rgba(142,68,173,0.25);color:#bb86fc}
+        .header .logo-link{display:inline-flex;align-items:center;padding:0 3px;text-decoration:none;order:99}
+        .header .logo-link img{height:16px;width:auto;max-width:70px;object-fit:contain;border-radius:3px}
         
-        /* Speed buttons - 3 ταχύτητες σε σειρά */
-        .speed-group{display:inline-flex;align-items:center;gap:1px;background:rgba(255,255,255,0.06);border-radius:4px;padding:1px 2px}
-        .speed-group button{background:transparent;color:#666;border:none;padding:2px 5px;font-size:8px;cursor:pointer;border-radius:3px;min-height:18px;transition:all 0.2s}
-        .speed-group button:hover{background:rgba(255,255,255,0.05)}
-        .speed-group button.active{background:rgba(76,175,80,0.25);color:#4CAF50}
+        /* Speed Group */
+        .speed-group{display:inline-flex;align-items:center;gap:1px;background:rgba(255,255,255,0.06);border-radius:4px;padding:1px 3px}
+        .speed-group button{background:transparent;color:#888;border:none;padding:2px 4px;font-size:8px;cursor:pointer;border-radius:3px;min-height:20px;min-width:20px}
+        .speed-group button:hover{background:rgba(255,255,255,0.08)}
+        .speed-group button.active{background:rgba(76,175,80,0.2);color:#4CAF50}
         .speed-group button .spd-icon{font-size:10px;display:block;text-align:center}
-        .speed-group button .spd-label{font-size:6px;display:block;text-align:center;color:#666;margin-top:1px}
+        .speed-group button .spd-label{font-size:6px;display:block;text-align:center;color:#777;margin-top:0px}
         .speed-group button.active .spd-label{color:#4CAF50}
         
-        .info-panel{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(26,26,46,0.95);padding:4px 10px;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,0.6);font-size:10px;text-align:center;min-width:160px;max-width:92%;border:1px solid rgba(255,255,255,0.1);cursor:grab;backdrop-filter:blur(8px);color:#eee;user-select:none}
-        .info-panel .main-info{font-size:12px;font-weight:700;color:#4CAF50}
-        .info-panel .main-info .dist{font-size:14px}
-        .info-panel .sub-info{font-size:8px;color:#999}
-        .info-panel .status-line{font-size:7px;color:#4CAF50;background:rgba(76,175,80,0.15);padding:1px 8px;border-radius:4px;display:inline-block;margin-top:2px}
+        /* ============================================================
+           INFO PANEL - ΜΕΓΑΛΥΤΕΡΑ ΓΡΑΜΜΑΤΑ
+           ============================================================ */
+        .info-panel{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(26,26,46,0.95);padding:8px 16px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.6);font-size:14px;text-align:center;min-width:220px;max-width:94%;border:1px solid rgba(255,255,255,0.08);cursor:grab;backdrop-filter:blur(8px);color:#eee;user-select:none}
+        .info-panel .main-info{font-size:18px;font-weight:700;color:#4CAF50;letter-spacing:0.5px}
+        .info-panel .main-info .dist{font-size:24px;font-weight:800;color:#4CAF50}
+        .info-panel .main-info .time-val{font-size:20px;font-weight:700;color:#4CAF50}
+        .info-panel .sub-info{font-size:12px;color:#aaa;margin-top:2px}
+        .info-panel .sub-info .route-name{color:#bb86fc;font-weight:600}
+        .info-panel .status-line{font-size:10px;color:#4CAF50;background:rgba(76,175,80,0.12);padding:3px 12px;border-radius:6px;display:inline-block;margin-top:4px;font-weight:600}
         
         #downloadProgress{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(0,0,0,0.92);color:white;padding:6px 14px;border-radius:14px;font-size:10px;display:none;min-width:160px;text-align:center}
         #downloadProgress .bar{width:100%;height:3px;background:#333;border-radius:2px;margin-top:3px;overflow:hidden}
         #downloadProgress .bar .fill{height:100%;background:#4CAF50;width:0%;transition:width 0.3s}
         
-        .status-badge{position:fixed;top:54px;right:4px;z-index:999;background:rgba(0,0,0,0.85);color:white;padding:2px 6px;border-radius:8px;font-size:7px;font-weight:600;backdrop-filter:blur(4px);pointer-events:none}
+        .status-badge{position:fixed;top:58px;right:4px;z-index:999;background:rgba(0,0,0,0.85);color:white;padding:2px 6px;border-radius:8px;font-size:7px;font-weight:600;backdrop-filter:blur(4px);pointer-events:none}
         .status-badge.online{background:rgba(39,174,96,0.85)}
         .status-badge.offline{background:rgba(41,128,185,0.85)}
         
-        .compass-indicator{position:fixed;bottom:100px;right:6px;z-index:2000;background:rgba(26,26,46,0.95);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 12px rgba(0,0,0,0.4);border:2px solid #2196F3;cursor:pointer}
-        .compass-indicator .north-mark{position:absolute;top:2px;font-size:6px;color:#e74c3c;font-weight:700}
+        .compass-indicator{position:fixed;bottom:100px;right:6px;z-index:2000;background:rgba(26,26,46,0.95);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 12px rgba(0,0,0,0.4);border:2px solid #2196F3;cursor:pointer}
+        .compass-indicator .north-mark{position:absolute;top:2px;font-size:7px;color:#e74c3c;font-weight:700}
         
-        .leaflet-control-zoom{z-index:800!important;margin-top:52px!important}
+        .leaflet-control-zoom{z-index:800!important;margin-top:58px!important}
         .leaflet-control-zoom a{background:rgba(26,26,46,0.95)!important;color:#eee!important}
         
-        #routeDropdown{position:fixed;top:56px;left:0;right:0;bottom:0;z-index:1200;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:10px}
+        #routeDropdown{position:fixed;top:60px;left:0;right:0;bottom:0;z-index:1200;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:10px}
         #routeDropdown.active{display:flex}
         #routeDropdown .dropdown-content{background:rgba(26,26,46,0.98);border-radius:14px;padding:12px 14px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;border:2px solid #8e44ad;color:#eee}
         #routeDropdown .dropdown-content h3{color:#bb86fc;font-size:14px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px}
@@ -93,15 +100,15 @@
         #sosContainer input::placeholder,#sosContainer textarea::placeholder{color:#666}
         #sosContainer select option{color:#333}
         
-        .photo-marker{background:white;border-radius:50%;width:26px;height:26px;border:3px solid #8e44ad;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer}
+        .photo-marker{background:white;border-radius:50%;width:28px;height:28px;border:3px solid #8e44ad;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer}
         .photo-marker img{width:100%;height:100%;object-fit:cover}
         
-        .blue-dot{background:#2196F3;border-radius:50%;width:14px;height:14px;border:2px solid white;box-shadow:0 0 0 3px rgba(33,150,243,0.3);display:block;position:relative}
+        .blue-dot{background:#2196F3;border-radius:50%;width:16px;height:16px;border:2px solid white;box-shadow:0 0 0 3px rgba(33,150,243,0.3);display:block;position:relative}
         .blue-dot::after{content:'';position:absolute;top:-7px;left:50%;transform:translateX(-50%);border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:6px solid #2196F3}
-        .blue-dot-glow{background:rgba(33,150,243,0.15);border-radius:50%;width:28px;height:28px;position:absolute;top:-7px;left:-7px;animation:pulse 2s infinite}
+        .blue-dot-glow{background:rgba(33,150,243,0.15);border-radius:50%;width:30px;height:30px;position:absolute;top:-7px;left:-7px;animation:pulse 2s infinite}
         @keyframes pulse{0%{transform:scale(1);opacity:0.6}50%{transform:scale(1.4);opacity:0.15}100%{transform:scale(1);opacity:0.6}}
         
-        .design-indicator{position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(230,126,34,0.9);color:white;padding:2px 12px;border-radius:0 0 8px 8px;font-size:8px;font-weight:700;display:none;pointer-events:none}
+        .design-indicator{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(230,126,34,0.9);color:white;padding:2px 12px;border-radius:0 0 8px 8px;font-size:8px;font-weight:700;display:none;pointer-events:none}
         .design-indicator.active{display:block}
         
         #codeModal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center}
@@ -117,53 +124,71 @@
         #codeModal .modal-content .btn-group .cancel{background:#555;color:white}
         #codeModal .modal-content .error{color:#e74c3c;font-size:10px;margin-top:6px;display:none}
         
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
         @media(max-width:600px){
-            .header{max-height:64px;padding:2px 3px;gap:2px}
-            .header button,.header select{font-size:7px;padding:2px 3px;min-height:17px}
-            .header select{max-width:80px}
-            .header .logo-link img{height:14px;max-width:60px}
-            .info-panel{bottom:50px;font-size:9px;min-width:120px;padding:3px 6px}
-            .info-panel .main-info{font-size:10px}
-            .compass-indicator{bottom:90px;right:4px;width:28px;height:28px;font-size:13px}
+            .header{max-height:68px;padding:2px 4px;gap:3px}
+            .header button,.header select{font-size:8px;padding:3px 5px;min-height:22px;min-width:24px}
+            .header select{max-width:60px;font-size:7px}
+            .header .logo-link img{height:14px;max-width:55px}
+            .info-panel{bottom:50px;font-size:12px;min-width:160px;padding:6px 12px}
+            .info-panel .main-info{font-size:15px}
+            .info-panel .main-info .dist{font-size:20px}
+            .info-panel .main-info .time-val{font-size:17px}
+            .info-panel .sub-info{font-size:10px}
+            .compass-indicator{bottom:90px;right:4px;width:32px;height:32px;font-size:15px}
             #waypointsPanel{bottom:100px;min-width:180px;max-height:160px;font-size:8px}
-            .leaflet-control-zoom{margin-top:58px!important}
+            .leaflet-control-zoom{margin-top:62px!important}
             #routeDropdown .dropdown-content{padding:8px 10px}
             #routeDropdown .route-item{font-size:8px;padding:3px 4px}
-            .speed-group button{padding:1px 3px;font-size:7px}
-            .speed-group button .spd-icon{font-size:8px}
+            .speed-group button{padding:1px 3px;font-size:7px;min-height:18px;min-width:18px}
+            .speed-group button .spd-icon{font-size:9px}
             .speed-group button .spd-label{font-size:5px}
+            .status-badge{top:62px;font-size:6px}
+            .design-indicator{top:62px;font-size:7px}
         }
         @media(max-width:400px){
-            .header button,.header select{font-size:6px;padding:1px 2px;min-height:15px}
-            .header{max-height:58px;gap:1px}
-            .header select{max-width:60px}
-            .speed-group button{padding:1px 2px;font-size:6px}
-            .speed-group button .spd-icon{font-size:7px}
+            .header button,.header select{font-size:7px;padding:2px 3px;min-height:20px;min-width:20px}
+            .header{max-height:62px;gap:2px}
+            .header select{max-width:50px;font-size:6px}
+            .header .logo-link img{height:12px;max-width:45px}
+            .info-panel .main-info{font-size:13px}
+            .info-panel .main-info .dist{font-size:17px}
+            .info-panel .main-info .time-val{font-size:15px}
+            .speed-group button{padding:1px 2px;font-size:6px;min-height:16px;min-width:16px}
+            .speed-group button .spd-icon{font-size:8px}
+        }
+        @media(min-width:601px){
+            .header .logo-link img{height:20px;max-width:90px}
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
     
+    <!-- ============================================================
+    HEADER - ΜΕΓΑΛΥΤΕΡΑ ΚΟΥΜΠΙΑ
+    ============================================================ -->
     <div class="header">
-        <button id="toggleOfflineBtn" class="offline-mode" title="Εναλλαγή Offline/Online"><span class="tooltip">Εναλλαγή Offline/Online</span>📥</button>
-        <button id="downloadBtn" class="primary" title="Λήψη offline χάρτη"><span class="tooltip">Λήψη offline χάρτη</span>⬇️</button>
-        <button id="clearCacheBtn" class="danger" title="Καθαρισμός cache"><span class="tooltip">Καθαρισμός cache</span>🗑️</button>
-        <button id="statusBtn" style="background:#2c3e50" title="Κατάσταση cache"><span class="tooltip">Κατάσταση cache</span>📊</button>
+        <button id="toggleOfflineBtn" class="offline-mode" title="Εναλλαγή Offline/Online"><span class="tooltip">Offline/Online</span>📥</button>
+        <button id="downloadBtn" class="primary" title="Λήψη offline χάρτη"><span class="tooltip">Λήψη</span>⬇️</button>
+        <button id="clearCacheBtn" class="danger" title="Καθαρισμός cache"><span class="tooltip">Cache</span>🗑️</button>
+        <button id="statusBtn" style="background:#2c3e50" title="Κατάσταση cache"><span class="tooltip">Κατάσταση</span>📊</button>
         <span class="badge" id="cacheBadge">0</span>
-        <button id="locateBtn" class="primary" title="GPS εντοπισμός"><span class="tooltip">GPS εντοπισμός</span>📍</button>
-        <button id="sosBtn" class="danger" title="SOS έκτακτη ανάγκη"><span class="tooltip">SOS έκτακτη ανάγκη</span>🆘</button>
-        <button id="photoBtn" title="Λήψη φωτογραφίας"><span class="tooltip">Λήψη φωτογραφίας</span>📸</button>
-        <button id="routesBtn" class="route-btn" title="Όλες οι διαδρομές"><span class="tooltip">Όλες οι διαδρομές (143)</span>🗺️</button>
+        <button id="locateBtn" class="primary" title="GPS εντοπισμός"><span class="tooltip">GPS</span>📍</button>
+        <button id="sosBtn" class="danger" title="SOS έκτακτη ανάγκη"><span class="tooltip">SOS</span>🆘</button>
+        <button id="photoBtn" title="Λήψη φωτογραφίας"><span class="tooltip">Φωτό</span>📸</button>
+        <button id="routesBtn" class="route-btn" title="Όλες οι διαδρομές"><span class="tooltip">Διαδρομές</span>🗺️</button>
         <span class="badge routes-badge" id="routesBadge">143</span>
-        <button id="clearBtn" class="danger" title="Καθαρισμός διαδρομής"><span class="tooltip">Καθαρισμός διαδρομής</span>🗑️</button>
-        <button id="saveRouteBtn" class="primary" title="Αποθήκευση διαδρομής"><span class="tooltip">Αποθήκευση διαδρομής</span>💾</button>
-        <button id="exportGpxBtn" title="Εξαγωγή GPX"><span class="tooltip">Εξαγωγή GPX</span>📤</button>
-        <button id="reloadMapBtn" title="Επαναφόρτωση χάρτη"><span class="tooltip">Επαναφόρτωση χάρτη</span>🔄</button>
-        <button id="toggleWaypointsBtn" title="Σημεία διαδρομής"><span class="tooltip">Σημεία διαδρομής</span>📍</button>
+        <button id="clearBtn" class="danger" title="Καθαρισμός διαδρομής"><span class="tooltip">Καθαρισμός</span>🗑️</button>
+        <button id="saveRouteBtn" class="primary" title="Αποθήκευση διαδρομής"><span class="tooltip">Αποθήκευση</span>💾</button>
+        <button id="exportGpxBtn" title="Εξαγωγή GPX"><span class="tooltip">GPX</span>📤</button>
+        <button id="reloadMapBtn" title="Επαναφόρτωση χάρτη"><span class="tooltip">Επαναφόρτωση</span>🔄</button>
+        <button id="toggleWaypointsBtn" title="Σημεία διαδρομής"><span class="tooltip">Σημεία</span>📍</button>
         <button id="helpBtn" title="Βοήθεια"><span class="tooltip">Βοήθεια</span>❓</button>
         
-        <!-- Speed Group - 3 ταχύτητες (ΜΟΝΟ ΑΥΤΕΣ) -->
+        <!-- Speed Group - 3 ταχύτητες -->
         <div class="speed-group" title="Ταχύτητα πεζοπορίας">
             <button class="spd-btn" data-speed="3" title="Αργή (3 km/h)">
                 <span class="spd-icon">🐢</span>
@@ -179,7 +204,7 @@
             </button>
         </div>
         
-        <!-- Logo link -->
+        <!-- Logo link - δίπλα σε άλλα κουμπιά -->
         <a href="https://agionorosroutes.blogspot.com/" target="_blank" class="logo-link" title="Άγιον Όρος διαδρομές">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPPmMNFQHezTEW7KFjFuPm3nFmS-waV6gjwBA7x_IyoPvA1bUUI3PlfEJuCfs3IXhaNP_eM-UvlNVywDfU6GCoVESm5WRTuCuq8VxSbVQ8wo88AA3rghIlvzjVnHUsvN5ct-JvkBV4p_qT9LYLQ3Bva=w300-h75-s-no-gm?authuser=2" alt="Athos Maps" loading="lazy">
         </a>
@@ -203,9 +228,12 @@
         <span id="compassArrow">🧭</span>
     </div>
 
+    <!-- ============================================================
+    INFO PANEL - ΜΕΓΑΛΥΤΕΡΑ ΓΡΑΜΜΑΤΑ
+    ============================================================ -->
     <div class="info-panel" id="routeInfo">
-        <div class="main-info">🥾 <span class="dist" id="dist1">-</span> km · ⏱️ <span id="time1">-</span></div>
-        <div class="sub-info">📸 <span id="photoCount">0</span> · <span id="routeNameDisplay" style="color:#bb86fc;">-</span></div>
+        <div class="main-info">🥾 <span class="dist" id="dist1">-</span> km · ⏱️ <span class="time-val" id="time1">-</span></div>
+        <div class="sub-info">📸 <span id="photoCount">0</span> · <span class="route-name" id="routeNameDisplay">-</span></div>
         <div class="status-line">📍 <span id="statusText">Πατήστε GPS</span></div>
     </div>
 
@@ -263,7 +291,7 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - ΤΕΛΙΚΗ ΕΚΔΟΣΗ (ΧΩΡΙΣ ΜΕΘΟΔΟΥΣ ΧΡΟΝΟΥ)
+        // ATHOS MAPS - UI ΒΕΛΤΙΩΜΕΝΟ ΓΙΑ ΚΙΝΗΤΟ
         // ============================================================
         
         // ============================================================
@@ -273,7 +301,7 @@
         let isOnlineAccessGranted = false;
         
         // ============================================================
-        // SPEED - 3 ΕΠΙΠΕΔΑ (ΜΟΝΟ ΑΥΤΑ)
+        // SPEED - 3 ΕΠΙΠΕΔΑ
         // ============================================================
         const SPEED_PRESETS = {
             '3': { label: 'Αργή', icon: '🐢', value: 3 },
@@ -806,7 +834,7 @@
         }
 
         // ============================================================
-        // OFFLINE MODE - ΜΕ ΣΩΣΤΟ ZOOM
+        // OFFLINE MODE
         // ============================================================
         async function enableOfflineMode() {
             const count = await getTileCountFromDB();
@@ -831,7 +859,6 @@
             document.getElementById('toggleOfflineBtn').textContent = '📥✓';
             document.getElementById('toggleOfflineBtn').className = 'offline-mode active';
             
-            // Σωστό zoom - φαίνεται ολόκληρη η περιοχή χωρίς μαύρο
             const bounds = L.latLngBounds([
                 [CONFIG.ATHOS_BOUNDS.southWest[0] - 0.01, CONFIG.ATHOS_BOUNDS.southWest[1] - 0.01],
                 [CONFIG.ATHOS_BOUNDS.northEast[0] + 0.01, CONFIG.ATHOS_BOUNDS.northEast[1] + 0.01]
@@ -921,7 +948,7 @@
         }
 
         // ============================================================
-        // ROUTES
+        // ROUTES - ΦΟΡΤΩΣΗ ΑΠΟ GITHUB
         // ============================================================
         function loadRouteFromGitHub(url, name) {
             if (state.isLoadingRoute) {
@@ -951,10 +978,12 @@
                 const allCoords = [];
                 data.tracks.forEach((coords, idx) => {
                     if (coords.length < 2) return;
+                    // 🔴 ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
                     const line = L.polyline(coords, { 
-                        color: '#bb86fc', 
+                        color: '#e74c3c', 
                         weight: 4, 
-                        opacity: 0.9 
+                        opacity: 0.9,
+                        smoothFactor: 1
                     }).addTo(state.map);
                     state.routeLines.push(line);
                     const d = computeDistance(coords.map(c => [c[1], c[0]]));
@@ -1028,7 +1057,7 @@
         }
 
         // ============================================================
-        // ROUTES UI
+        // ROUTES UI - ΑΛΦΑΒΗΤΙΚΗ ΣΕΙΡΑ
         // ============================================================
         function showRouteDropdown() {
             document.getElementById('routeDropdown').classList.add('active');
@@ -1693,7 +1722,7 @@
         }
 
         // ============================================================
-        // CALCULATE ROUTE
+        // CALCULATE ROUTE - ΜΕ ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
         // ============================================================
         function calculateRoute() {
             if (!state.startPoint || !state.endPoint) {
@@ -1753,10 +1782,11 @@
                         }
                         
                         const ll = geom.map(c => [c[1], c[0]]);
+                        // 🔴 ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
                         const line = L.polyline(ll, {
-                            color: '#4CAF50',
+                            color: '#e74c3c',
                             weight: 4,
-                            opacity: 0.8
+                            opacity: 0.85
                         }).addTo(state.map);
                         state.routeLines.push(line);
                         
@@ -1766,7 +1796,7 @@
                         
                         updateInfo();
                         saveLastRouteState();
-                        showToast(`✅ Διαδρομή: ${state.lastMainDistance.toFixed(2)} km`, '#4CAF50');
+                        showToast(`✅ Διαδρομή: ${state.lastMainDistance.toFixed(2)} km`, '#e74c3c');
                     } else {
                         showToast('❌ Δεν βρέθηκε διαδρομή - δοκιμάστε άλλους προορισμούς', '#e74c3c');
                     }
@@ -1822,10 +1852,11 @@
                         }
                         
                         const ll = geom.map(c => [c[1], c[0]]);
+                        // 🔴 ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
                         const line = L.polyline(ll, {
-                            color: '#4CAF50',
+                            color: '#e74c3c',
                             weight: 4,
-                            opacity: 0.8
+                            opacity: 0.85
                         }).addTo(state.map);
                         state.routeLines.push(line);
                         
@@ -1835,7 +1866,7 @@
                         
                         updateInfo();
                         saveLastRouteState();
-                        showToast(`✅ Διαδρομή (GraphHopper): ${state.lastMainDistance.toFixed(2)} km`, '#4CAF50');
+                        showToast(`✅ Διαδρομή (GraphHopper): ${state.lastMainDistance.toFixed(2)} km`, '#e74c3c');
                     } else {
                         if (!state.routeCalculated) {
                             showToast('❌ Αποτυχία υπολογισμού διαδρομής', '#e74c3c');
@@ -1971,10 +2002,11 @@
                 }
                 
                 const ll = data.geometry.map(c => [c[1], c[0]]);
+                // 🔴 ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
                 const line = L.polyline(ll, { 
-                    color: state.lastRouteName ? '#bb86fc' : '#4CAF50', 
-                    weight: 4, 
-                    opacity: 0.8 
+                    color: '#e74c3c',
+                    weight: 4,
+                    opacity: 0.85
                 }).addTo(state.map);
                 state.routeLines.push(line);
                 state.map.fitBounds(line.getBounds(), { padding: [60, 60] });
@@ -2092,7 +2124,7 @@
             const modeBtn = document.createElement('button');
             modeBtn.id = 'modeToggleBtn';
             modeBtn.title = 'Εναλλαγή Πλοήγησης/Σχεδίασης';
-            modeBtn.innerHTML = '<span class="tooltip">Εναλλαγή Πλοήγησης/Σχεδίασης</span>🧭';
+            modeBtn.innerHTML = '<span class="tooltip">Πλοήγηση/Σχεδίαση</span>🧭';
             
             const routesBtn = header.querySelector('#routesBtn');
             if (routesBtn) {
@@ -2201,13 +2233,13 @@
             });
 
             document.getElementById('helpBtn').addEventListener('click', function() {
-                alert('🏔️ Athos Maps - Όλες οι Διαδρομές\n\n' +
+                alert('🏔️ Athos Maps\n\n' +
                     '📥 Offline mode: ΠΑΝΤΑ από cache\n' +
                     '⬇️ Λήψη: Κατέβασε τον χάρτη\n' +
                     '📍 GPS: Εντοπισμός θέσης\n' +
                     '🗺️ Διαδρομές: 143 διαδρομές αλφαβητικά\n' +
                     '⏱️ Ταχύτητα: 🐢 Αργή, 🚶 Μέτρια, 🏃 Γρήγορη\n' +
-                    '✏️ Σχεδίαση: Πατήστε στο χάρτη (κουμπί 🧭/✏️)\n' +
+                    '✏️ Σχεδίαση: Πατήστε στο χάρτη\n' +
                     '📸 Φωτογραφίες: Σημεία\n' +
                     '📝 Σημειώσεις: Σε κάθε σημείο\n' +
                     '💾 Αποθήκευση: Τοπικά\n' +
@@ -2228,7 +2260,7 @@
                                 state.lastMainGeometry = coords.map(c => [c[1], c[0]]);
                                 state.lastMainDistance = computeDistance(coords.map(c => [c[1], c[0]]));
                                 state.routeCalculated = true;
-                                const line = L.polyline(coords, { color: '#4CAF50', weight: 4, opacity: 0.8 }).addTo(state.map);
+                                const line = L.polyline(coords, { color: '#e74c3c', weight: 4, opacity: 0.85 }).addTo(state.map);
                                 state.routeLines.push(line);
                                 state.map.fitBounds(line.getBounds(), { padding: [60, 60] });
                                 updateInfo();
@@ -2258,11 +2290,11 @@
         // ============================================================
         // START
         // ============================================================
-        console.log('🏔️ Athos Maps - Όλες οι Διαδρομές');
+        console.log('🏔️ Athos Maps - UI Βελτιωμένο για Κινητό');
         console.log(`📂 ${ROUTES.length} διαδρομές - Αλφαβητική σειρά`);
-        console.log('📥 Offline First - Πάντα από cache');
-        console.log('⏱️ 3 ταχύτητες (Αργή, Μέτρια, Γρήγορη)');
-        console.log('🔐 Online Access: Απαιτεί κωδικό');
+        console.log('🔴 Κόκκινη διαδρομή για καλύτερη ορατότητα');
+        console.log('📊 Μεγάλα γράμματα στο info panel');
+        console.log('📱 Μεγαλύτερα κουμπιά στο header');
         console.log('🔗 agionorosroutes.blogspot.com');
     </script>
 </body>
