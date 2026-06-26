@@ -12,9 +12,6 @@
         body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;overflow:hidden;height:100%;touch-action:pan-x pan-y}
         #map{height:100vh;width:100vw;z-index:1;background:#1a1a2e}
         
-        /* ============================================================
-           HEADER - ΜΕΓΑΛΥΤΕΡΑ ΚΟΥΜΠΙΑ, ΚΑΛΥΤΕΡΗ ΔΙΑΤΑΞΗ
-           ============================================================ */
         .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:3px 5px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;max-height:64px;overflow:hidden;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d;align-items:center}
         .header button,.header select{padding:4px 7px;font-size:9px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:white;cursor:pointer;min-height:24px;transition:all 0.2s;touch-action:manipulation;position:relative;min-width:28px}
         .header button{background:#2c5f2d;color:white;border:none;font-weight:600}
@@ -28,7 +25,7 @@
         .header button.route-btn{background:#8e44ad}
         .header button .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:2px 8px;border-radius:4px;font-size:8px;white-space:nowrap;pointer-events:none;z-index:9999;margin-bottom:3px}
         .header button:hover .tooltip,.header button:focus .tooltip{display:block}
-        .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:2px 5px;max-width:70px;font-size:8px;border:1px solid rgba(255,255,255,0.08);min-height:24px}
+        .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:2px 5px;max-width:100px;font-size:8px;border:1px solid rgba(255,255,255,0.08);min-height:24px}
         .header select option{color:#333}
         .header .badge{font-size:7px;background:rgba(255,255,255,0.12);padding:0 5px;border-radius:6px;display:inline-flex;align-items:center;color:#aaa;min-height:16px}
         .header .badge.has-tiles{background:rgba(39,174,96,0.25);color:#4CAF50}
@@ -36,7 +33,14 @@
         .header .logo-link{display:inline-flex;align-items:center;padding:0 3px;text-decoration:none;order:99}
         .header .logo-link img{height:16px;width:auto;max-width:70px;object-fit:contain;border-radius:3px}
         
-        /* Speed Group */
+        /* Extra area selector */
+        .extra-area-selector{display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,0.05);border-radius:4px;padding:2px 4px}
+        .extra-area-selector select{background:rgba(255,255,255,0.1);color:#ddd;border:1px solid rgba(255,255,255,0.08);border-radius:3px;padding:2px 4px;font-size:8px;min-height:20px;max-width:80px}
+        .extra-area-selector select option{color:#333}
+        .extra-area-selector button{background:#8e44ad;color:white;border:none;padding:2px 6px;font-size:8px;border-radius:3px;cursor:pointer;min-height:20px}
+        .extra-area-selector button:active{transform:scale(0.92)}
+        .extra-area-selector .gps-btn{background:#2980b9}
+        
         .speed-group{display:inline-flex;align-items:center;gap:1px;background:rgba(255,255,255,0.06);border-radius:4px;padding:1px 3px}
         .speed-group button{background:transparent;color:#888;border:none;padding:2px 4px;font-size:8px;cursor:pointer;border-radius:3px;min-height:20px;min-width:20px}
         .speed-group button:hover{background:rgba(255,255,255,0.08)}
@@ -45,9 +49,6 @@
         .speed-group button .spd-label{font-size:6px;display:block;text-align:center;color:#777;margin-top:0px}
         .speed-group button.active .spd-label{color:#4CAF50}
         
-        /* ============================================================
-           INFO PANEL - ΜΕΓΑΛΥΤΕΡΑ ΓΡΑΜΜΑΤΑ
-           ============================================================ */
         .info-panel{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(26,26,46,0.95);padding:8px 16px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.6);font-size:14px;text-align:center;min-width:220px;max-width:94%;border:1px solid rgba(255,255,255,0.08);cursor:grab;backdrop-filter:blur(8px);color:#eee;user-select:none}
         .info-panel .main-info{font-size:18px;font-weight:700;color:#4CAF50;letter-spacing:0.5px}
         .info-panel .main-info .dist{font-size:24px;font-weight:800;color:#4CAF50}
@@ -124,14 +125,13 @@
         #codeModal .modal-content .btn-group .cancel{background:#555;color:white}
         #codeModal .modal-content .error{color:#e74c3c;font-size:10px;margin-top:6px;display:none}
         
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
         @media(max-width:600px){
-            .header{max-height:68px;padding:2px 4px;gap:3px}
-            .header button,.header select{font-size:8px;padding:3px 5px;min-height:22px;min-width:24px}
-            .header select{max-width:60px;font-size:7px}
+            .header{max-height:72px;padding:2px 4px;gap:2px}
+            .header button,.header select{font-size:7px;padding:3px 4px;min-height:20px;min-width:22px}
+            .header select{max-width:70px;font-size:7px}
             .header .logo-link img{height:14px;max-width:55px}
+            .extra-area-selector select{max-width:60px;font-size:7px}
+            .extra-area-selector button{font-size:7px;padding:1px 4px;min-height:18px}
             .info-panel{bottom:50px;font-size:12px;min-width:160px;padding:6px 12px}
             .info-panel .main-info{font-size:15px}
             .info-panel .main-info .dist{font-size:20px}
@@ -139,40 +139,54 @@
             .info-panel .sub-info{font-size:10px}
             .compass-indicator{bottom:90px;right:4px;width:32px;height:32px;font-size:15px}
             #waypointsPanel{bottom:100px;min-width:180px;max-height:160px;font-size:8px}
-            .leaflet-control-zoom{margin-top:62px!important}
+            .leaflet-control-zoom{margin-top:66px!important}
             #routeDropdown .dropdown-content{padding:8px 10px}
             #routeDropdown .route-item{font-size:8px;padding:3px 4px}
             .speed-group button{padding:1px 3px;font-size:7px;min-height:18px;min-width:18px}
             .speed-group button .spd-icon{font-size:9px}
             .speed-group button .spd-label{font-size:5px}
-            .status-badge{top:62px;font-size:6px}
-            .design-indicator{top:62px;font-size:7px}
+            .status-badge{top:66px;font-size:6px}
+            .design-indicator{top:66px;font-size:7px}
         }
         @media(max-width:400px){
-            .header button,.header select{font-size:7px;padding:2px 3px;min-height:20px;min-width:20px}
-            .header{max-height:62px;gap:2px}
+            .header button,.header select{font-size:6px;padding:2px 3px;min-height:18px;min-width:18px}
+            .header{max-height:66px;gap:2px}
             .header select{max-width:50px;font-size:6px}
             .header .logo-link img{height:12px;max-width:45px}
+            .extra-area-selector select{max-width:50px;font-size:6px}
+            .extra-area-selector button{font-size:6px;padding:1px 3px;min-height:16px}
             .info-panel .main-info{font-size:13px}
             .info-panel .main-info .dist{font-size:17px}
             .info-panel .main-info .time-val{font-size:15px}
             .speed-group button{padding:1px 2px;font-size:6px;min-height:16px;min-width:16px}
             .speed-group button .spd-icon{font-size:8px}
         }
-        @media(min-width:601px){
-            .header .logo-link img{height:20px;max-width:90px}
-        }
     </style>
 </head>
 <body>
     <div id="map"></div>
     
-    <!-- ============================================================
-    HEADER - ΜΕΓΑΛΥΤΕΡΑ ΚΟΥΜΠΙΑ
-    ============================================================ -->
     <div class="header">
         <button id="toggleOfflineBtn" class="offline-mode" title="Εναλλαγή Offline/Online"><span class="tooltip">Offline/Online</span>📥</button>
         <button id="downloadBtn" class="primary" title="Λήψη offline χάρτη"><span class="tooltip">Λήψη</span>⬇️</button>
+        
+        <!-- Extra Area Selector -->
+        <div class="extra-area-selector">
+            <select id="extraAreaSelect">
+                <option value="">+ Περιοχή</option>
+                <option value="patras">🏙️ Πάτρα</option>
+                <option value="athens">🏛️ Αθήνα</option>
+                <option value="thessaloniki">🌊 Θεσσαλονίκη</option>
+                <option value="heraklion">🏝️ Ηράκλειο</option>
+                <option value="ioannina">🏔️ Ιωάννινα</option>
+                <option value="volos">⛰️ Βόλος</option>
+                <option value="rhodes">🌅 Ρόδος</option>
+                <option value="my_area">📍 Η περιοχή μου (GPS)</option>
+            </select>
+            <button id="downloadExtraBtn" title="Λήψη Άγιο Όρος + επιλεγμένη περιοχή">📥</button>
+            <button id="downloadGpsAreaBtn" class="gps-btn" title="Λήψη Άγιο Όρος + η περιοχή μου (GPS)" style="background:#27ae60;">📍</button>
+        </div>
+        
         <button id="clearCacheBtn" class="danger" title="Καθαρισμός cache"><span class="tooltip">Cache</span>🗑️</button>
         <button id="statusBtn" style="background:#2c3e50" title="Κατάσταση cache"><span class="tooltip">Κατάσταση</span>📊</button>
         <span class="badge" id="cacheBadge">0</span>
@@ -188,7 +202,7 @@
         <button id="toggleWaypointsBtn" title="Σημεία διαδρομής"><span class="tooltip">Σημεία</span>📍</button>
         <button id="helpBtn" title="Βοήθεια"><span class="tooltip">Βοήθεια</span>❓</button>
         
-        <!-- Speed Group - 3 ταχύτητες -->
+        <!-- Speed Group -->
         <div class="speed-group" title="Ταχύτητα πεζοπορίας">
             <button class="spd-btn" data-speed="3" title="Αργή (3 km/h)">
                 <span class="spd-icon">🐢</span>
@@ -204,7 +218,7 @@
             </button>
         </div>
         
-        <!-- Logo link - δίπλα σε άλλα κουμπιά -->
+        <!-- Logo link -->
         <a href="https://agionorosroutes.blogspot.com/" target="_blank" class="logo-link" title="Άγιον Όρος διαδρομές">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPPmMNFQHezTEW7KFjFuPm3nFmS-waV6gjwBA7x_IyoPvA1bUUI3PlfEJuCfs3IXhaNP_eM-UvlNVywDfU6GCoVESm5WRTuCuq8VxSbVQ8wo88AA3rghIlvzjVnHUsvN5ct-JvkBV4p_qT9LYLQ3Bva=w300-h75-s-no-gm?authuser=2" alt="Athos Maps" loading="lazy">
         </a>
@@ -228,9 +242,6 @@
         <span id="compassArrow">🧭</span>
     </div>
 
-    <!-- ============================================================
-    INFO PANEL - ΜΕΓΑΛΥΤΕΡΑ ΓΡΑΜΜΑΤΑ
-    ============================================================ -->
     <div class="info-panel" id="routeInfo">
         <div class="main-info">🥾 <span class="dist" id="dist1">-</span> km · ⏱️ <span class="time-val" id="time1">-</span></div>
         <div class="sub-info">📸 <span id="photoCount">0</span> · <span class="route-name" id="routeNameDisplay">-</span></div>
@@ -291,7 +302,7 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - UI ΒΕΛΤΙΩΜΕΝΟ ΓΙΑ ΚΙΝΗΤΟ
+        // ATHOS MAPS - ΜΕ ΕΠΙΠΛΕΟΝ ΠΕΡΙΟΧΗ (ΛΙΣΤΑ + GPS)
         // ============================================================
         
         // ============================================================
@@ -309,6 +320,54 @@
             '5': { label: 'Γρήγορη', icon: '🏃', value: 5 }
         };
         let currentSpeed = 4;
+
+        // ============================================================
+        // ΠΟΛΕΙΣ - ΕΠΙΠΛΕΟΝ ΠΕΡΙΟΧΕΣ
+        // ============================================================
+        const CITIES = {
+            'patras': { 
+                name: 'Πάτρα', 
+                lat: 38.2466, 
+                lng: 21.7346,
+                radius: 15 // km
+            },
+            'athens': { 
+                name: 'Αθήνα', 
+                lat: 37.9838, 
+                lng: 23.7275,
+                radius: 20 
+            },
+            'thessaloniki': { 
+                name: 'Θεσσαλονίκη', 
+                lat: 40.6401, 
+                lng: 22.9444,
+                radius: 15 
+            },
+            'heraklion': { 
+                name: 'Ηράκλειο', 
+                lat: 35.3387, 
+                lng: 25.1442,
+                radius: 15 
+            },
+            'ioannina': { 
+                name: 'Ιωάννινα', 
+                lat: 39.6650, 
+                lng: 20.8537,
+                radius: 12 
+            },
+            'volos': { 
+                name: 'Βόλος', 
+                lat: 39.3622, 
+                lng: 22.9422,
+                radius: 12 
+            },
+            'rhodes': { 
+                name: 'Ρόδος', 
+                lat: 36.4349, 
+                lng: 28.2176,
+                radius: 12 
+            }
+        };
 
         // ============================================================
         // ΟΛΕΣ ΟΙ ΔΙΑΔΡΟΜΕΣ (143) - ΑΛΦΑΒΗΤΙΚΗ ΣΕΙΡΑ
@@ -478,7 +537,8 @@
             DB_NAME: 'AthosTilesDB',
             DB_VERSION: 1,
             BATCH_SIZE: 8,
-            MAX_ZOOM: 17
+            MAX_ZOOM: 17,
+            DEFAULT_RADIUS: 15 // km
         };
 
         // ============================================================
@@ -675,7 +735,7 @@
         }
 
         // ============================================================
-        // DOWNLOAD TILES
+        // ΛΗΨΗ ΠΕΡΙΟΧΗΣ (υποστήριξη για επιπλέον περιοχή)
         // ============================================================
         function getTilesForBounds(bounds, zoom) {
             const tiles = [];
@@ -695,15 +755,205 @@
             return tiles;
         }
 
-        async function downloadOfflineMap() {
+        function getBoundsAroundPoint(lat, lng, radiusKm) {
+            const latDelta = radiusKm / 111;
+            const lngDelta = radiusKm / (111 * Math.cos(lat * Math.PI / 180));
+            return {
+                southWest: [lat - latDelta, lng - lngDelta],
+                northEast: [lat + latDelta, lng + lngDelta]
+            };
+        }
+
+        async function downloadArea(bounds, label, progressText, progressFill, totalTiles) {
+            const zoomLevels = CONFIG.ZOOM_LEVELS;
+            let loadedTiles = 0;
+            const existingTiles = new Set();
+            const tileMap = new Map();
+            let totalAreaTiles = 0;
+            
+            for (const z of zoomLevels) {
+                const tiles = getTilesForBounds(bounds, z);
+                totalAreaTiles += tiles.length;
+                tileMap.set(z, tiles);
+            }
+            
+            // Έλεγχος υπαρχόντων
+            for (const [z, tiles] of tileMap) {
+                for (const tile of tiles) {
+                    const key = `osm_${z}_${tile.x}_${tile.y}`;
+                    const data = await getTileFromDB(key);
+                    if (data) {
+                        existingTiles.add(key);
+                        loadedTiles++;
+                    }
+                }
+            }
+            
+            const tilesToDownload = totalAreaTiles - existingTiles.size;
+            if (tilesToDownload === 0) {
+                if (progressText) {
+                    progressText.textContent = `✅ ${label}: Όλα υπάρχουν!`;
+                }
+                return;
+            }
+            
+            if (progressText) {
+                progressText.textContent = `${label}: Λήψη ${tilesToDownload} tiles...`;
+            }
+            
+            for (const [z, tiles] of tileMap) {
+                const batchSize = CONFIG.BATCH_SIZE;
+                let batch = [];
+                
+                for (const tile of tiles) {
+                    const key = `osm_${z}_${tile.x}_${tile.y}`;
+                    if (existingTiles.has(key)) continue;
+                    
+                    batch.push({ z, x: tile.x, y: tile.y, key });
+                    
+                    if (batch.length >= batchSize) {
+                        await downloadTileBatch(batch, progressText, progressFill, loadedTiles, totalTiles, existingTiles);
+                        loadedTiles += batch.length;
+                        batch = [];
+                    }
+                }
+                
+                if (batch.length > 0) {
+                    await downloadTileBatch(batch, progressText, progressFill, loadedTiles, totalTiles, existingTiles);
+                    loadedTiles += batch.length;
+                }
+            }
+        }
+
+        async function downloadTileBatch(batch, progressText, progressFill, loadedTiles, totalTiles, existingTiles) {
+            const promises = batch.map(async ({ z, x, y, key }) => {
+                try {
+                    const existing = await getTileFromDB(key);
+                    if (existing) return;
+                    
+                    const url = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    return new Promise((resolve) => {
+                        reader.onload = async function(e) {
+                            await putTileInDB(key, e.target.result, z);
+                            existingTiles.add(key);
+                            resolve();
+                        };
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (err) {
+                    console.warn(`Tile ${key} failed:`, err);
+                    return;
+                }
+            });
+
+            await Promise.allSettled(promises);
+            
+            if (progressFill && totalTiles) {
+                const currentTotal = await getTileCountFromDB();
+                const pct = Math.min(100, Math.round((currentTotal / totalTiles) * 100));
+                progressFill.style.width = pct + '%';
+                if (progressText) {
+                    progressText.textContent = `Λήψη... ${pct}% (${currentTotal}/${totalTiles})`;
+                }
+            }
+        }
+
+        // ============================================================
+        // ΛΗΨΗ ATHOS + ΕΠΙΠΛΕΟΝ ΠΕΡΙΟΧΗ
+        // ============================================================
+        async function downloadAthosPlusArea(cityKey) {
             if (state.isDownloading) {
                 showToast('⏳ Ήδη σε εξέλιξη...', '#f39c12');
                 return;
             }
 
+            let cityData = null;
+            let areaLabel = '';
+
+            if (cityKey === 'my_area') {
+                // Χρήση GPS
+                if (!state.lastKnownPosition) {
+                    showToast('📍 Περιμένετε να βρεθεί η θέση σας...', '#2980b9');
+                    // Προσπάθεια εντοπισμού
+                    await new Promise((resolve) => {
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                                (pos) => {
+                                    state.lastKnownPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                                    resolve();
+                                },
+                                () => resolve(),
+                                { enableHighAccuracy: true, timeout: 10000 }
+                            );
+                        } else {
+                            resolve();
+                        }
+                    });
+                    
+                    if (!state.lastKnownPosition) {
+                        showToast('❌ Δεν βρέθηκε θέση. Δοκιμάστε από λίστα.', '#e74c3c');
+                        return;
+                    }
+                }
+                
+                const bounds = getBoundsAroundPoint(
+                    state.lastKnownPosition.lat, 
+                    state.lastKnownPosition.lng, 
+                    CONFIG.DEFAULT_RADIUS
+                );
+                areaLabel = `Η περιοχή μου (${state.lastKnownPosition.lat.toFixed(3)}, ${state.lastKnownPosition.lng.toFixed(3)})`;
+                
+                // Λήψη μόνο της περιοχής του χρήστη (χωρίς Άγιο Όρος)
+                state.isDownloading = true;
+                const btn = document.getElementById('downloadBtn');
+                btn.textContent = '⏳';
+                btn.className = 'warning';
+                
+                const progressDiv = document.getElementById('downloadProgress');
+                const progressFill = document.getElementById('progressFill');
+                const progressText = document.getElementById('progressText');
+                progressDiv.style.display = 'block';
+                
+                try {
+                    const totalTiles = await getTotalTilesForBounds(bounds);
+                    await downloadArea(bounds, areaLabel, progressText, progressFill, totalTiles);
+                    
+                    const finalCount = await getTileCountFromDB();
+                    progressText.textContent = `✅ Ολοκληρώθηκε! ${finalCount} tiles (${areaLabel})`;
+                    setTimeout(() => { progressDiv.style.display = 'none'; }, 3000);
+                    
+                    showToast(`✅ Λήψη ${areaLabel} ολοκληρώθηκε!`, '#2c5f2d');
+                    updateCacheInfo();
+                    enableOfflineMode();
+                } catch (error) {
+                    console.error('Download error:', error);
+                    showToast(`❌ Σφάλμα: ${error.message}`, '#e74c3c');
+                    progressDiv.style.display = 'none';
+                }
+                
+                state.isDownloading = false;
+                btn.textContent = '⬇️';
+                btn.className = 'primary';
+                return;
+            }
+            
+            cityData = CITIES[cityKey];
+            if (!cityData) {
+                showToast('❌ Επιλέξτε μια πόλη', '#e74c3c');
+                return;
+            }
+            
+            areaLabel = cityData.name;
+            
+            // Έλεγχος υπάρχοντων tiles
             const existing = await getTileCountFromDB();
             if (existing > 100) {
-                if (!confirm(`🔄 Υπάρχουν ήδη ${existing} tiles. Θέλεις να ξανακατεβάσεις;`)) {
+                if (!confirm(`🔄 Υπάρχουν ήδη ${existing} tiles. Θέλεις να ξανακατεβάσεις (Άγιο Όρος + ${areaLabel});`)) {
                     return;
                 }
                 await clearTilesDB();
@@ -720,72 +970,29 @@
             progressDiv.style.display = 'block';
 
             try {
-                const zoomLevels = CONFIG.ZOOM_LEVELS;
-                let totalTiles = 0;
-                const tileMap = new Map();
+                // 1. Λήψη Αγίου Όρους
+                const athosBounds = CONFIG.ATHOS_BOUNDS;
+                const athosTiles = getTilesForBounds(athosBounds, CONFIG.ZOOM_LEVELS);
+                let totalTiles = athosTiles.length;
                 
-                for (const z of zoomLevels) {
-                    const tiles = getTilesForBounds(CONFIG.ATHOS_BOUNDS, z);
-                    totalTiles += tiles.length;
-                    tileMap.set(z, tiles);
-                }
-
-                let loadedTiles = 0;
-                const existingTiles = new Set();
-
-                for (const [z, tiles] of tileMap) {
-                    for (const tile of tiles) {
-                        const key = `osm_${z}_${tile.x}_${tile.y}`;
-                        const data = await getTileFromDB(key);
-                        if (data) {
-                            existingTiles.add(key);
-                            loadedTiles++;
-                        }
-                    }
-                }
-
-                const tilesToDownload = totalTiles - existingTiles.size;
-                if (tilesToDownload === 0) {
-                    progressText.textContent = '✅ Όλα τα tiles υπάρχουν!';
-                    setTimeout(() => { progressDiv.style.display = 'none'; }, 2000);
-                    showToast(`✅ ${totalTiles} tiles έτοιμα!`, '#2c5f2d');
-                    state.isDownloading = false;
-                    btn.textContent = '⬇️';
-                    btn.className = 'primary';
-                    updateCacheInfo();
-                    return;
-                }
-
-                progressText.textContent = `Λήψη ${tilesToDownload} tiles...`;
-
-                for (const [z, tiles] of tileMap) {
-                    const batchSize = CONFIG.BATCH_SIZE;
-                    let batch = [];
-                    
-                    for (const tile of tiles) {
-                        const key = `osm_${z}_${tile.x}_${tile.y}`;
-                        if (existingTiles.has(key)) continue;
-                        
-                        batch.push({ z, x: tile.x, y: tile.y, key });
-                        
-                        if (batch.length >= batchSize) {
-                            await downloadBatch(batch, progressText, progressFill, loadedTiles, totalTiles);
-                            loadedTiles += batch.length;
-                            batch = [];
-                        }
-                    }
-                    
-                    if (batch.length > 0) {
-                        await downloadBatch(batch, progressText, progressFill, loadedTiles, totalTiles);
-                        loadedTiles += batch.length;
-                    }
-                }
-
+                // 2. Λήψη επιπλέον περιοχής
+                const cityBounds = getBoundsAroundPoint(cityData.lat, cityData.lng, cityData.radius);
+                const cityTiles = getTilesForBounds(cityBounds, CONFIG.ZOOM_LEVELS);
+                totalTiles += cityTiles.length;
+                
+                progressText.textContent = `Λήψη Άγιο Όρος + ${areaLabel} (${totalTiles} tiles)...`;
+                
+                // Λήψη Αγίου Όρους
+                await downloadArea(athosBounds, 'Άγιο Όρος', progressText, progressFill, totalTiles);
+                
+                // Λήψη επιπλέον περιοχής
+                await downloadArea(cityBounds, areaLabel, progressText, progressFill, totalTiles);
+                
                 const finalCount = await getTileCountFromDB();
-                progressText.textContent = `✅ Ολοκληρώθηκε! ${finalCount} tiles`;
+                progressText.textContent = `✅ Ολοκληρώθηκε! ${finalCount} tiles (Άγιο Όρος + ${areaLabel})`;
                 setTimeout(() => { progressDiv.style.display = 'none'; }, 3000);
                 
-                showToast(`✅ Λήψη ολοκληρώθηκε! ${finalCount} tiles`, '#2c5f2d');
+                showToast(`✅ Λήψη ολοκληρώθηκε! Άγιο Όρος + ${areaLabel}`, '#2c5f2d');
                 updateCacheInfo();
                 enableOfflineMode();
                 
@@ -800,37 +1007,14 @@
             btn.className = 'primary';
         }
 
-        async function downloadBatch(batch, progressText, progressFill, loadedTiles, totalTiles) {
-            const promises = batch.map(async ({ z, x, y, key }) => {
-                try {
-                    const existing = await getTileFromDB(key);
-                    if (existing) return;
-                    
-                    const url = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    
-                    const blob = await response.blob();
-                    const reader = new FileReader();
-                    return new Promise((resolve) => {
-                        reader.onload = async function(e) {
-                            await putTileInDB(key, e.target.result, z);
-                            resolve();
-                        };
-                        reader.readAsDataURL(blob);
-                    });
-                } catch (err) {
-                    console.warn(`Tile ${key} failed:`, err);
-                    return;
-                }
-            });
-
-            await Promise.allSettled(promises);
-            
-            const currentTotal = await getTileCountFromDB();
-            const pct = Math.min(100, Math.round((currentTotal / totalTiles) * 100));
-            progressFill.style.width = pct + '%';
-            progressText.textContent = `Λήψη... ${pct}% (${currentTotal}/${totalTiles})`;
+        async function getTotalTilesForBounds(bounds) {
+            const zoomLevels = CONFIG.ZOOM_LEVELS;
+            let total = 0;
+            for (const z of zoomLevels) {
+                const tiles = getTilesForBounds(bounds, z);
+                total += tiles.length;
+            }
+            return total;
         }
 
         // ============================================================
@@ -948,7 +1132,7 @@
         }
 
         // ============================================================
-        // ROUTES - ΦΟΡΤΩΣΗ ΑΠΟ GITHUB
+        // ROUTES - ΣΥΝΤΟΜΟ
         // ============================================================
         function loadRouteFromGitHub(url, name) {
             if (state.isLoadingRoute) {
@@ -978,7 +1162,6 @@
                 const allCoords = [];
                 data.tracks.forEach((coords, idx) => {
                     if (coords.length < 2) return;
-                    // 🔴 ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
                     const line = L.polyline(coords, { 
                         color: '#e74c3c', 
                         weight: 4, 
@@ -1057,7 +1240,7 @@
         }
 
         // ============================================================
-        // ROUTES UI - ΑΛΦΑΒΗΤΙΚΗ ΣΕΙΡΑ
+        // ROUTES UI
         // ============================================================
         function showRouteDropdown() {
             document.getElementById('routeDropdown').classList.add('active');
@@ -1131,7 +1314,7 @@
         }
 
         // ============================================================
-        // SPEED GROUP - 3 ΤΑΧΥΤΗΤΕΣ
+        // SPEED GROUP
         // ============================================================
         function setupSpeedGroup() {
             const buttons = document.querySelectorAll('.spd-btn');
@@ -1722,7 +1905,7 @@
         }
 
         // ============================================================
-        // CALCULATE ROUTE - ΜΕ ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
+        // CALCULATE ROUTE
         // ============================================================
         function calculateRoute() {
             if (!state.startPoint || !state.endPoint) {
@@ -1782,7 +1965,6 @@
                         }
                         
                         const ll = geom.map(c => [c[1], c[0]]);
-                        // 🔴 ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
                         const line = L.polyline(ll, {
                             color: '#e74c3c',
                             weight: 4,
@@ -1852,7 +2034,6 @@
                         }
                         
                         const ll = geom.map(c => [c[1], c[0]]);
-                        // 🔴 ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
                         const line = L.polyline(ll, {
                             color: '#e74c3c',
                             weight: 4,
@@ -2002,7 +2183,6 @@
                 }
                 
                 const ll = data.geometry.map(c => [c[1], c[0]]);
-                // 🔴 ΚΟΚΚΙΝΗ ΔΙΑΔΡΟΜΗ
                 const line = L.polyline(ll, { 
                     color: '#e74c3c',
                     weight: 4,
@@ -2156,6 +2336,22 @@
                 isOnlineAccessGranted = true;
             }
 
+            // Extra area download - από λίστα
+            document.getElementById('downloadExtraBtn').addEventListener('click', function() {
+                const select = document.getElementById('extraAreaSelect');
+                const city = select.value;
+                if (!city) {
+                    showToast('❌ Επιλέξτε μια πόλη ή "Η περιοχή μου"', '#e74c3c');
+                    return;
+                }
+                downloadAthosPlusArea(city);
+            });
+            
+            // Extra area download - GPS
+            document.getElementById('downloadGpsAreaBtn').addEventListener('click', function() {
+                downloadAthosPlusArea('my_area');
+            });
+
             document.getElementById('routesBtn').addEventListener('click', showRouteDropdown);
             document.getElementById('closeRoutesBtn').addEventListener('click', hideRouteDropdown);
             document.getElementById('closeRoutesBtn2').addEventListener('click', hideRouteDropdown);
@@ -2171,7 +2367,7 @@
                     if (count === 0) {
                         showToast('❌ Δεν υπάρχουν offline tiles. Κάνε λήψη πρώτα.', '#e74c3c');
                         if (confirm('Θέλεις να κατεβάσεις τον offline χάρτη τώρα;')) {
-                            downloadOfflineMap();
+                            downloadAthosPlusArea('patras');
                         }
                         return;
                     }
@@ -2179,7 +2375,10 @@
                 }
             });
 
-            document.getElementById('downloadBtn').addEventListener('click', downloadOfflineMap);
+            document.getElementById('downloadBtn').addEventListener('click', function() {
+                downloadAthosPlusArea('patras');
+            });
+            
             document.getElementById('clearCacheBtn').addEventListener('click', async function() {
                 if (!confirm('🗑️ Διαγραφή όλων των offline tiles;')) return;
                 await clearTilesDB();
@@ -2235,7 +2434,7 @@
             document.getElementById('helpBtn').addEventListener('click', function() {
                 alert('🏔️ Athos Maps\n\n' +
                     '📥 Offline mode: ΠΑΝΤΑ από cache\n' +
-                    '⬇️ Λήψη: Κατέβασε τον χάρτη\n' +
+                    '⬇️ Λήψη: Άγιο Όρος + επιπλέον περιοχή\n' +
                     '📍 GPS: Εντοπισμός θέσης\n' +
                     '🗺️ Διαδρομές: 143 διαδρομές αλφαβητικά\n' +
                     '⏱️ Ταχύτητα: 🐢 Αργή, 🚶 Μέτρια, 🏃 Γρήγορη\n' +
@@ -2290,11 +2489,9 @@
         // ============================================================
         // START
         // ============================================================
-        console.log('🏔️ Athos Maps - UI Βελτιωμένο για Κινητό');
+        console.log('🏔️ Athos Maps - Με Επιπλέον Περιοχή');
         console.log(`📂 ${ROUTES.length} διαδρομές - Αλφαβητική σειρά`);
-        console.log('🔴 Κόκκινη διαδρομή για καλύτερη ορατότητα');
-        console.log('📊 Μεγάλα γράμματα στο info panel');
-        console.log('📱 Μεγαλύτερα κουμπιά στο header');
+        console.log('📍 Λήψη: Άγιο Όρος + Επιλεγμένη πόλη / GPS');
         console.log('🔗 agionorosroutes.blogspot.com');
     </script>
 </body>
