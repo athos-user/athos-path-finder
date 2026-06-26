@@ -34,7 +34,6 @@
         .header .logo-link{display:flex;align-items:center;padding:0 2px;text-decoration:none}
         .header .logo-link img{height:18px;width:auto;max-width:80px;object-fit:contain;border-radius:3px}
         
-        /* Speed buttons - 3 ταχύτητες σε σειρά */
         .speed-group{display:inline-flex;align-items:center;gap:1px;background:rgba(255,255,255,0.06);border-radius:4px;padding:1px 2px}
         .speed-group button{background:transparent;color:#666;border:none;padding:2px 5px;font-size:8px;cursor:pointer;border-radius:3px;min-height:18px;transition:all 0.2s}
         .speed-group button:hover{background:rgba(255,255,255,0.05)}
@@ -163,7 +162,7 @@
         <button id="toggleWaypointsBtn" title="Σημεία διαδρομής"><span class="tooltip">Σημεία διαδρομής</span>📍</button>
         <button id="helpBtn" title="Βοήθεια"><span class="tooltip">Βοήθεια</span>❓</button>
         
-        <!-- Speed Group - 3 ταχύτητες (ΜΟΝΟ ΑΥΤΕΣ) -->
+        <!-- Speed Group - 3 ταχύτητες -->
         <div class="speed-group" title="Ταχύτητα πεζοπορίας">
             <button class="spd-btn" data-speed="3" title="Αργή (3 km/h)">
                 <span class="spd-icon">🐢</span>
@@ -263,7 +262,7 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - ΤΕΛΙΚΗ ΕΚΔΟΣΗ (ΧΩΡΙΣ ΜΕΘΟΔΟΥΣ ΧΡΟΝΟΥ)
+        // ATHOS MAPS - ΧΩΡΙΣ SERVICE WORKER (ΓΙΑ GITHUB PAGES)
         // ============================================================
         
         // ============================================================
@@ -273,7 +272,7 @@
         let isOnlineAccessGranted = false;
         
         // ============================================================
-        // SPEED - 3 ΕΠΙΠΕΔΑ (ΜΟΝΟ ΑΥΤΑ)
+        // SPEED - 3 ΕΠΙΠΕΔΑ
         // ============================================================
         const SPEED_PRESETS = {
             '3': { label: 'Αργή', icon: '🐢', value: 3 },
@@ -614,6 +613,7 @@
                     } else if (navigator.onLine && isOnlineAccessGranted) {
                         tile.src = url;
                         tile.onload = () => {
+                            // Αποθήκευση για μελλοντική offline χρήση
                             fetch(url).then(resp => {
                                 if (resp.ok) {
                                     resp.blob().then(blob => {
@@ -831,7 +831,7 @@
             document.getElementById('toggleOfflineBtn').textContent = '📥✓';
             document.getElementById('toggleOfflineBtn').className = 'offline-mode active';
             
-            // Σωστό zoom - φαίνεται ολόκληρη η περιοχή χωρίς μαύρο
+            // Σωστό zoom - φαίνεται ολόκληρη η περιοχή
             const bounds = L.latLngBounds([
                 [CONFIG.ATHOS_BOUNDS.southWest[0] - 0.01, CONFIG.ATHOS_BOUNDS.southWest[1] - 0.01],
                 [CONFIG.ATHOS_BOUNDS.northEast[0] + 0.01, CONFIG.ATHOS_BOUNDS.northEast[1] + 0.01]
@@ -2258,12 +2258,13 @@
         // ============================================================
         // START
         // ============================================================
-        console.log('🏔️ Athos Maps - Όλες οι Διαδρομές');
+        console.log('🏔️ Athos Maps - Όλες οι Διαδρομές (χωρίς Service Worker)');
         console.log(`📂 ${ROUTES.length} διαδρομές - Αλφαβητική σειρά`);
-        console.log('📥 Offline First - Πάντα από cache');
+        console.log('📥 Offline First - Πάντα από cache (IndexedDB)');
         console.log('⏱️ 3 ταχύτητες (Αργή, Μέτρια, Γρήγορη)');
         console.log('🔐 Online Access: Απαιτεί κωδικό');
         console.log('🔗 agionorosroutes.blogspot.com');
+        console.log('✅ Λειτουργεί κανονικά σε GitHub Pages!');
     </script>
 </body>
 </html>
