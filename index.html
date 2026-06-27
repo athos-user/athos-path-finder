@@ -30,6 +30,8 @@
         .header button.screen-on-btn.active{background:#1abc9c;box-shadow:0 0 10px rgba(26,188,156,0.5)}
         .header button.offroute-btn{background:#c0392b;color:white}
         .header button.offroute-btn.active{background:#e74c3c;box-shadow:0 0 10px rgba(231,76,60,0.5)}
+        .header button.navigate-btn{background:#2196F3;color:white}
+        .header button.navigate-btn.active{background:#00BCD4;box-shadow:0 0 12px rgba(0,188,212,0.5)}
         .header button .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:2px 8px;border-radius:4px;font-size:8px;white-space:nowrap;pointer-events:none;z-index:9999;margin-bottom:3px}
         .header button:hover .tooltip,.header button:focus .tooltip{display:block}
         .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:4px 7px;max-width:110px;font-size:10px;border:1px solid rgba(255,255,255,0.08);min-height:34px}
@@ -214,8 +216,7 @@
         <span class="badge" id="cacheBadge">0</span>
         
         <button id="locateBtn" class="primary" title="GPS εντοπισμός"><span class="tooltip">GPS εντοπισμός</span>📍</button>
-        
-        <!-- ΝΕΑ ΚΟΥΜΠΙΑ -->
+        <button id="navigateBtn" class="navigate-btn" title="Πλοήγηση - Ακολούθησέ με"><span class="tooltip">Πλοήγηση</span>🧭</button>
         <button id="screenOnBtn" class="screen-on-btn" title="Οθόνη πάντα ανοιχτή"><span class="tooltip">Οθόνη ON</span>🔆</button>
         <button id="offRouteBtn" class="offroute-btn" title="Ειδοποίηση εκτός διαδρομής"><span class="tooltip">Εκτός διαδρομής</span>⚠️</button>
         
@@ -333,7 +334,7 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - FINAL VERSION ΜΕ ΟΘΟΝΗ ON + OFF-ROUTE ALERT
+        // ATHOS MAPS - FINAL VERSION ΜΕ ΠΛΟΗΓΗΣΗ (FOLLOW ME)
         // ============================================================
         
         const ACCESS_CODE = '10101010';
@@ -562,7 +563,10 @@
             wakeLock: null,
             isScreenOn: false,
             isOffRouteAlert: false,
-            offRouteWatchId: null
+            offRouteWatchId: null,
+            isNavigating: false,
+            navigateWatchId: null,
+            lastUserInteraction: 0
         };
 
         // ============================================================
@@ -1111,7 +1115,7 @@
         }
 
         // ============================================================
-        // WAKE LOCK - ΟΘΟΝΗ ΠΑΝΤΑ ΑΝΟΙΧΤΗ
+        // WAKE LOCK
         // ============================================================
         async function toggleScreenOn() {
             if (state.isScreenOn) {
@@ -1159,7 +1163,60 @@
         }
 
         // ============================================================
-        // OFF-ROUTE ALERT - ΕΙΔΟΠΟΙΗΣΗ ΕΚΤΟΣ ΔΙΑΔΡΟΜΗΣ
+        // ΠΛΟΗΓΗΣΗ - FOLLOW ME
+        // ============================================================
+        function toggleNavigation() {
+            if (state.isNavigating) {
+                disableNavigation();
+            } else {
+                enableNavigation();
+            }
+        }
+
+        function enableNavigation() {
+            if (!state.isLocationTracking) {
+                showToast('⚠️ Ενεργοποίησε πρώτα το GPS', '#e67e22');
+                return;
+            }
+
+            state.isNavigating = true;
+            document.getElementById('navigateBtn').textContent = '🧭✓';
+            document.getElementById('navigateBtn').className = 'navigate-btn active';
+            
+            // Κεντράρουμε αμέσως στη θέση
+            if (state.lastKnownPosition) {
+                state.map.flyTo([state.lastKnownPosition.lat, state.lastKnownPosition.lng], state.map.getZoom());
+            }
+            
+            // Παρακολουθούμε για αλλαγές θέσης και ακολουθούμε
+            state.navigateWatchId = setInterval(() => {
+                if (state.isNavigating && state.lastKnownPosition && !state.isUserInteracting()) {
+                    state.map.panTo([state.lastKnownPosition.lat, state.lastKnownPosition.lng], { animate: true, duration: 0.5 });
+                }
+            }, 1000);
+            
+            showToast('🧭 Πλοήγηση ON - Ο χάρτης σε ακολουθεί', '#2196F3');
+        }
+
+        function disableNavigation() {
+            state.isNavigating = false;
+            document.getElementById('navigateBtn').textContent = '🧭';
+            document.getElementById('navigateBtn').className = 'navigate-btn';
+            
+            if (state.navigateWatchId) {
+                clearInterval(state.navigateWatchId);
+                state.navigateWatchId = null;
+            }
+            showToast('🧭 Πλοήγηση OFF', '#888');
+        }
+
+        function isUserInteracting() {
+            // Αν ο χρήστης έχει κάνει pan/zoom τα τελευταία 5 δευτερόλεπτα
+            return (Date.now() - state.lastUserInteraction) < 5000;
+        }
+
+        // ============================================================
+        // OFF-ROUTE ALERT
         // ============================================================
         function toggleOffRouteAlert() {
             if (state.isOffRouteAlert) {
@@ -1184,7 +1241,6 @@
             document.getElementById('offRouteBtn').textContent = '⚠️✓';
             document.getElementById('offRouteBtn').className = 'offroute-btn active';
             
-            // Έλεγχος κάθε 3 δευτερόλεπτα
             state.offRouteWatchId = setInterval(checkOffRoute, 3000);
             showToast('⚠️ Ειδοποίηση εκτός διαδρομής ON (50m)', '#e74c3c');
         }
@@ -1209,7 +1265,6 @@
             const userLng = state.lastKnownPosition.lng;
             let minDistance = Infinity;
             
-            // Βρίσκουμε την απόσταση από το πλησιέστερο σημείο της διαδρομής
             for (const coord of state.lastMainGeometry) {
                 const dist = L.latLng(userLat, userLng).distanceTo(L.latLng(coord[1], coord[0]));
                 if (dist < minDistance) minDistance = dist;
@@ -1219,20 +1274,18 @@
             const statusEl = document.getElementById('statusText');
             
             if (minDistance > 50) {
-                // Εκτός διαδρομής
                 warningEl.classList.add('active');
                 warningEl.textContent = `⚠️ ΕΚΤΟΣ ΔΙΑΔΡΟΜΗΣ! (${Math.round(minDistance)}m)`;
                 if (statusEl) statusEl.textContent = `⚠️ Εκτός διαδρομής: ${Math.round(minDistance)}m`;
                 
-                // Δόνηση αν υποστηρίζεται
                 if (navigator.vibrate) {
                     navigator.vibrate([200, 100, 200]);
                 }
             } else {
-                // Εντός διαδρομής
                 warningEl.classList.remove('active');
                 if (statusEl && state.isLocationTracking) {
-                    statusEl.textContent = `📍 ${userLat.toFixed(4)}, ${userLng.toFixed(4)} | ✅ Εντός διαδρομής`;
+                    const navStatus = state.isNavigating ? '🧭' : '📍';
+                    statusEl.textContent = `${navStatus} ${userLat.toFixed(4)}, ${userLng.toFixed(4)} | ✅ Εντός διαδρομής`;
                 }
             }
         }
@@ -1272,7 +1325,10 @@
                         }
                         
                         document.getElementById('statusText').textContent = `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                        state.map.flyTo([lat, lng], 15);
+                        
+                        if (!state.isNavigating) {
+                            state.map.flyTo([lat, lng], 15);
+                        }
                         state.isGpsCentered = true;
                     },
                     function() {
@@ -1291,10 +1347,9 @@
                             state.userBlueDot.setLatLng([lat, lng]);
                         }
                         
-                        if (state.isOffRouteAlert && state.lastMainGeometry) {
-                            // Το checkOffRoute τρέχει από το setInterval
-                        } else {
-                            document.getElementById('statusText').textContent = `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                        if (!state.isOffRouteAlert) {
+                            const navStatus = state.isNavigating ? '🧭' : '📍';
+                            document.getElementById('statusText').textContent = `${navStatus} ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                         }
                     },
                     function() {},
@@ -1314,14 +1369,21 @@
                 clearInterval(state.offRouteWatchId);
                 state.offRouteWatchId = null;
             }
+            if (state.navigateWatchId) {
+                clearInterval(state.navigateWatchId);
+                state.navigateWatchId = null;
+            }
             state.isLocationTracking = false;
             state.isGpsCentered = false;
             state.positionLocked = false;
             state.isOffRouteAlert = false;
+            state.isNavigating = false;
             document.getElementById('locateBtn').textContent = '📍';
             document.getElementById('locateBtn').className = 'primary';
             document.getElementById('offRouteBtn').textContent = '⚠️';
             document.getElementById('offRouteBtn').className = 'offroute-btn';
+            document.getElementById('navigateBtn').textContent = '🧭';
+            document.getElementById('navigateBtn').className = 'navigate-btn';
             document.getElementById('offRouteWarning').classList.remove('active');
             document.getElementById('statusText').textContent = 'Πατήστε GPS';
         }
@@ -1678,8 +1740,24 @@
                 maxZoom: 19
             });
 
+            // Ανίχνευση αλληλεπίδρασης χρήστη
+            state.map.on('movestart', function() {
+                state.lastUserInteraction = Date.now();
+            });
+            state.map.on('zoomstart', function() {
+                state.lastUserInteraction = Date.now();
+            });
+
             state.map.on('click', function(e) {
                 showClickPopup(e);
+            });
+
+            // Όταν η σελίδα γίνεται ξανά ορατή (ξεκλείδωμα οθόνης)
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible' && state.isNavigating && state.lastKnownPosition) {
+                    state.map.flyTo([state.lastKnownPosition.lat, state.lastKnownPosition.lng], state.map.getZoom());
+                    showToast('🧭 Επαναφορά στη θέση σας', '#2196F3');
+                }
             });
 
             document.getElementById('compassIndicator').addEventListener('click', function() {
@@ -2432,7 +2510,7 @@
                 isOnlineAccessGranted = true;
             }
 
-            // ΝΕΑ ΚΟΥΜΠΙΑ
+            document.getElementById('navigateBtn').addEventListener('click', toggleNavigation);
             document.getElementById('screenOnBtn').addEventListener('click', toggleScreenOn);
             document.getElementById('offRouteBtn').addEventListener('click', toggleOffRouteAlert);
 
@@ -2531,14 +2609,14 @@
                 alert('🏔️ Athos Maps\n\n' +
                     '📥 Offline mode: ΠΑΝΤΑ από cache\n' +
                     '⬇️ Λήψη: Άγιο Όρος + επιπλέον περιοχή\n' +
-                    '📍 GPS: Εντοπισμός θέσης (μένει στη θέση σας)\n' +
+                    '📍 GPS: Εντοπισμός θέσης\n' +
+                    '🧭 Πλοήγηση: Ο χάρτης σε ακολουθεί\n' +
                     '🔆 Οθόνη ON: Η οθόνη δεν κλείνει\n' +
                     '⚠️ Εκτός διαδρομής: Ειδοποίηση αν βγείτε εκτός\n' +
                     '🗺️ Διαδρομές: 143 διαδρομές αλφαβητικά\n' +
                     '⏱️ Ταχύτητα: 🐢 Αργή, 🚶 Μέτρια, 🏃 Γρήγορη\n' +
                     '✏️ Σχεδίαση: Πατήστε στο χάρτη\n' +
                     '📸 Φωτογραφίες: Σημεία\n' +
-                    '📝 Σημειώσεις: Σε κάθε σημείο\n' +
                     '💾 Αποθήκευση: Τοπικά\n' +
                     '📤 GPX: Με κωδικό\n' +
                     '🔐 Online: Απαιτεί κωδικό\n' +
@@ -2584,12 +2662,13 @@
             });
         });
 
-        console.log('🏔️ Athos Maps - FINAL VERSION');
-        console.log('✅ ΟΘΟΝΗ ON: Wake Lock API');
-        console.log('✅ ΕΚΤΟΣ ΔΙΑΔΡΟΜΗΣ: Alert στα 50m');
-        console.log('✅ GPS: Κεντράρει μόνο την πρώτη φορά');
-        console.log('✅ Offline: Δεν αλλάζει θέση');
-        console.log('✅ Γκρι fallback tile');
+        console.log('🏔️ Athos Maps - FINAL VERSION ΜΕ ΠΛΟΗΓΗΣΗ');
+        console.log('✅ 🧭 ΠΛΟΗΓΗΣΗ: Follow me - ο χάρτης σε ακολουθεί');
+        console.log('✅ 🔆 ΟΘΟΝΗ ON: Wake Lock API');
+        console.log('✅ ⚠️ ΕΚΤΟΣ ΔΙΑΔΡΟΜΗΣ: Alert στα 50m');
+        console.log('✅ 📍 GPS: Κεντράρει μόνο την πρώτη φορά');
+        console.log('✅ 📥 Offline: Δεν αλλάζει θέση');
+        console.log('✅ 📱 Επαναφορά στο ξεκλείδωμα οθόνης');
         console.log('📦 143 διαδρομές');
     </script>
 </body>
