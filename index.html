@@ -15,8 +15,8 @@
         /* ============================================================
            HEADER - ΜΕΓΑΛΥΤΕΡΑ ΚΟΥΜΠΙΑ
            ============================================================ */
-        .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:5px 7px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-height:76px;overflow:hidden;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d;align-items:center}
-        .header button,.header select{padding:6px 10px;font-size:11px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:white;cursor:pointer;min-height:32px;transition:all 0.2s;touch-action:manipulation;position:relative;min-width:36px}
+        .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:5px 7px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-height:82px;overflow:hidden;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d;align-items:center}
+        .header button,.header select{padding:7px 12px;font-size:12px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:white;cursor:pointer;min-height:36px;transition:all 0.2s;touch-action:manipulation;position:relative;min-width:40px}
         .header button{background:#2c5f2d;color:white;border:none;font-weight:600}
         .header button:active{transform:scale(0.92)}
         .header button.primary{background:#1a7a3a}
@@ -28,29 +28,46 @@
         .header button.route-btn{background:#8e44ad}
         .header button .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:2px 8px;border-radius:4px;font-size:8px;white-space:nowrap;pointer-events:none;z-index:9999;margin-bottom:3px}
         .header button:hover .tooltip,.header button:focus .tooltip{display:block}
-        .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:4px 7px;max-width:110px;font-size:10px;border:1px solid rgba(255,255,255,0.08);min-height:32px}
+        .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:5px 8px;max-width:120px;font-size:11px;border:1px solid rgba(255,255,255,0.08);min-height:36px}
         .header select option{color:#333}
-        .header .badge{font-size:9px;background:rgba(255,255,255,0.12);padding:0 7px;border-radius:6px;display:inline-flex;align-items:center;color:#aaa;min-height:20px}
+        .header .badge{font-size:10px;background:rgba(255,255,255,0.12);padding:0 8px;border-radius:6px;display:inline-flex;align-items:center;color:#aaa;min-height:22px}
         .header .badge.has-tiles{background:rgba(39,174,96,0.25);color:#4CAF50}
         .header .badge.routes-badge{background:rgba(142,68,173,0.25);color:#bb86fc}
         .header .logo-link{display:inline-flex;align-items:center;padding:0 4px;text-decoration:none;order:99}
-        .header .logo-link img{height:20px;width:auto;max-width:90px;object-fit:contain;border-radius:3px}
+        .header .logo-link img{height:22px;width:auto;max-width:100px;object-fit:contain;border-radius:3px}
         
         /* Extra area selector */
         .extra-area-selector{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.05);border-radius:5px;padding:2px 5px}
-        .extra-area-selector select{background:rgba(255,255,255,0.1);color:#ddd;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:4px 6px;font-size:10px;min-height:30px;max-width:100px}
+        .extra-area-selector select{background:rgba(255,255,255,0.1);color:#ddd;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:5px 8px;font-size:11px;min-height:34px;max-width:110px}
         .extra-area-selector select option{color:#333}
-        .extra-area-selector button{background:#8e44ad;color:white;border:none;padding:4px 10px;font-size:10px;border-radius:4px;cursor:pointer;min-height:30px}
+        .extra-area-selector button{background:#8e44ad;color:white;border:none;padding:5px 12px;font-size:11px;border-radius:4px;cursor:pointer;min-height:34px}
         .extra-area-selector button:active{transform:scale(0.92)}
         .extra-area-selector .gps-btn{background:#27ae60}
         
         .speed-group{display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,0.06);border-radius:5px;padding:2px 5px}
-        .speed-group button{background:transparent;color:#888;border:none;padding:3px 6px;font-size:10px;cursor:pointer;border-radius:3px;min-height:26px;min-width:28px}
+        .speed-group button{background:transparent;color:#888;border:none;padding:3px 7px;font-size:11px;cursor:pointer;border-radius:3px;min-height:28px;min-width:32px}
         .speed-group button:hover{background:rgba(255,255,255,0.08)}
         .speed-group button.active{background:rgba(76,175,80,0.2);color:#4CAF50}
-        .speed-group button .spd-icon{font-size:13px;display:block;text-align:center}
+        .speed-group button .spd-icon{font-size:15px;display:block;text-align:center}
         .speed-group button .spd-label{font-size:7px;display:block;text-align:center;color:#777;margin-top:0px}
         .speed-group button.active .spd-label{color:#4CAF50}
+        
+        /* ============================================================
+           BOTTOM BAR - ΓΙΑ ΤΑΧΥΤΗΤΕΣ & ΛΟΓΟΤΥΠΟ
+           ============================================================ */
+        .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:950;background:rgba(26,26,46,0.95);padding:4px 8px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;border-top:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(8px);align-items:center;padding-bottom:calc(4px + env(safe-area-inset-bottom))}
+        .bottom-bar .logo-link img{height:18px;width:auto;max-width:70px;object-fit:contain}
+        .bottom-bar .speed-group{background:rgba(255,255,255,0.05)}
+        .bottom-bar .speed-group button{min-height:24px;min-width:28px;padding:2px 5px;font-size:10px}
+        .bottom-bar .speed-group button .spd-icon{font-size:13px}
+        .bottom-bar .speed-group button .spd-label{font-size:6px}
+        .bottom-bar .extra-area-selector select{font-size:10px;min-height:28px;padding:3px 6px;max-width:85px}
+        .bottom-bar .extra-area-selector button{font-size:10px;min-height:28px;padding:3px 8px}
+        .bottom-bar .bottom-btn{background:rgba(255,255,255,0.08);border:none;color:#ddd;padding:4px 10px;font-size:10px;border-radius:4px;cursor:pointer;min-height:28px;display:inline-flex;align-items:center;gap:3px}
+        .bottom-bar .bottom-btn:active{transform:scale(0.92)}
+        .bottom-bar .bottom-btn.primary{background:#1a7a3a;color:white}
+        .bottom-bar .bottom-btn.danger{background:#c0392b;color:white}
+        .bottom-bar .bottom-btn.route-btn{background:#8e44ad;color:white}
         
         /* ============================================================
            INFO PANEL
@@ -67,17 +84,17 @@
         #downloadProgress .bar{width:100%;height:3px;background:#333;border-radius:2px;margin-top:3px;overflow:hidden}
         #downloadProgress .bar .fill{height:100%;background:#4CAF50;width:0%;transition:width 0.3s}
         
-        .status-badge{position:fixed;top:68px;right:4px;z-index:999;background:rgba(0,0,0,0.85);color:white;padding:2px 6px;border-radius:8px;font-size:7px;font-weight:600;backdrop-filter:blur(4px);pointer-events:none}
+        .status-badge{position:fixed;top:76px;right:4px;z-index:999;background:rgba(0,0,0,0.85);color:white;padding:2px 6px;border-radius:8px;font-size:7px;font-weight:600;backdrop-filter:blur(4px);pointer-events:none}
         .status-badge.online{background:rgba(39,174,96,0.85)}
         .status-badge.offline{background:rgba(41,128,185,0.85)}
         
         .compass-indicator{position:fixed;bottom:100px;right:6px;z-index:2000;background:rgba(26,26,46,0.95);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 12px rgba(0,0,0,0.4);border:2px solid #2196F3;cursor:pointer}
         .compass-indicator .north-mark{position:absolute;top:2px;font-size:7px;color:#e74c3c;font-weight:700}
         
-        .leaflet-control-zoom{z-index:800!important;margin-top:70px!important}
+        .leaflet-control-zoom{z-index:800!important;margin-top:76px!important}
         .leaflet-control-zoom a{background:rgba(26,26,46,0.95)!important;color:#eee!important}
         
-        #routeDropdown{position:fixed;top:68px;left:0;right:0;bottom:0;z-index:1200;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:10px}
+        #routeDropdown{position:fixed;top:76px;left:0;right:0;bottom:0;z-index:1200;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:10px}
         #routeDropdown.active{display:flex}
         #routeDropdown .dropdown-content{background:rgba(26,26,46,0.98);border-radius:14px;padding:12px 14px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;border:2px solid #8e44ad;color:#eee}
         #routeDropdown .dropdown-content h3{color:#bb86fc;font-size:14px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px}
@@ -115,7 +132,7 @@
         .blue-dot-glow{background:rgba(33,150,243,0.15);border-radius:50%;width:30px;height:30px;position:absolute;top:-7px;left:-7px;animation:pulse 2s infinite}
         @keyframes pulse{0%{transform:scale(1);opacity:0.6}50%{transform:scale(1.4);opacity:0.15}100%{transform:scale(1);opacity:0.6}}
         
-        .design-indicator{position:fixed;top:68px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(230,126,34,0.9);color:white;padding:2px 12px;border-radius:0 0 8px 8px;font-size:8px;font-weight:700;display:none;pointer-events:none}
+        .design-indicator{position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(230,126,34,0.9);color:white;padding:2px 12px;border-radius:0 0 8px 8px;font-size:8px;font-weight:700;display:none;pointer-events:none}
         .design-indicator.active{display:block}
         
         #codeModal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center}
@@ -135,12 +152,12 @@
            RESPONSIVE
            ============================================================ */
         @media(max-width:600px){
-            .header{max-height:82px;padding:4px 5px;gap:3px}
-            .header button,.header select{font-size:10px;padding:5px 8px;min-height:28px;min-width:32px}
-            .header select{max-width:85px;font-size:9px}
-            .header .logo-link img{height:16px;max-width:65px}
-            .extra-area-selector select{max-width:75px;font-size:9px;min-height:28px}
-            .extra-area-selector button{font-size:9px;padding:3px 8px;min-height:28px}
+            .header{max-height:78px;padding:4px 5px;gap:3px}
+            .header button,.header select{font-size:11px;padding:5px 8px;min-height:30px;min-width:34px}
+            .header select{max-width:90px;font-size:10px}
+            .header .logo-link img{height:18px;max-width:70px}
+            .extra-area-selector select{max-width:80px;font-size:10px;min-height:30px}
+            .extra-area-selector button{font-size:10px;padding:4px 8px;min-height:30px}
             .info-panel{bottom:50px;font-size:12px;min-width:160px;padding:6px 12px}
             .info-panel .main-info{font-size:15px}
             .info-panel .main-info .dist{font-size:20px}
@@ -148,33 +165,44 @@
             .info-panel .sub-info{font-size:10px}
             .compass-indicator{bottom:90px;right:4px;width:34px;height:34px;font-size:16px}
             #waypointsPanel{bottom:100px;min-width:180px;max-height:160px;font-size:8px}
-            .leaflet-control-zoom{margin-top:76px!important}
+            .leaflet-control-zoom{margin-top:72px!important}
             #routeDropdown .dropdown-content{padding:8px 10px}
             #routeDropdown .route-item{font-size:8px;padding:3px 4px}
-            .speed-group button{padding:2px 5px;font-size:9px;min-height:24px;min-width:24px}
-            .speed-group button .spd-icon{font-size:11px}
-            .speed-group button .spd-label{font-size:6px}
-            .status-badge{top:74px;font-size:6px}
-            .design-indicator{top:74px;font-size:7px}
+            .status-badge{top:72px;font-size:6px}
+            .design-indicator{top:72px;font-size:7px}
+            .bottom-bar .logo-link img{height:16px;max-width:60px}
+            .bottom-bar .speed-group button{min-height:22px;min-width:24px;padding:2px 4px;font-size:9px}
+            .bottom-bar .speed-group button .spd-icon{font-size:12px}
+            .bottom-bar .extra-area-selector select{font-size:9px;min-height:24px;padding:2px 5px;max-width:70px}
+            .bottom-bar .extra-area-selector button{font-size:9px;min-height:24px;padding:3px 6px}
+            .bottom-bar .bottom-btn{font-size:9px;min-height:24px;padding:3px 7px}
         }
         @media(max-width:400px){
-            .header button,.header select{font-size:9px;padding:4px 6px;min-height:26px;min-width:28px}
-            .header{max-height:76px;gap:2px}
-            .header select{max-width:65px;font-size:8px}
-            .header .logo-link img{height:14px;max-width:55px}
-            .extra-area-selector select{max-width:60px;font-size:8px;min-height:26px}
-            .extra-area-selector button{font-size:8px;padding:2px 6px;min-height:26px}
+            .header button,.header select{font-size:10px;padding:4px 6px;min-height:28px;min-width:30px}
+            .header{max-height:72px;gap:2px}
+            .header select{max-width:70px;font-size:9px}
+            .header .logo-link img{height:16px;max-width:60px}
+            .extra-area-selector select{max-width:65px;font-size:9px;min-height:28px}
+            .extra-area-selector button{font-size:9px;padding:3px 6px;min-height:28px}
             .info-panel .main-info{font-size:13px}
             .info-panel .main-info .dist{font-size:17px}
             .info-panel .main-info .time-val{font-size:15px}
-            .speed-group button{padding:2px 4px;font-size:8px;min-height:22px;min-width:22px}
-            .speed-group button .spd-icon{font-size:10px}
+            .bottom-bar .speed-group button{min-height:20px;min-width:20px;padding:1px 3px;font-size:8px}
+            .bottom-bar .speed-group button .spd-icon{font-size:11px}
+            .bottom-bar .extra-area-selector select{font-size:8px;min-height:22px;max-width:60px}
+            .bottom-bar .extra-area-selector button{font-size:8px;min-height:22px;padding:2px 5px}
+        }
+        @media(min-width:601px){
+            .bottom-bar{display:none}
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
     
+    <!-- ============================================================
+    HEADER - ΜΟΝΟ ΒΑΣΙΚΑ ΚΟΥΜΠΙΑ
+    ============================================================ -->
     <div class="header">
         <button id="toggleOfflineBtn" class="offline-mode" title="Εναλλαγή Offline/Online"><span class="tooltip">Offline/Online</span>📥</button>
         <button id="downloadBtn" class="primary" title="Λήψη offline χάρτη"><span class="tooltip">Λήψη</span>⬇️</button>
@@ -209,6 +237,20 @@
         <button id="toggleWaypointsBtn" title="Σημεία διαδρομής"><span class="tooltip">Σημεία</span>📍</button>
         <button id="helpBtn" title="Βοήθεια"><span class="tooltip">Βοήθεια</span>❓</button>
         
+        <!-- Logo link -->
+        <a href="https://agionorosroutes.blogspot.com/" target="_blank" class="logo-link" title="Άγιον Όρος διαδρομές">
+            <img src="https://lh3.googleusercontent.com/pw/AP1GczPPmMNFQHezTEW7KFjFuPm3nFmS-waV6gjwBA7x_IyoPvA1bUUI3PlfEJuCfs3IXhaNP_eM-UvlNVywDfU6GCoVESm5WRTuCuq8VxSbVQ8wo88AA3rghIlvzjVnHUsvN5ct-JvkBV4p_qT9LYLQ3Bva=w300-h75-s-no-gm?authuser=2" alt="Athos Maps" loading="lazy">
+        </a>
+        
+        <input type="file" id="fileInput" accept=".gpx" style="display:none">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+        <input type="file" id="galleryInput" accept="image/*" style="display:none">
+    </div>
+
+    <!-- ============================================================
+    BOTTOM BAR - ΤΑΧΥΤΗΤΕΣ + EXTRA AREA
+    ============================================================ -->
+    <div class="bottom-bar" id="bottomBar">
         <!-- Speed Group -->
         <div class="speed-group" title="Ταχύτητα πεζοπορίας">
             <button class="spd-btn" data-speed="3" title="Αργή (3 km/h)">
@@ -225,14 +267,25 @@
             </button>
         </div>
         
+        <!-- Extra area selector (μικρό) -->
+        <div class="extra-area-selector">
+            <select id="bottomExtraAreaSelect">
+                <option value="patras">Πάτρα</option>
+                <option value="athens">Αθήνα</option>
+                <option value="thessaloniki">Θεσσαλονίκη</option>
+                <option value="heraklion">Ηράκλειο</option>
+                <option value="ioannina">Ιωάννινα</option>
+                <option value="volos">Βόλος</option>
+                <option value="rhodes">Ρόδος</option>
+                <option value="my_area">📍 GPS</option>
+            </select>
+            <button id="bottomDownloadExtraBtn" title="Λήψη">📥</button>
+        </div>
+        
         <!-- Logo link -->
         <a href="https://agionorosroutes.blogspot.com/" target="_blank" class="logo-link" title="Άγιον Όρος διαδρομές">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPPmMNFQHezTEW7KFjFuPm3nFmS-waV6gjwBA7x_IyoPvA1bUUI3PlfEJuCfs3IXhaNP_eM-UvlNVywDfU6GCoVESm5WRTuCuq8VxSbVQ8wo88AA3rghIlvzjVnHUsvN5ct-JvkBV4p_qT9LYLQ3Bva=w300-h75-s-no-gm?authuser=2" alt="Athos Maps" loading="lazy">
         </a>
-        
-        <input type="file" id="fileInput" accept=".gpx" style="display:none">
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
-        <input type="file" id="galleryInput" accept="image/*" style="display:none">
     </div>
 
     <div class="design-indicator" id="designIndicator">✏️ Mode Σχεδίασης</div>
@@ -309,7 +362,7 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - ΤΕΛΙΚΗ ΕΚΔΟΣΗ (με Πάτρα & μεγάλα κουμπιά)
+        // ATHOS MAPS - ΤΕΛΙΚΗ ΕΚΔΟΣΗ (με bottom bar)
         // ============================================================
         
         // ============================================================
@@ -882,7 +935,7 @@
         }
 
         // ============================================================
-        // ΛΗΨΗ ATHOS + ΕΠΙΠΛΕΟΝ ΠΕΡΙΟΧΗ
+        // ΛΗΨΗ ATHOS + ΕΠΙΠΛΕΟΝ ΠΕΡΙΟΧΗ - ΔΙΟΡΘΩΜΕΝΟ
         // ============================================================
         async function downloadAthosPlusArea(cityKey) {
             if (state.isDownloading) {
@@ -922,7 +975,7 @@
                     state.lastKnownPosition.lng, 
                     CONFIG.DEFAULT_RADIUS
                 );
-                areaLabel = `Η περιοχή μου (${state.lastKnownPosition.lat.toFixed(3)}, ${state.lastKnownPosition.lng.toFixed(3)})`;
+                areaLabel = `Η περιοχή μου`;
                 
                 state.isDownloading = true;
                 const btn = document.getElementById('downloadBtn');
@@ -935,6 +988,7 @@
                 progressDiv.style.display = 'block';
                 
                 try {
+                    // Λήψη ΜΟΝΟ της περιοχής του χρήστη (για να μην υπερφορτωθεί)
                     const totalTiles = await getTotalTilesForBounds(bounds);
                     await downloadArea(bounds, areaLabel, progressText, progressFill, totalTiles);
                     
@@ -965,8 +1019,9 @@
             
             areaLabel = cityData.name;
             
+            // ΕΛΕΓΧΟΣ: Υπάρχουν ήδη tiles;
             const existing = await getTileCountFromDB();
-            if (existing > 100) {
+            if (existing > 10) {
                 if (!confirm(`🔄 Υπάρχουν ήδη ${existing} tiles. Θέλεις να ξανακατεβάσεις (Άγιο Όρος + ${areaLabel});`)) {
                     return;
                 }
@@ -985,16 +1040,23 @@
 
             try {
                 const athosBounds = CONFIG.ATHOS_BOUNDS;
-                const athosTiles = getTilesForBounds(athosBounds, CONFIG.ZOOM_LEVELS);
-                let totalTiles = athosTiles.length;
+                let totalTiles = 0;
                 
+                // Υπολογισμός tiles για Άγιο Όρος
+                const athosTiles = getTilesForBounds(athosBounds, CONFIG.ZOOM_LEVELS);
+                totalTiles += athosTiles.length;
+                
+                // Υπολογισμός tiles για επιπλέον περιοχή
                 const cityBounds = getBoundsAroundPoint(cityData.lat, cityData.lng, cityData.radius);
                 const cityTiles = getTilesForBounds(cityBounds, CONFIG.ZOOM_LEVELS);
                 totalTiles += cityTiles.length;
                 
                 progressText.textContent = `Λήψη Άγιο Όρος + ${areaLabel} (${totalTiles} tiles)...`;
                 
+                // 1. Λήψη Αγίου Όρους
                 await downloadArea(athosBounds, 'Άγιο Όρος', progressText, progressFill, totalTiles);
+                
+                // 2. Λήψη επιπλέον περιοχής
                 await downloadArea(cityBounds, areaLabel, progressText, progressFill, totalTiles);
                 
                 const finalCount = await getTileCountFromDB();
@@ -1017,7 +1079,7 @@
         }
 
         // ============================================================
-        // OFFLINE MODE - ΠΑΝΤΑ ΣΤΟ ΑΓΙΟ ΟΡΟΣ
+        // OFFLINE MODE
         // ============================================================
         async function enableOfflineMode() {
             const count = await getTileCountFromDB();
@@ -1087,7 +1149,7 @@
         }
 
         // ============================================================
-        // GPS - ΜΕΝΕΙ ΣΤΗ ΘΕΣΗ ΤΟΥ ΧΡΗΣΤΗ
+        // GPS
         // ============================================================
         function locateUser() {
             if (state.isLocationTracking) {
@@ -1122,7 +1184,6 @@
                         
                         document.getElementById('statusText').textContent = `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                         
-                        // ΜΕΝΟΥΜΕ ΣΤΗ ΘΕΣΗ
                         if (!state.isGpsCentered) {
                             state.map.flyTo([lat, lng], 15);
                             state.isGpsCentered = true;
@@ -1200,7 +1261,7 @@
         }
 
         // ============================================================
-        // ROUTES
+        // ROUTES - ΣΥΝΤΟΜΟ
         // ============================================================
         function loadRouteFromGitHub(url, name) {
             if (state.isLoadingRoute) {
@@ -1382,7 +1443,7 @@
         }
 
         // ============================================================
-        // SPEED GROUP
+        // SPEED GROUP - ΔΙΠΛΗ ΛΕΙΤΟΥΡΓΙΑ (header + bottom)
         // ============================================================
         function setupSpeedGroup() {
             const buttons = document.querySelectorAll('.spd-btn');
@@ -1393,8 +1454,9 @@
                     const speed = parseInt(this.dataset.speed);
                     if (speed && SPEED_PRESETS[speed]) {
                         currentSpeed = speed;
-                        buttons.forEach(b => b.classList.remove('active'));
-                        this.classList.add('active');
+                        // Ενημέρωση όλων των κουμπιών (header + bottom)
+                        document.querySelectorAll('.spd-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll(`.spd-btn[data-speed="${speed}"]`).forEach(b => b.classList.add('active'));
                         updateTimeDisplay();
                         updateInfo();
                         showToast(`⏱️ Ταχύτητα: ${SPEED_PRESETS[speed].label} (${speed} km/h)`, '#4CAF50');
@@ -1915,7 +1977,7 @@
         }
 
         // ============================================================
-        // CALCULATE ROUTE
+        // CALCULATE ROUTE - ΜΕ ΑΠΛΟΠΟΙΗΣΗ ΣΦΑΛΜΑΤΟΣ
         // ============================================================
         function calculateRoute() {
             if (!state.startPoint || !state.endPoint) {
@@ -1990,15 +2052,17 @@
                         saveLastRouteState();
                         showToast(`✅ Διαδρομή: ${state.lastMainDistance.toFixed(2)} km`, '#e74c3c');
                     } else {
-                        showToast('❌ Δεν βρέθηκε διαδρομή - δοκιμάστε άλλους προορισμούς', '#e74c3c');
+                        showToast('❌ Δεν βρέθηκε διαδρομή', '#e74c3c');
                     }
                 })
                 .catch(err => {
                     console.error('Routing error:', err);
+                    // ΔΕΝ ΕΜΦΑΝΙΖΟΥΜΕ ΣΦΑΛΜΑ ΑΝ ΥΠΑΡΧΕΙ ΗΔΗ ΔΙΑΔΡΟΜΗ
                     if (!state.routeCalculated) {
                         showToast(`❌ Σφάλμα: ${err.message}`, '#e74c3c');
                         calculateRouteGraphHopper(allPoints);
                     } else {
+                        // Απλά κάνουμε επαναϋπολογισμό χωρίς μήνυμα
                         calculateRouteGraphHopper(allPoints);
                     }
                 });
@@ -2325,8 +2389,19 @@
             
             modeBtn.addEventListener('click', toggleDesignMode);
 
-            // Speed group
+            // Speed group - διπλή λειτουργία
             setupSpeedGroup();
+
+            // Bottom bar extra area
+            document.getElementById('bottomDownloadExtraBtn').addEventListener('click', function() {
+                const select = document.getElementById('bottomExtraAreaSelect');
+                const city = select.value;
+                if (!city) {
+                    showToast('❌ Επιλέξτε μια πόλη', '#e74c3c');
+                    return;
+                }
+                downloadAthosPlusArea(city);
+            });
 
             openDB().then(() => {
                 console.log('💾 IndexedDB ready');
@@ -2346,7 +2421,7 @@
                 isOnlineAccessGranted = true;
             }
 
-            // Extra area download
+            // Extra area download (header)
             document.getElementById('downloadExtraBtn').addEventListener('click', function() {
                 const select = document.getElementById('extraAreaSelect');
                 const city = select.value;
@@ -2495,8 +2570,8 @@
         // ============================================================
         // START
         // ============================================================
-        console.log('🏔️ Athos Maps - Τελική Έκδοση με Πάτρα');
-        console.log('📱 Μεγαλύτερα κουμπιά στο header');
+        console.log('🏔️ Athos Maps - Τελική Έκδοση με Bottom Bar');
+        console.log('📱 Ταχύτητες & Επιπλέον περιοχή στην κάτω γραμμή');
         console.log('📍 GPS: Μένει στη θέση σας');
         console.log('🔗 agionorosroutes.blogspot.com');
     </script>
