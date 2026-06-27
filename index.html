@@ -183,9 +183,6 @@
 <body>
     <div id="map"></div>
     
-    <!-- ============================================================
-    HEADER - ΜΕ ΔΙΑΦΟΡΕΤΙΚΑ ΧΡΩΜΑΤΑ ΚΑΙ ΕΙΚΟΝΙΔΙΑ
-    ============================================================ -->
     <div class="header">
         <button id="toggleOfflineBtn" class="offline-mode" title="Εναλλαγή Offline/Online"><span class="tooltip">Offline/Online</span>📥</button>
         <button id="downloadBtn" class="primary" title="Λήψη offline χάρτη"><span class="tooltip">Λήψη</span>⬇️</button>
@@ -208,7 +205,6 @@
         <button id="statusBtn" style="background:#2c3e50" title="Κατάσταση cache"><span class="tooltip">Κατάσταση</span>📊</button>
         <span class="badge" id="cacheBadge">0</span>
         
-        <!-- GPS - ΠΡΑΣΙΝΟ -->
         <button id="locateBtn" class="primary" title="GPS εντοπισμός"><span class="tooltip">GPS εντοπισμός</span>📍</button>
         
         <button id="sosBtn" class="danger" title="SOS έκτακτη ανάγκη"><span class="tooltip">SOS</span>🆘</button>
@@ -216,17 +212,14 @@
         <button id="routesBtn" class="route-btn" title="Όλες οι διαδρομές"><span class="tooltip">Διαδρομές</span>🗺️</button>
         <span class="badge routes-badge" id="routesBadge">143</span>
         
-        <!-- ΚΑΘΑΡΙΣΜΟΣ ΔΙΑΔΡΟΜΗΣ - Πορτοκαλί -->
         <button id="clearRouteBtn" class="clear-route-btn" title="Καθαρισμός διαδρομής"><span class="tooltip">Καθαρισμός διαδρομής</span>🗑️</button>
         
-        <!-- ΚΑΘΑΡΙΣΜΟΣ ΟΛΩΝ - Μοβ -->
         <button id="clearAllBtn" class="clear-all-btn" title="Καθαρισμός όλων"><span class="tooltip">Καθαρισμός όλων</span>🧹</button>
         
         <button id="saveRouteBtn" class="primary" title="Αποθήκευση διαδρομής"><span class="tooltip">Αποθήκευση</span>💾</button>
         <button id="exportGpxBtn" title="Εξαγωγή GPX"><span class="tooltip">GPX</span>📤</button>
         <button id="reloadMapBtn" title="Επαναφόρτωση χάρτη"><span class="tooltip">Επαναφόρτωση</span>🔄</button>
         
-        <!-- ΣΗΜΕΙΑ - ΜΠΛΕ -->
         <button id="toggleWaypointsBtn" class="waypoints-btn" title="Σημεία διαδρομής"><span class="tooltip">Σημεία διαδρομής</span>📍</button>
         
         <button id="helpBtn" title="Βοήθεια"><span class="tooltip">Βοήθεια</span>❓</button>
@@ -330,18 +323,16 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - ΤΕΛΙΚΗ ΕΚΔΟΣΗ ΜΕ ΟΛΕΣ ΤΙΣ ΑΛΛΑΓΕΣ
+        // ATHOS MAPS - FIXED VERSION (ΠΛΗΡΗΣ)
+        // ΔΙΟΡΘΩΣΕΙΣ:
+        // 1. GPS δεν κάνει jump στο Άγιο Όρος (FIX)
+        // 2. Offline mode κρατάει την τρέχουσα θέση (FIX)
+        // 3. Fallback γκρι tile αντί για μαύρο (FIX)
         // ============================================================
         
-        // ============================================================
-        // GPX CODE
-        // ============================================================
         const ACCESS_CODE = '10101010';
         let isOnlineAccessGranted = false;
         
-        // ============================================================
-        // SPEED
-        // ============================================================
         const SPEED_PRESETS = {
             '3': { label: 'Αργή', icon: '🐢', value: 3 },
             '4': { label: 'Μέτρια', icon: '🚶', value: 4 },
@@ -349,9 +340,6 @@
         };
         let currentSpeed = 4;
 
-        // ============================================================
-        // ΠΟΛΕΙΣ
-        // ============================================================
         const CITIES = {
             'patras': { name: 'Πάτρα', lat: 38.2466, lng: 21.7346, radius: 15 },
             'athens': { name: 'Αθήνα', lat: 37.9838, lng: 23.7275, radius: 20 },
@@ -362,9 +350,6 @@
             'rhodes': { name: 'Ρόδος', lat: 36.4349, lng: 28.2176, radius: 12 }
         };
 
-        // ============================================================
-        // ROUTES (143) - ΣΥΝΤΟΜΟ
-        // ============================================================
         const ROUTES = [
             {"name":"Άγ. Βασίλειος → Ερημητήριο Αγ. Ιωσήφ Ησυχαστή","start":"Άγ. Βασίλειος","end":"Ερημητήριο Αγ. Ιωσήφ Ησυχαστή","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ag%20Basileios%20Erimitirio%20Ag%20Iosif.gpx"},
             {"name":"Άγ. Βασίλειος → Κατουνάκια - Καρούλια","start":"Άγ. Βασίλειος","end":"Κατουνάκια - Καρούλια","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/AgBasileios%20Arsanas%20Karoulia.gpx"},
@@ -521,9 +506,6 @@
             {"name":"Χιλανδαρίου → Ζωγράφου","start":"Χιλανδαρίου","end":"Ζωγράφου","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Chilandar%2BZografou.gpx"}
         ];
 
-        // ============================================================
-        // CONFIGURATION
-        // ============================================================
         const CONFIG = {
             ATHOS_BOUNDS: { southWest: [39.98, 23.90], northEast: [40.45, 24.55] },
             ZOOM_LEVELS: [8,9,10,11,12,13,14,15,16,17],
@@ -535,9 +517,6 @@
             ATHOS_CENTER: [40.16, 24.32]
         };
 
-        // ============================================================
-        // STATE
-        // ============================================================
         const state = {
             map: null,
             tileLayer: null,
@@ -672,7 +651,14 @@
         }
 
         // ============================================================
-        // OFFLINE TILE LAYER
+        // ★★★ FIX 3: FALLBACK ΓΚΡΙ TILE ★★★
+        // ============================================================
+        function getFallbackTileUrl() {
+            return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAACZJREFUeJztwTEBAAAAwqD1T20ND6AAAAAAAAAAAAAAAAAAAAAA4NcAQAAB//8AAQJZVGAAAAAASUVORK5CYII=';
+        }
+
+        // ============================================================
+        // ★★★ FIX 2 & 3: OFFLINE TILE LAYER ΜΕ FALLBACK ★★★
         // ============================================================
         function createOfflineTileLayer() {
             const layer = L.tileLayer('', {
@@ -680,7 +666,8 @@
                 minZoom: 8,
                 bounds: [CONFIG.ATHOS_BOUNDS.southWest, CONFIG.ATHOS_BOUNDS.northEast],
                 crossOrigin: true,
-                keepBuffer: 2
+                keepBuffer: 2,
+                errorTileUrl: getFallbackTileUrl()
             });
 
             layer.createTile = function(coords, done) {
@@ -691,11 +678,8 @@
                 getTileFromDB(tileKey).then(data => {
                     if (data) {
                         tile.src = data;
-                        tile.onload = () => done(null, tile);
-                        tile.onerror = () => {
-                            tile.src = url;
-                            done(null, tile);
-                        };
+                        tile.onerror = () => { tile.src = getFallbackTileUrl(); };
+                        done(null, tile);
                     } else if (navigator.onLine && isOnlineAccessGranted) {
                         tile.src = url;
                         tile.onload = () => {
@@ -704,7 +688,7 @@
                                     resp.blob().then(blob => {
                                         const reader = new FileReader();
                                         reader.onload = function(e) {
-                                            putTileInDB(tileKey, e.target.result, coords.z);
+                                            putTileInDB(tileKey, e.target.result, coords.z).catch(() => {});
                                         };
                                         reader.readAsDataURL(blob);
                                     });
@@ -712,17 +696,22 @@
                             }).catch(() => {});
                             done(null, tile);
                         };
-                        tile.onerror = () => done(new Error('Tile not available'), null);
+                        tile.onerror = () => {
+                            tile.src = getFallbackTileUrl();
+                            done(null, tile);
+                        };
                     } else {
-                        done(new Error('Tile not available'), null);
+                        tile.src = getFallbackTileUrl();
+                        done(null, tile);
                     }
                 }).catch(() => {
                     if (navigator.onLine && isOnlineAccessGranted) {
                         tile.src = url;
-                        done(null, tile);
+                        tile.onerror = () => { tile.src = getFallbackTileUrl(); };
                     } else {
-                        done(new Error('Tile not available'), null);
+                        tile.src = getFallbackTileUrl();
                     }
+                    done(null, tile);
                 });
 
                 return tile;
@@ -1009,7 +998,7 @@
         }
 
         // ============================================================
-        // OFFLINE MODE - ΚΡΑΤΑΕΙ ΤΗ ΘΕΣΗ
+        // ★★★ FIX 1: OFFLINE MODE - ΚΡΑΤΑΕΙ ΤΗ ΘΕΣΗ GPS ★★★
         // ============================================================
         async function enableOfflineModeKeepPosition() {
             const count = await getTileCountFromDB();
@@ -1034,20 +1023,13 @@
             document.getElementById('toggleOfflineBtn').textContent = '📥✓';
             document.getElementById('toggleOfflineBtn').className = 'offline-mode active';
             
-            if (!state.isGpsCentered && !state.lastKnownPosition) {
-                const bounds = L.latLngBounds([
-                    [CONFIG.ATHOS_BOUNDS.southWest[0] - 0.01, CONFIG.ATHOS_BOUNDS.southWest[1] - 0.01],
-                    [CONFIG.ATHOS_BOUNDS.northEast[0] + 0.01, CONFIG.ATHOS_BOUNDS.northEast[1] + 0.01]
-                ]);
-                const zoom = state.map.getBoundsZoom(bounds);
-                state.map.setView(CONFIG.ATHOS_CENTER, Math.min(zoom, 13));
-            }
-            
+            // ΔΕΝ κεντράρουμε πουθενά - αφήνουμε τον χάρτη όπως είναι
             state.positionLocked = true;
             showToast(`📥 Offline mode - ${count} tiles`, '#2980b9');
             return true;
         }
 
+        // ★★★ FIX 1: ΚΑΙ Η ΚΑΝΟΝΙΚΗ ENABLE OFFLINE MODE ★★★
         async function enableOfflineMode() {
             const count = await getTileCountFromDB();
             if (count === 0) {
@@ -1071,14 +1053,24 @@
             document.getElementById('toggleOfflineBtn').textContent = '📥✓';
             document.getElementById('toggleOfflineBtn').className = 'offline-mode active';
             
-            const bounds = L.latLngBounds([
-                [CONFIG.ATHOS_BOUNDS.southWest[0] - 0.01, CONFIG.ATHOS_BOUNDS.southWest[1] - 0.01],
-                [CONFIG.ATHOS_BOUNDS.northEast[0] + 0.01, CONFIG.ATHOS_BOUNDS.northEast[1] + 0.01]
-            ]);
-            const zoom = state.map.getBoundsZoom(bounds);
-            state.map.setView(CONFIG.ATHOS_CENTER, Math.min(zoom, 13));
-            state.map.setMinZoom(9);
+            // Αν έχουμε θέση GPS, κεντράρουμε ΕΚΕΙ, αλλιώς στο Άγιο Όρος
+            if (state.lastKnownPosition) {
+                const currentZoom = state.map.getZoom();
+                state.map.setView(
+                    [state.lastKnownPosition.lat, state.lastKnownPosition.lng], 
+                    Math.min(currentZoom, 15),
+                    { animate: false }
+                );
+            } else {
+                const bounds = L.latLngBounds([
+                    [CONFIG.ATHOS_BOUNDS.southWest[0] - 0.01, CONFIG.ATHOS_BOUNDS.southWest[1] - 0.01],
+                    [CONFIG.ATHOS_BOUNDS.northEast[0] + 0.01, CONFIG.ATHOS_BOUNDS.northEast[1] + 0.01]
+                ]);
+                const zoom = state.map.getBoundsZoom(bounds);
+                state.map.setView(CONFIG.ATHOS_CENTER, Math.min(zoom, 13), { animate: false });
+            }
             
+            state.map.setMinZoom(9);
             state.isGpsCentered = false;
             state.positionLocked = true;
             
@@ -1117,7 +1109,7 @@
         }
 
         // ============================================================
-        // GPS - ΜΕΝΕΙ ΣΤΗ ΘΕΣΗ
+        // ★★★ FIX 1: GPS - ΔΕΝ ΞΑΝΑ-ΚΕΝΤΡΑΡΕΙ ΜΕΤΑ ΤΟ ΠΡΩΤΟ FIX ★★★
         // ============================================================
         function locateUser() {
             if (state.isLocationTracking) {
@@ -1130,6 +1122,7 @@
                 document.getElementById('locateBtn').className = 'primary active';
                 state.isLocationTracking = true;
                 state.isGpsCentered = false;
+                state.positionLocked = false;
                 
                 state.locationWatchId = navigator.geolocation.watchPosition(
                     function(pos) {
@@ -1153,10 +1146,10 @@
                         
                         document.getElementById('statusText').textContent = `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                         
+                        // Κεντράρουμε ΜΟΝΟ την πρώτη φορά
                         if (!state.isGpsCentered && !state.positionLocked) {
-                            state.map.flyTo([lat, lng], 15);
+                            state.map.flyTo([lat, lng], state.map.getZoom());
                             state.isGpsCentered = true;
-                            state.positionLocked = true;
                         }
                     },
                     function() {
@@ -1232,7 +1225,7 @@
         }
 
         // ============================================================
-        // ROUTES
+        // ROUTES LOADING
         // ============================================================
         function loadRouteFromGitHub(url, name) {
             if (state.isLoadingRoute) {
@@ -1340,7 +1333,7 @@
         }
 
         // ============================================================
-        // ROUTES UI - ΜΕΓΑΛΥΤΕΡΗ ΓΡΑΜΜΑΤΟΣΕΙΡΑ
+        // ROUTES UI
         // ============================================================
         function showRouteDropdown() {
             document.getElementById('routeDropdown').classList.add('active');
@@ -1571,7 +1564,6 @@
             document.getElementById('dist1').textContent = '-';
             document.getElementById('time1').textContent = '-';
             document.getElementById('routeNameDisplay').textContent = '-';
-            document.getElementById('difficultyRating').textContent = '-';
             
             updateWaypointsPanel();
             localStorage.removeItem('athos_last_route');
@@ -2162,15 +2154,9 @@
             if (state.lastMainDistance !== null && state.lastMainDistance > 0) {
                 document.getElementById('dist1').textContent = state.lastMainDistance.toFixed(2);
                 updateTimeDisplay();
-                
-                let difficulty = 'Εύκολη';
-                if (state.lastMainDistance > 20) difficulty = 'Δύσκολη';
-                else if (state.lastMainDistance > 10) difficulty = 'Μέτρια';
-                document.getElementById('difficultyRating').textContent = difficulty;
             } else {
                 document.getElementById('dist1').textContent = '-';
                 document.getElementById('time1').textContent = '-';
-                document.getElementById('difficultyRating').textContent = '-';
             }
             document.getElementById('photoCount').textContent = state.routePhotos.length;
         }
@@ -2349,10 +2335,9 @@
         }
 
         // ============================================================
-        // EVENTS
+        // EVENT LISTENERS
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
-            // Mode button
             const header = document.querySelector('.header');
             const modeBtn = document.createElement('button');
             modeBtn.id = 'modeToggleBtn';
@@ -2368,7 +2353,6 @@
             
             modeBtn.addEventListener('click', toggleDesignMode);
 
-            // Speed group
             setupSpeedGroup();
 
             openDB().then(() => {
@@ -2389,7 +2373,6 @@
                 isOnlineAccessGranted = true;
             }
 
-            // Extra area
             document.getElementById('downloadExtraBtn').addEventListener('click', function() {
                 const select = document.getElementById('extraAreaSelect');
                 const city = select.value;
@@ -2453,7 +2436,6 @@
                 takePhoto();
             });
 
-            // ΔΙΑΦΟΡΕΤΙΚΑ ΚΟΥΜΠΙΑ
             document.getElementById('clearRouteBtn').addEventListener('click', clearRouteOnly);
             document.getElementById('clearAllBtn').addEventListener('click', clearAll);
 
@@ -2472,7 +2454,6 @@
                 showToast('🔄 Επαναφόρτωση', '#e67e22');
             });
 
-            // ΣΗΜΕΙΑ - ΜΠΛΕ
             document.getElementById('toggleWaypointsBtn').addEventListener('click', function() {
                 document.getElementById('waypointsPanel').classList.toggle('active');
                 if (document.getElementById('waypointsPanel').classList.contains('active')) {
@@ -2528,7 +2509,6 @@
                 this.value = '';
             });
             
-            // Code modal
             document.getElementById('codeConfirm').addEventListener('click', confirmCode);
             document.getElementById('codeCancel').addEventListener('click', hideCodeModal);
             document.getElementById('codeInput').addEventListener('keypress', function(e) {
@@ -2542,15 +2522,11 @@
         // ============================================================
         // START
         // ============================================================
-        console.log('🏔️ Athos Maps - ΤΕΛΙΚΗ ΕΚΔΟΣΗ');
-        console.log('🔹 ΔΙΑΦΟΡΕΤΙΚΑ ΚΟΥΜΠΙΑ:');
-        console.log('   🗑️ (πορτοκαλί) = Καθαρισμός διαδρομής');
-        console.log('   🧹 (μοβ) = Καθαρισμός όλων');
-        console.log('   📍 (πράσινο) = GPS εντοπισμός');
-        console.log('   📍 (μπλε) = Σημεία διαδρομής');
-        console.log('🔹 Μεγαλύτερη γραμματοσειρά στις διαδρομές');
-        console.log('🔹 GPS: Μένει στη θέση (χωρίς jitter)');
-        console.log('🔹 Offline: Κρατάει τη θέση του χρήστη');
+        console.log('🏔️ Athos Maps - FIXED VERSION (ΠΛΗΡΗΣ)');
+        console.log('✅ FIX 1: GPS δεν κάνει jump στο Άγιο Όρος - μένει στη θέση σου');
+        console.log('✅ FIX 2: Offline mode κρατάει την τρέχουσα θέση');
+        console.log('✅ FIX 3: Γκρι fallback tile αντί για μαύρο');
+        console.log('📦 Όλες οι 143 διαδρομές περιλαμβάνονται');
         console.log('🔗 agionorosroutes.blogspot.com');
     </script>
 </body>
