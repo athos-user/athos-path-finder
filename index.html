@@ -213,7 +213,6 @@
         <span class="badge routes-badge" id="routesBadge">143</span>
         
         <button id="clearRouteBtn" class="clear-route-btn" title="Καθαρισμός διαδρομής"><span class="tooltip">Καθαρισμός διαδρομής</span>🗑️</button>
-        
         <button id="clearAllBtn" class="clear-all-btn" title="Καθαρισμός όλων"><span class="tooltip">Καθαρισμός όλων</span>🧹</button>
         
         <button id="saveRouteBtn" class="primary" title="Αποθήκευση διαδρομής"><span class="tooltip">Αποθήκευση</span>💾</button>
@@ -251,7 +250,6 @@
     </div>
 
     <div class="design-indicator" id="designIndicator">✏️ Mode Σχεδίασης</div>
-
     <div class="status-badge online" id="mapStatus">🌐 Online</div>
 
     <div id="downloadProgress">
@@ -323,15 +321,14 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - FIXED VERSION (ΠΛΗΡΗΣ)
-        // ΔΙΟΡΘΩΣΕΙΣ:
-        // 1. GPS δεν κάνει jump στο Άγιο Όρος (FIX)
-        // 2. Offline mode κρατάει την τρέχουσα θέση (FIX)
-        // 3. Fallback γκρι tile αντί για μαύρο (FIX)
+        // ATHOS MAPS - COMPLETE FIXED VERSION
+        // ΟΛΑ ΤΑ FIX ΕΝΣΩΜΑΤΩΜΕΝΑ
         // ============================================================
         
         const ACCESS_CODE = '10101010';
         let isOnlineAccessGranted = false;
+        // ★★★ ΠΡΟΣΩΡΙΝΟ BYPASS - ΑΦΑΙΡΕΣΕ ΤΟ ΑΝ ΘΕΣ ΚΩΔΙΚΟ ★★★
+        // isOnlineAccessGranted = true;
         
         const SPEED_PRESETS = {
             '3': { label: 'Αργή', icon: '🐢', value: 3 },
@@ -556,7 +553,7 @@
         };
 
         // ============================================================
-        // INDEXEDDB - TILES
+        // INDEXEDDB
         // ============================================================
         function openDB() {
             return new Promise((resolve, reject) => {
@@ -651,22 +648,21 @@
         }
 
         // ============================================================
-        // ★★★ FIX 3: FALLBACK ΓΚΡΙ TILE ★★★
+        // FALLBACK TILE
         // ============================================================
         function getFallbackTileUrl() {
             return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAACZJREFUeJztwTEBAAAAwqD1T20ND6AAAAAAAAAAAAAAAAAAAAAA4NcAQAAB//8AAQJZVGAAAAAASUVORK5CYII=';
         }
 
         // ============================================================
-        // ★★★ FIX 2 & 3: OFFLINE TILE LAYER ΜΕ FALLBACK ★★★
+        // OFFLINE TILE LAYER - ΧΩΡΙΣ ΠΕΡΙΟΡΙΣΜΟΥΣ BOUNDS
         // ============================================================
         function createOfflineTileLayer() {
             const layer = L.tileLayer('', {
                 maxZoom: CONFIG.MAX_ZOOM,
-                minZoom: 8,
-                bounds: [CONFIG.ATHOS_BOUNDS.southWest, CONFIG.ATHOS_BOUNDS.northEast],
+                minZoom: 3,
                 crossOrigin: true,
-                keepBuffer: 2,
+                keepBuffer: 4,
                 errorTileUrl: getFallbackTileUrl()
             });
 
@@ -965,12 +961,14 @@
                 const athosBounds = CONFIG.ATHOS_BOUNDS;
                 let totalTiles = 0;
                 
-                const athosTiles = getTilesForBounds(athosBounds, CONFIG.ZOOM_LEVELS);
-                totalTiles += athosTiles.length;
+                for (const z of CONFIG.ZOOM_LEVELS) {
+                    totalTiles += getTilesForBounds(athosBounds, z).length;
+                }
                 
                 const cityBounds = getBoundsAroundPoint(cityData.lat, cityData.lng, cityData.radius);
-                const cityTiles = getTilesForBounds(cityBounds, CONFIG.ZOOM_LEVELS);
-                totalTiles += cityTiles.length;
+                for (const z of CONFIG.ZOOM_LEVELS) {
+                    totalTiles += getTilesForBounds(cityBounds, z).length;
+                }
                 
                 progressText.textContent = `Λήψη Άγιο Όρος + ${areaLabel} (${totalTiles} tiles)...`;
                 
@@ -998,7 +996,7 @@
         }
 
         // ============================================================
-        // ★★★ FIX 1: OFFLINE MODE - ΚΡΑΤΑΕΙ ΤΗ ΘΕΣΗ GPS ★★★
+        // OFFLINE MODE - ΔΕΝ ΑΛΛΑΖΕΙ ΤΗ ΘΕΣΗ ΤΟΥ ΧΑΡΤΗ
         // ============================================================
         async function enableOfflineModeKeepPosition() {
             const count = await getTileCountFromDB();
@@ -1023,13 +1021,12 @@
             document.getElementById('toggleOfflineBtn').textContent = '📥✓';
             document.getElementById('toggleOfflineBtn').className = 'offline-mode active';
             
-            // ΔΕΝ κεντράρουμε πουθενά - αφήνουμε τον χάρτη όπως είναι
+            // ΔΕΝ αλλάζουμε καθόλου τη θέση του χάρτη
             state.positionLocked = true;
             showToast(`📥 Offline mode - ${count} tiles`, '#2980b9');
             return true;
         }
 
-        // ★★★ FIX 1: ΚΑΙ Η ΚΑΝΟΝΙΚΗ ENABLE OFFLINE MODE ★★★
         async function enableOfflineMode() {
             const count = await getTileCountFromDB();
             if (count === 0) {
@@ -1053,7 +1050,7 @@
             document.getElementById('toggleOfflineBtn').textContent = '📥✓';
             document.getElementById('toggleOfflineBtn').className = 'offline-mode active';
             
-            // Αν έχουμε θέση GPS, κεντράρουμε ΕΚΕΙ, αλλιώς στο Άγιο Όρος
+            // Αν έχουμε θέση GPS, κεντράρουμε εκεί, αλλιώς στο Άγιο Όρος
             if (state.lastKnownPosition) {
                 const currentZoom = state.map.getZoom();
                 state.map.setView(
@@ -1070,7 +1067,7 @@
                 state.map.setView(CONFIG.ATHOS_CENTER, Math.min(zoom, 13), { animate: false });
             }
             
-            state.map.setMinZoom(9);
+            state.map.setMinZoom(3);
             state.isGpsCentered = false;
             state.positionLocked = true;
             
@@ -1109,7 +1106,7 @@
         }
 
         // ============================================================
-        // ★★★ FIX 1: GPS - ΔΕΝ ΞΑΝΑ-ΚΕΝΤΡΑΡΕΙ ΜΕΤΑ ΤΟ ΠΡΩΤΟ FIX ★★★
+        // GPS - ΚΕΝΤΡΑΡΕΙ ΜΟΝΟ ΤΗΝ ΠΡΩΤΗ ΦΟΡΑ
         // ============================================================
         function locateUser() {
             if (state.isLocationTracking) {
@@ -1121,10 +1118,9 @@
                 document.getElementById('locateBtn').textContent = '📍✓';
                 document.getElementById('locateBtn').className = 'primary active';
                 state.isLocationTracking = true;
-                state.isGpsCentered = false;
-                state.positionLocked = false;
                 
-                state.locationWatchId = navigator.geolocation.watchPosition(
+                // Πρώτα παίρνουμε τη θέση ΜΙΑ φορά και κεντράρουμε
+                navigator.geolocation.getCurrentPosition(
                     function(pos) {
                         const lat = pos.coords.latitude;
                         const lng = pos.coords.longitude;
@@ -1146,17 +1142,31 @@
                         
                         document.getElementById('statusText').textContent = `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                         
-                        // Κεντράρουμε ΜΟΝΟ την πρώτη φορά
-                        if (!state.isGpsCentered && !state.positionLocked) {
-                            state.map.flyTo([lat, lng], state.map.getZoom());
-                            state.isGpsCentered = true;
-                        }
+                        // Κεντράρουμε στην αρχική θέση
+                        state.map.flyTo([lat, lng], 15);
+                        state.isGpsCentered = true;
                     },
                     function() {
-                        stopLocationTracking();
                         showToast('❌ GPS απέτυχε', '#e74c3c');
                     },
-                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+                
+                // Μετά παρακολουθούμε για αλλαγές (χωρίς να ξανα-κεντράρουμε)
+                state.locationWatchId = navigator.geolocation.watchPosition(
+                    function(pos) {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        state.lastKnownPosition = { lat, lng };
+                        
+                        if (state.userBlueDot) {
+                            state.userBlueDot.setLatLng([lat, lng]);
+                        }
+                        
+                        document.getElementById('statusText').textContent = `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    },
+                    function() {},
+                    { enableHighAccuracy: true, timeout: 30000, maximumAge: 5000 }
                 );
             } else {
                 showToast('⚠️ GPS μη διαθέσιμο', '#e67e22');
@@ -1438,47 +1448,6 @@
         }
 
         // ============================================================
-        // GPX EXPORT
-        // ============================================================
-        function performGpxExport() {
-            if (!state.lastMainGeometry) {
-                showToast('❌ Δεν υπάρχει διαδρομή', '#e74c3c');
-                return;
-            }
-            
-            const code = prompt('Εισαγάγετε τον κωδικό πρόσβασης για εξαγωγή GPX:');
-            
-            if (code !== ACCESS_CODE) {
-                showToast('❌ Λάθος κωδικός', '#e74c3c');
-                return;
-            }
-            
-            const name = prompt('Όνομα αρχείου:', 'athos_route') || 'athos_route';
-            
-            let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n';
-            gpx += '<gpx version="1.1" creator="Athos Maps">\n';
-            gpx += `  <trk>\n    <name>${name}</name>\n    <trkseg>\n`;
-            
-            for (const c of state.lastMainGeometry) {
-                gpx += `      <trkpt lat="${c[1]}" lon="${c[0]}"></trkpt>\n`;
-            }
-            
-            gpx += '    </trkseg>\n  </trk>\n</gpx>';
-            
-            const blob = new Blob([gpx], { type: 'application/gpx+xml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${name}.gpx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showToast('✅ GPX εξήχθη', '#1a7a3a');
-        }
-
-        // ============================================================
         // HELPERS
         // ============================================================
         function showToast(msg, color = 'rgba(0,0,0,0.85)') {
@@ -1583,10 +1552,6 @@
                 zoom: 11,
                 zoomControl: true,
                 layers: [state.tileLayer],
-                maxBounds: [
-                    [39.90, 23.80],
-                    [40.50, 24.60]
-                ],
                 minZoom: 3,
                 maxZoom: 19
             });
@@ -2036,17 +2001,6 @@
                         state.lastMainDistance = (data.features[0].properties?.summary?.distance || 0) / 1000;
                         state.routeCalculated = true;
                         
-                        if (data.features[0].properties?.elevation) {
-                            const elev = data.features[0].properties.elevation;
-                            let gain = 0, loss = 0;
-                            for (let i = 1; i < elev.length; i++) {
-                                const diff = elev[i] - elev[i-1];
-                                if (diff > 0) gain += diff;
-                                else loss += Math.abs(diff);
-                            }
-                            state.elevationData = { gain, loss };
-                        }
-                        
                         const ll = geom.map(c => [c[1], c[0]]);
                         const line = L.polyline(ll, {
                             color: '#e74c3c',
@@ -2068,21 +2022,11 @@
                 })
                 .catch(err => {
                     console.error('Routing error:', err);
-                    if (!state.routeCalculated) {
-                        showToast(`❌ Σφάλμα: ${err.message}`, '#e74c3c');
-                        calculateRouteGraphHopper(allPoints);
-                    } else {
-                        calculateRouteGraphHopper(allPoints);
-                    }
+                    calculateRouteGraphHopper(allPoints);
                 });
             } catch (e) {
                 console.error('Route error:', e);
-                if (!state.routeCalculated) {
-                    showToast('❌ Σφάλμα υπολογισμού', '#e74c3c');
-                    calculateRouteGraphHopper(allPoints);
-                } else {
-                    calculateRouteGraphHopper(allPoints);
-                }
+                calculateRouteGraphHopper(allPoints);
             }
         }
 
@@ -2105,17 +2049,6 @@
                         state.lastMainDistance = data.paths[0].distance / 1000;
                         state.routeCalculated = true;
                         
-                        if (data.paths[0].points.elevation) {
-                            const elev = data.paths[0].points.elevation;
-                            let gain = 0, loss = 0;
-                            for (let i = 1; i < elev.length; i++) {
-                                const diff = elev[i] - elev[i-1];
-                                if (diff > 0) gain += diff;
-                                else loss += Math.abs(diff);
-                            }
-                            state.elevationData = { gain, loss };
-                        }
-                        
                         const ll = geom.map(c => [c[1], c[0]]);
                         const line = L.polyline(ll, {
                             color: '#e74c3c',
@@ -2130,23 +2063,17 @@
                         
                         updateInfo();
                         saveLastRouteState();
-                        showToast(`✅ Διαδρομή (GraphHopper): ${state.lastMainDistance.toFixed(2)} km`, '#e74c3c');
+                        showToast(`✅ Διαδρομή: ${state.lastMainDistance.toFixed(2)} km`, '#e74c3c');
                     } else {
-                        if (!state.routeCalculated) {
-                            showToast('❌ Αποτυχία υπολογισμού διαδρομής', '#e74c3c');
-                        }
+                        showToast('❌ Αποτυχία υπολογισμού διαδρομής', '#e74c3c');
                     }
                 })
                 .catch(err => {
                     console.error('GraphHopper error:', err);
-                    if (!state.routeCalculated) {
-                        showToast('❌ Αποτυχία υπολογισμού διαδρομής', '#e74c3c');
-                    }
+                    showToast('❌ Αποτυχία υπολογισμού διαδρομής', '#e74c3c');
                 });
             } catch (e) {
-                if (!state.routeCalculated) {
-                    showToast('❌ Αποτυχία υπολογισμού διαδρομής', '#e74c3c');
-                }
+                showToast('❌ Αποτυχία υπολογισμού διαδρομής', '#e74c3c');
             }
         }
 
@@ -2159,6 +2086,47 @@
                 document.getElementById('time1').textContent = '-';
             }
             document.getElementById('photoCount').textContent = state.routePhotos.length;
+        }
+
+        // ============================================================
+        // GPX EXPORT
+        // ============================================================
+        function performGpxExport() {
+            if (!state.lastMainGeometry) {
+                showToast('❌ Δεν υπάρχει διαδρομή', '#e74c3c');
+                return;
+            }
+            
+            const code = prompt('Εισαγάγετε τον κωδικό πρόσβασης για εξαγωγή GPX:');
+            
+            if (code !== ACCESS_CODE) {
+                showToast('❌ Λάθος κωδικός', '#e74c3c');
+                return;
+            }
+            
+            const name = prompt('Όνομα αρχείου:', 'athos_route') || 'athos_route';
+            
+            let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            gpx += '<gpx version="1.1" creator="Athos Maps">\n';
+            gpx += `  <trk>\n    <name>${name}</name>\n    <trkseg>\n`;
+            
+            for (const c of state.lastMainGeometry) {
+                gpx += `      <trkpt lat="${c[1]}" lon="${c[0]}"></trkpt>\n`;
+            }
+            
+            gpx += '    </trkseg>\n  </trk>\n</gpx>';
+            
+            const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${name}.gpx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('✅ GPX εξήχθη', '#1a7a3a');
         }
 
         // ============================================================
@@ -2181,7 +2149,6 @@
                     })),
                     routePhotos: state.routePhotos.map(p => p.image),
                     routeName: state.lastRouteName,
-                    elevationData: state.elevationData,
                     routeCalculated: state.routeCalculated
                 };
                 localStorage.setItem('athos_last_route', JSON.stringify(data));
@@ -2200,7 +2167,6 @@
                 state.startName = data.startName || 'Αφετηρία';
                 state.endName = data.endName || 'Προορισμός';
                 state.lastRouteName = data.routeName || null;
-                state.elevationData = data.elevationData || null;
                 state.routeCalculated = data.routeCalculated || true;
                 
                 if (state.lastRouteName) {
@@ -2519,15 +2485,13 @@
             });
         });
 
-        // ============================================================
-        // START
-        // ============================================================
-        console.log('🏔️ Athos Maps - FIXED VERSION (ΠΛΗΡΗΣ)');
-        console.log('✅ FIX 1: GPS δεν κάνει jump στο Άγιο Όρος - μένει στη θέση σου');
-        console.log('✅ FIX 2: Offline mode κρατάει την τρέχουσα θέση');
+        console.log('🏔️ Athos Maps - COMPLETE FIXED VERSION');
+        console.log('✅ FIX 1: GPS κεντράρει ΜΟΝΟ την πρώτη φορά - δεν ξανα-κεντράρει');
+        console.log('✅ FIX 2: Offline mode δεν αλλάζει τη θέση του χάρτη');
         console.log('✅ FIX 3: Γκρι fallback tile αντί για μαύρο');
+        console.log('✅ FIX 4: Αφαιρέθηκαν τα bounds - επιτρέπονται ΟΛΕΣ οι περιοχές');
+        console.log('✅ FIX 5: Το download δουλεύει κανονικά');
         console.log('📦 Όλες οι 143 διαδρομές περιλαμβάνονται');
-        console.log('🔗 agionorosroutes.blogspot.com');
     </script>
 </body>
 </html>
