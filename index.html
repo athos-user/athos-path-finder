@@ -8,12 +8,15 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
+        /* ============================================================
+           ΒΑΣΙΚΑ STYLES
+           ============================================================ */
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;overflow:hidden;height:100%;touch-action:pan-x pan-y}
         #map{height:100vh;width:100vw;z-index:1;background:#1a1a2e}
         
         /* ============================================================
-           HEADER - ΜΕ ΔΙΑΦΟΡΕΤΙΚΑ ΧΡΩΜΑΤΑ
+           HEADER
            ============================================================ */
         .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:4px 6px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;max-height:78px;overflow:hidden;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d;align-items:center}
         .header button,.header select{padding:6px 10px;font-size:11px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:white;cursor:pointer;min-height:34px;transition:all 0.2s;touch-action:manipulation;position:relative;min-width:36px}
@@ -26,8 +29,13 @@
         .header button.offline-mode{background:#2980b9}
         .header button.offline-mode.active{background:#27ae60;box-shadow:0 0 12px rgba(39,174,96,0.4)}
         .header button.route-btn{background:#8e44ad}
+        
+        /* ============================================================
+           ΔΙΑΦΟΡΕΤΙΚΑ ΧΡΩΜΑΤΑ ΓΙΑ ΚΑΘΑΡΙΣΜΟ
+           ============================================================ */
         .header button.clear-route-btn{background:#d35400;color:white}
         .header button.clear-all-btn{background:#6c3483;color:white}
+        
         .header button .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:2px 8px;border-radius:4px;font-size:8px;white-space:nowrap;pointer-events:none;z-index:9999;margin-bottom:3px}
         .header button:hover .tooltip,.header button:focus .tooltip{display:block}
         .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:4px 7px;max-width:110px;font-size:10px;border:1px solid rgba(255,255,255,0.08);min-height:34px}
@@ -38,7 +46,6 @@
         .header .logo-link{display:inline-flex;align-items:center;padding:0 4px;text-decoration:none}
         .header .logo-link img{height:20px;width:auto;max-width:90px;object-fit:contain;border-radius:3px}
         
-        /* Extra area selector */
         .extra-area-selector{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.05);border-radius:5px;padding:2px 5px}
         .extra-area-selector select{background:rgba(255,255,255,0.1);color:#ddd;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:4px 7px;font-size:10px;min-height:32px;max-width:105px}
         .extra-area-selector select option{color:#333}
@@ -46,7 +53,7 @@
         .extra-area-selector button:active{transform:scale(0.92)}
         
         /* ============================================================
-           BOTTOM BAR - ΜΟΝΟ ΤΑΧΥΤΗΤΕΣ + LOGO
+           BOTTOM BAR
            ============================================================ */
         .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:950;background:rgba(26,26,46,0.95);padding:3px 8px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;border-top:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(8px);align-items:center;padding-bottom:calc(3px + env(safe-area-inset-bottom))}
         .bottom-bar .speed-group{display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,0.06);border-radius:5px;padding:2px 5px}
@@ -196,7 +203,7 @@
     <div id="map"></div>
     
     <!-- ============================================================
-    HEADER - ΔΙΑΦΟΡΕΤΙΚΑ ΧΡΩΜΑΤΑ
+    HEADER - ΜΕ ΔΙΑΦΟΡΕΤΙΚΑ ΧΡΩΜΑΤΑ
     ============================================================ -->
     <div class="header">
         <button id="toggleOfflineBtn" class="offline-mode" title="Εναλλαγή Offline/Online"><span class="tooltip">Offline/Online</span>📥</button>
@@ -226,7 +233,7 @@
         <button id="routesBtn" class="route-btn" title="Όλες οι διαδρομές"><span class="tooltip">Διαδρομές</span>🗺️</button>
         <span class="badge routes-badge" id="routesBadge">143</span>
         
-        <!-- ΔΙΑΦΟΡΕΤΙΚΑ ΧΡΩΜΑΤΑ ΓΙΑ ΠΑΡΟΜΟΙΑ ΚΟΥΜΠΙΑ -->
+        <!-- ΔΙΑΦΟΡΕΤΙΚΑ ΧΡΩΜΑΤΑ: Πορτοκαλί + Μοβ -->
         <button id="clearRouteBtn" class="clear-route-btn" title="Καθαρισμός διαδρομής"><span class="tooltip">Καθαρισμός διαδρομής</span>🗑️</button>
         <button id="clearAllBtn" class="clear-all-btn" title="Καθαρισμός όλων"><span class="tooltip">Καθαρισμός όλων</span>🧹</button>
         
@@ -339,7 +346,7 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - ΤΕΛΙΚΗ ΔΙΟΡΘΩΣΗ
+        // ATHOS MAPS - ΔΙΟΡΘΩΜΕΝΗ ΕΚΔΟΣΗ (ΟΛΕΣ ΟΙ ΑΛΛΑΓΕΣ)
         // ============================================================
         
         // ============================================================
@@ -372,7 +379,7 @@
         };
 
         // ============================================================
-        // ROUTES (143) - ΣΥΝΤΟΜΟ
+        // ROUTES (143 - ΣΥΝΤΟΜΟ)
         // ============================================================
         const ROUTES = [
             {"name":"Άγ. Βασίλειος → Ερημητήριο Αγ. Ιωσήφ Ησυχαστή","start":"Άγ. Βασίλειος","end":"Ερημητήριο Αγ. Ιωσήφ Ησυχαστή","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ag%20Basileios%20Erimitirio%20Ag%20Iosif.gpx"},
@@ -586,7 +593,7 @@
         };
 
         // ============================================================
-        // INDEXEDDB - TILES (ΣΥΝΤΟΜΟ)
+        // INDEXEDDB - TILES
         // ============================================================
         function openDB() {
             return new Promise((resolve, reject) => {
@@ -635,18 +642,6 @@
             });
         }
 
-        function getAllTilesFromDB() {
-            return openDB().then(d => {
-                return new Promise((resolve, reject) => {
-                    const tx = d.transaction(['tiles'], 'readonly');
-                    const store = tx.objectStore('tiles');
-                    const request = store.getAll();
-                    request.onsuccess = () => resolve(request.result || []);
-                    request.onerror = () => reject(request.error);
-                });
-            });
-        }
-
         function getTileCountFromDB() {
             return openDB().then(d => {
                 return new Promise((resolve, reject) => {
@@ -680,8 +675,20 @@
             return size;
         }
 
+        function getAllTilesFromDB() {
+            return openDB().then(d => {
+                return new Promise((resolve, reject) => {
+                    const tx = d.transaction(['tiles'], 'readonly');
+                    const store = tx.objectStore('tiles');
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result || []);
+                    request.onerror = () => reject(request.error);
+                });
+            });
+        }
+
         // ============================================================
-        // OFFLINE TILE LAYER - ΜΕ ΥΠΟΣΤΗΡΙΞΗ EXTRA AREA
+        // OFFLINE TILE LAYER
         // ============================================================
         function createOfflineTileLayer() {
             const layer = L.tileLayer('', {
@@ -942,7 +949,6 @@
                     showToast(`✅ Λήψη ${areaLabel} ολοκληρώθηκε!`, '#2c5f2d');
                     state.hasExtraArea = true;
                     updateCacheInfo();
-                    // Φόρτωση offline mode ΚΡΑΤΩΝΤΑΣ τη θέση
                     enableOfflineModeKeepPosition();
                 } catch (error) {
                     console.error('Download error:', error);
@@ -1019,7 +1025,7 @@
         }
 
         // ============================================================
-        // OFFLINE MODE - ΚΡΑΤΑΕΙ ΤΗ ΘΕΣΗ (ΧΩΡΙΣ JITTER)
+        // OFFLINE MODE - ΚΡΑΤΑΕΙ ΤΗ ΘΕΣΗ
         // ============================================================
         async function enableOfflineModeKeepPosition() {
             const count = await getTileCountFromDB();
@@ -1129,7 +1135,7 @@
         }
 
         // ============================================================
-        // GPS - ΜΕΝΕΙ ΣΤΗ ΘΕΣΗ ΧΩΡΙΣ JITTER
+        // GPS - ΜΕΝΕΙ ΣΤΗ ΘΕΣΗ (ΧΩΡΙΣ JITTER)
         // ============================================================
         function locateUser() {
             if (state.isLocationTracking) {
@@ -1245,7 +1251,7 @@
         }
 
         // ============================================================
-        // ROUTES - ΣΥΝΤΟΜΟ
+        // ROUTES
         // ============================================================
         function loadRouteFromGitHub(url, name) {
             if (state.isLoadingRoute) {
@@ -1353,7 +1359,7 @@
         }
 
         // ============================================================
-        // ROUTES UI
+        // ROUTES UI - ΜΕΓΑΛΥΤΕΡΗ ΓΡΑΜΜΑΤΟΣΕΙΡΑ
         // ============================================================
         function showRouteDropdown() {
             document.getElementById('routeDropdown').classList.add('active');
@@ -1764,7 +1770,7 @@
         }
 
         // ============================================================
-        // START / END / WAYPOINTS (ΣΥΝΤΟΜΟ)
+        // START / END / WAYPOINTS
         // ============================================================
         function setStartPoint(ll) {
             if (state.startMarker) state.map.removeLayer(state.startMarker);
@@ -2554,9 +2560,9 @@
         // ============================================================
         // START
         // ============================================================
-        console.log('🏔️ Athos Maps - ΤΕΛΙΚΗ ΔΙΟΡΘΩΣΗ');
+        console.log('🏔️ Athos Maps - ΔΙΟΡΘΩΜΕΝΗ ΕΚΔΟΣΗ');
         console.log('🔹 Διαφορετικά χρώματα: 🗑️ (πορτοκαλί) | 🧹 (μοβ)');
-        console.log('🔹 Μεγαλύτερη γραμματοσειρά στις διαδρομές');
+        console.log('🔹 Μεγαλύτερη γραμματοσειρά στις διαδρομές (13px)');
         console.log('🔹 GPS: Μένει στη θέση (χωρίς jitter/άλματα)');
         console.log('🔹 Offline: Κρατάει τη θέση του χρήστη');
         console.log('🔹 Extra area: Λειτουργεί κανονικά');
