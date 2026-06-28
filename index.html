@@ -11,7 +11,7 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Segoe UI',sans-serif;background:#0d1117;overflow:hidden;height:100%;touch-action:pan-x pan-y}
-        #map{height:100vh;width:100vw;z-index:1;background:#0d1117;transition:transform 0.5s ease-out}
+        #map{height:100vh;width:100vw;z-index:1;background:#0d1117;transition:transform 0.3s ease-out}
         
         .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(13,17,23,0.95);padding:5px 6px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;align-items:center;backdrop-filter:blur(8px);border-bottom:2px solid #2196F3;max-height:72px;overflow:hidden}
         .header button,.header a{padding:5px 8px;font-size:10px;border-radius:6px;border:none;color:white;cursor:pointer;min-height:32px;font-weight:600;transition:all 0.2s;touch-action:manipulation;text-decoration:none;display:inline-flex;align-items:center;gap:3px}
@@ -45,15 +45,15 @@
         .info-bar .offroute{color:#f44336;font-weight:700;display:none;font-size:12px}
         .info-bar .offroute.active{display:block}
         
-        .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:950;background:rgba(13,17,23,0.95);padding:4px 8px;display:flex;gap:4px;justify-content:center;align-items:center;border-top:1px solid rgba(255,255,255,0.08);padding-bottom:calc(4px + env(safe-area-inset-bottom));flex-wrap:wrap}
+        .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:950;background:rgba(13,17,23,0.95);padding:6px 8px;display:flex;gap:6px;justify-content:center;align-items:center;border-top:1px solid rgba(255,255,255,0.08);padding-bottom:calc(6px + env(safe-area-inset-bottom));flex-wrap:wrap}
         .bottom-bar button{padding:5px 10px;font-size:9px;border-radius:5px;border:none;cursor:pointer;font-weight:600;color:white;min-height:28px;touch-action:manipulation}
         .bottom-bar button.speed-btn{background:rgba(255,255,255,0.08);color:#888}
         .bottom-bar button.speed-btn.active{background:rgba(76,175,80,0.3);color:#4CAF50}
         .bottom-bar button.screen-btn{background:rgba(255,255,255,0.08);color:#888}
         .bottom-bar button.screen-btn.active{background:rgba(26,188,156,0.3);color:#1abc9c}
         .bottom-bar button.sos-bottom-btn{background:#f44336;font-size:12px;min-width:36px;min-height:28px;padding:4px 8px}
-        .bottom-bar .dist-info{font-size:9px;color:#ccc;display:flex;gap:8px;align-items:center;padding:2px 8px;background:rgba(255,255,255,0.04);border-radius:5px}
-        .bottom-bar .dist-info span{color:#4CAF50;font-weight:700}
+        .bottom-bar .dist-info{font-size:10px;color:#ccc;display:flex;gap:10px;align-items:center;padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:5px;font-weight:500}
+        .bottom-bar .dist-info span{color:#4CAF50;font-weight:700;font-size:11px}
         .bottom-bar .dist-info .remaining{color:#FF9800}
         
         .offroute-warning{position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:1001;background:#f44336;color:white;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;display:none;box-shadow:0 4px 20px rgba(244,67,54,0.6);flex-direction:column;align-items:center;gap:8px}
@@ -61,9 +61,9 @@
         .offroute-warning button{background:white;color:#f44336;border:none;padding:8px 18px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-top:4px}
         .offroute-warning .disable-forever-btn{background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4);padding:6px 14px;border-radius:6px;font-size:10px;cursor:pointer;margin-top:2px}
         
-        .blog-link{position:fixed;bottom:40px;right:8px;z-index:850;background:rgba(13,17,23,0.85);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);transition:all 0.2s;text-decoration:none;backdrop-filter:blur(4px);overflow:hidden}
+        .blog-link{position:fixed;bottom:48px;right:8px;z-index:850;background:rgba(13,17,23,0.85);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);transition:all 0.2s;text-decoration:none;backdrop-filter:blur(4px);overflow:hidden}
         .blog-link:hover{transform:scale(1.1);border-color:rgba(255,255,255,0.3)}
-        .blog-link img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+        .blog-link img{width:28px;height:28px;border-radius:50%;object-fit:cover}
         
         #downloadProgress{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(0,0,0,0.92);color:white;padding:6px 14px;border-radius:12px;font-size:9px;display:none;min-width:150px;text-align:center}
         #downloadProgress .bar{width:100%;height:3px;background:#333;border-radius:2px;margin-top:3px;overflow:hidden}
@@ -122,9 +122,10 @@
             #routeDropdown .route-item{font-size:12px;padding:6px 7px;min-height:36px}
             #routeDropdown .route-item .rname{font-size:12px}
             #routeDropdown .letter-header{font-size:14px}
-            .blog-link{bottom:36px;right:6px;width:30px;height:30px}
-            .blog-link img{width:24px;height:24px}
-            .bottom-bar .dist-info{font-size:8px;gap:4px;padding:2px 4px}
+            .blog-link{bottom:44px;right:6px;width:28px;height:28px}
+            .blog-link img{width:22px;height:22px}
+            .bottom-bar .dist-info{font-size:9px;gap:6px;padding:2px 6px}
+            .bottom-bar .dist-info span{font-size:10px}
         }
     </style>
 </head>
@@ -183,7 +184,7 @@
         <button class="speed-btn" data-speed="5" title="Γρήγορη">🏃 5</button>
         <button id="screenBtn" class="screen-btn" title="Οθόνη ON">🔆</button>
         <div class="dist-info" id="distProgress" style="display:none">
-            📍<span id="distDone">0.00</span> / <span class="remaining" id="distRemaining">0.00</span> km
+            📍 Διανυθέντα: <span id="distDone">0.00</span> km | Υπολείπονται: <span class="remaining" id="distRemaining">0.00</span> km
         </div>
     </div>
 
@@ -231,8 +232,8 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - NAVIGATION APP v1.9 FINAL
-        // CSS Transform περιστροφή, διορθωμένο alert, όλα μέσα
+        // ATHOS MAPS - NAVIGATION APP v2.0 FINAL
+        // CSS Transform περιστροφή, bottom-bar km, όλα διορθωμένα
         // ============================================================
         
         const ACCESS_CODE = '10101010';
@@ -503,11 +504,40 @@
 
         function updateUserMarker(lat,lng){const h=state.currentHeading||0;const html=`<div class="arrow-dot" style="transform:rotate(${h}deg)"><div class="arrow"></div><div class="dot"></div><div class="glow"></div></div>`;if(!state.userMarker){state.userMarker=L.marker([lat,lng],{icon:L.divIcon({html,className:'',iconSize:[32,32],iconAnchor:[16,20]}),zIndexOffset:1000}).addTo(state.map);}else{state.userMarker.setLatLng([lat,lng]);const el=state.userMarker.getElement();if(el){const ad=el.querySelector('.arrow-dot');if(ad)ad.style.transform=`rotate(${h}deg)`;}}}
 
+        // ★★★ ΠΕΡΙΣΤΡΟΦΗ ΧΑΡΤΗ ΜΕ CSS TRANSFORM ★★★
         function toggleCompass(){if(state.isCompassOn){disableCompass();}else{enableCompass();}}
-        function enableCompass(){state.isCompassOn=true;document.getElementById('compassBtn').textContent='🗺️↻✓';document.getElementById('compassBtn').classList.add('active');applyMapRotation();}
-        function disableCompass(){state.isCompassOn=false;document.getElementById('compassBtn').textContent='🗺️↻';document.getElementById('compassBtn').classList.remove('active');resetMapRotation();}
-        function applyMapRotation(){if(!state.isCompassOn)return;const m=document.getElementById('map');m.style.transform=`rotate(${-state.currentHeading}deg)`;m.style.transformOrigin='center center';m.style.width='140vw';m.style.height='140vh';m.style.position='fixed';m.style.top='-20vh';m.style.left='-20vw';}
-        function resetMapRotation(){const m=document.getElementById('map');m.style.transform='rotate(0deg)';m.style.width='100vw';m.style.height='100vh';m.style.top='0';m.style.left='0';}
+        function enableCompass(){
+            state.isCompassOn=true;
+            document.getElementById('compassBtn').textContent='🗺️↻✓';
+            document.getElementById('compassBtn').classList.add('active');
+            applyMapRotation();
+        }
+        function disableCompass(){
+            state.isCompassOn=false;
+            document.getElementById('compassBtn').textContent='🗺️↻';
+            document.getElementById('compassBtn').classList.remove('active');
+            resetMapRotation();
+        }
+        function applyMapRotation(){
+            if(!state.isCompassOn)return;
+            const m=document.getElementById('map');
+            const heading=state.currentHeading||0;
+            m.style.transform=`rotate(${-heading}deg)`;
+            m.style.transformOrigin='center center';
+            m.style.width='150vw';
+            m.style.height='150vh';
+            m.style.position='fixed';
+            m.style.top='-25vh';
+            m.style.left='-25vw';
+        }
+        function resetMapRotation(){
+            const m=document.getElementById('map');
+            m.style.transform='rotate(0deg)';
+            m.style.width='100vw';
+            m.style.height='100vh';
+            m.style.top='0';
+            m.style.left='0';
+        }
 
         function toggleNavigation(){if(state.isNavigating){stopNavigation();}else{startNavigation();}}
         function startNavigation(){
