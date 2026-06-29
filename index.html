@@ -12,8 +12,8 @@
         body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;overflow:hidden;height:100%;touch-action:pan-x pan-y}
         #map{height:100vh;width:100vw;z-index:1;background:#1a1a2e}
         
-        .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:4px 6px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;max-height:78px;overflow:hidden;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d;align-items:center}
-        .header button,.header select{padding:6px 10px;font-size:11px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:white;cursor:pointer;min-height:34px;transition:all 0.2s;touch-action:manipulation;position:relative;min-width:36px}
+        .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:6px 8px;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d;align-items:center;max-height:none}
+        .header button,.header select{padding:6px 12px;font-size:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:white;cursor:pointer;min-height:38px;transition:all 0.2s;touch-action:manipulation;position:relative;min-width:40px}
         .header button{background:#2c5f2d;color:white;border:none;font-weight:600}
         .header button:active{transform:scale(0.92)}
         .header button.primary{background:#1a7a3a}
@@ -26,146 +26,158 @@
         .header button.clear-route-btn{background:#d35400;color:white}
         .header button.clear-all-btn{background:#6c3483;color:white}
         .header button.waypoints-btn{background:#2980b9;color:white}
-        .header button.nav-app-btn{background:#2196F3;color:white;font-size:12px;font-weight:700}
+        .header button.nav-app-btn{background:#2196F3;color:white;font-size:13px;font-weight:700}
         .header button.locate-btn{background:#2c3e50;color:white}
         .header button .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:2px 8px;border-radius:4px;font-size:8px;white-space:nowrap;pointer-events:none;z-index:9999;margin-bottom:3px}
         .header button:hover .tooltip,.header button:focus .tooltip{display:block}
-        .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:4px 7px;max-width:110px;font-size:10px;border:1px solid rgba(255,255,255,0.08);min-height:34px}
+        .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:4px 8px;max-width:120px;font-size:11px;border:1px solid rgba(255,255,255,0.08);min-height:38px}
         .header select option{color:#333}
-        .header .badge{font-size:9px;background:rgba(255,255,255,0.12);padding:0 7px;border-radius:6px;display:inline-flex;align-items:center;color:#aaa;min-height:20px}
+        .header .badge{font-size:10px;background:rgba(255,255,255,0.12);padding:0 10px;border-radius:6px;display:inline-flex;align-items:center;color:#aaa;min-height:28px}
         .header .badge.has-tiles{background:rgba(39,174,96,0.25);color:#4CAF50}
         .header .badge.routes-badge{background:rgba(142,68,173,0.25);color:#bb86fc}
         
-        .extra-area-selector{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.05);border-radius:5px;padding:2px 5px}
-        .extra-area-selector select{background:rgba(255,255,255,0.1);color:#ddd;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:4px 7px;font-size:10px;min-height:32px;max-width:105px}
+        .extra-area-selector{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.05);border-radius:6px;padding:2px 6px}
+        .extra-area-selector select{background:rgba(255,255,255,0.1);color:#ddd;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:4px 8px;font-size:11px;min-height:36px;max-width:110px}
         .extra-area-selector select option{color:#333}
-        .extra-area-selector button{background:#8e44ad;color:white;border:none;padding:4px 10px;font-size:10px;border-radius:4px;cursor:pointer;min-height:32px}
+        .extra-area-selector button{background:#8e44ad;color:white;border:none;padding:4px 12px;font-size:11px;border-radius:4px;cursor:pointer;min-height:36px}
         .extra-area-selector button:active{transform:scale(0.92)}
         
-        .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:950;background:rgba(26,26,46,0.95);padding:3px 8px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;border-top:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(8px);align-items:center;padding-bottom:calc(3px + env(safe-area-inset-bottom))}
-        .bottom-bar .speed-group{display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,0.06);border-radius:5px;padding:2px 5px}
-        .bottom-bar .speed-group button{background:transparent;color:#888;border:none;padding:3px 7px;font-size:10px;cursor:pointer;border-radius:3px;min-height:26px;min-width:30px}
+        .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:950;background:rgba(26,26,46,0.95);padding:4px 10px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;border-top:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(8px);align-items:center;padding-bottom:calc(4px + env(safe-area-inset-bottom))}
+        .bottom-bar .speed-group{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.06);border-radius:6px;padding:3px 6px}
+        .bottom-bar .speed-group button{background:transparent;color:#888;border:none;padding:4px 10px;font-size:11px;cursor:pointer;border-radius:4px;min-height:32px;min-width:36px}
         .bottom-bar .speed-group button:hover{background:rgba(255,255,255,0.08)}
         .bottom-bar .speed-group button.active{background:rgba(76,175,80,0.25);color:#4CAF50}
-        .bottom-bar .speed-group button .spd-icon{font-size:14px;display:block;text-align:center}
-        .bottom-bar .speed-group button .spd-label{font-size:7px;display:block;text-align:center;color:#777;margin-top:0px}
+        .bottom-bar .speed-group button .spd-icon{font-size:16px;display:block;text-align:center}
+        .bottom-bar .speed-group button .spd-label{font-size:8px;display:block;text-align:center;color:#777;margin-top:1px}
         .bottom-bar .speed-group button.active .spd-label{color:#4CAF50}
         
-        .blog-link{position:fixed;bottom:44px;right:8px;z-index:850;background:rgba(26,26,46,0.85);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);transition:all 0.2s;text-decoration:none;backdrop-filter:blur(4px)}
+        .blog-link{position:fixed;bottom:50px;right:10px;z-index:850;background:rgba(26,26,46,0.85);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);transition:all 0.2s;text-decoration:none;backdrop-filter:blur(4px)}
         .blog-link:hover{transform:scale(1.1)}
-        .blog-link img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+        .blog-link img{width:30px;height:30px;border-radius:50%;object-fit:cover}
         
-        .info-panel{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(26,26,46,0.95);padding:8px 16px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.6);font-size:14px;text-align:center;min-width:220px;max-width:94%;border:1px solid rgba(255,255,255,0.08);cursor:grab;backdrop-filter:blur(8px);color:#eee;user-select:none}
-        .info-panel .main-info{font-size:18px;font-weight:700;color:#4CAF50;letter-spacing:0.5px}
-        .info-panel .main-info .dist{font-size:24px;font-weight:800;color:#4CAF50}
-        .info-panel .main-info .time-val{font-size:20px;font-weight:700;color:#4CAF50}
-        .info-panel .sub-info{font-size:12px;color:#aaa;margin-top:2px}
+        .info-panel{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(26,26,46,0.95);padding:10px 18px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.6);font-size:15px;text-align:center;min-width:240px;max-width:94%;border:1px solid rgba(255,255,255,0.08);cursor:grab;backdrop-filter:blur(8px);color:#eee;user-select:none}
+        .info-panel .main-info{font-size:19px;font-weight:700;color:#4CAF50;letter-spacing:0.5px}
+        .info-panel .main-info .dist{font-size:26px;font-weight:800;color:#4CAF50}
+        .info-panel .main-info .time-val{font-size:22px;font-weight:700;color:#4CAF50}
+        .info-panel .sub-info{font-size:13px;color:#aaa;margin-top:2px}
         .info-panel .sub-info .route-name{color:#bb86fc;font-weight:600}
-        .info-panel .status-line{font-size:10px;color:#4CAF50;background:rgba(76,175,80,0.12);padding:3px 12px;border-radius:6px;display:inline-block;margin-top:4px;font-weight:600}
+        .info-panel .status-line{font-size:11px;color:#4CAF50;background:rgba(76,175,80,0.12);padding:3px 14px;border-radius:6px;display:inline-block;margin-top:5px;font-weight:600}
         
-        #downloadProgress{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(0,0,0,0.92);color:white;padding:6px 14px;border-radius:14px;font-size:10px;display:none;min-width:160px;text-align:center}
-        #downloadProgress .bar{width:100%;height:3px;background:#333;border-radius:2px;margin-top:3px;overflow:hidden}
+        #downloadProgress{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(0,0,0,0.92);color:white;padding:8px 16px;border-radius:14px;font-size:11px;display:none;min-width:180px;text-align:center}
+        #downloadProgress .bar{width:100%;height:4px;background:#333;border-radius:2px;margin-top:4px;overflow:hidden}
         #downloadProgress .bar .fill{height:100%;background:#4CAF50;width:0%;transition:width 0.3s}
         
-        .status-badge{position:fixed;top:72px;right:4px;z-index:999;background:rgba(0,0,0,0.85);color:white;padding:2px 6px;border-radius:8px;font-size:7px;font-weight:600;backdrop-filter:blur(4px);pointer-events:none}
+        .status-badge{position:fixed;top:auto;bottom:50px;right:10px;z-index:999;background:rgba(0,0,0,0.85);color:white;padding:3px 8px;border-radius:10px;font-size:8px;font-weight:600;backdrop-filter:blur(4px);pointer-events:none}
         .status-badge.online{background:rgba(39,174,96,0.85)}
         .status-badge.offline{background:rgba(41,128,185,0.85)}
         
-        .leaflet-control-zoom{z-index:800!important;margin-top:72px!important}
-        .leaflet-control-zoom a{background:rgba(26,26,46,0.95)!important;color:#eee!important}
+        .leaflet-control-zoom{z-index:800!important;margin-top:10px!important}
+        .leaflet-control-zoom a{background:rgba(26,26,46,0.95)!important;color:#eee!important;width:34px!important;height:34px!important;line-height:34px!important}
         
         .location-marker{background:transparent!important;border:none!important}
         
-        #routeDropdown{position:fixed;top:72px;left:0;right:0;bottom:0;z-index:1200;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:10px}
+        #routeDropdown{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1200;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:10px}
         #routeDropdown.active{display:flex}
-        #routeDropdown .dropdown-content{background:rgba(26,26,46,0.98);border-radius:14px;padding:12px 14px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;border:2px solid #8e44ad;color:#eee}
-        #routeDropdown .dropdown-content h3{color:#bb86fc;font-size:17px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px}
-        #routeDropdown .route-item{display:flex;justify-content:space-between;align-items:center;padding:6px 7px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;border-radius:4px;gap:4px;font-size:13px}
+        #routeDropdown .dropdown-content{background:rgba(26,26,46,0.98);border-radius:14px;padding:14px 16px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;border:2px solid #8e44ad;color:#eee}
+        #routeDropdown .dropdown-content h3{color:#bb86fc;font-size:18px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px}
+        #routeDropdown .route-item{display:flex;justify-content:space-between;align-items:center;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;border-radius:4px;gap:6px;font-size:14px}
         #routeDropdown .route-item:hover{background:rgba(255,255,255,0.08)}
-        #routeDropdown .route-item .route-name{flex:1;min-width:0;color:#eee;font-size:13px;font-weight:500}
-        #routeDropdown .route-item .route-name .start-end{font-size:11px;color:#888;margin-top:1px}
-        #routeDropdown .route-item button{background:transparent;border:none;color:#4CAF50;cursor:pointer;font-size:12px;padding:2px 8px}
-        #routeDropdown .route-search{width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-size:11px;margin-bottom:8px}
+        #routeDropdown .route-item .route-name{flex:1;min-width:0;color:#eee;font-size:14px;font-weight:500}
+        #routeDropdown .route-item .route-name .start-end{font-size:12px;color:#888;margin-top:1px}
+        #routeDropdown .route-item button{background:transparent;border:none;color:#4CAF50;cursor:pointer;font-size:14px;padding:4px 10px}
+        #routeDropdown .route-search{width:100%;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-size:13px;margin-bottom:8px}
         #routeDropdown .route-search::placeholder{color:#666}
-        #routeDropdown .close-routes{background:#555;color:white;border:none;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:11px;margin-top:6px;width:100%}
-        #routeDropdown .route-count{font-size:10px;color:#888;text-align:center;padding:4px}
-        #routeDropdown .letter-header{font-size:14px;font-weight:700;color:#bb86fc;padding:8px 4px 4px 4px;border-bottom:1px solid rgba(255,255,255,0.08);margin-top:6px}
+        #routeDropdown .close-routes{background:#555;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;margin-top:6px;width:100%}
+        #routeDropdown .route-count{font-size:11px;color:#888;text-align:center;padding:4px}
+        #routeDropdown .letter-header{font-size:15px;font-weight:700;color:#bb86fc;padding:8px 4px 4px 4px;border-bottom:1px solid rgba(255,255,255,0.08);margin-top:6px}
         
-        #waypointsPanel{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:950;background:rgba(26,26,46,0.97);padding:6px 10px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.5);max-height:240px;overflow-y:auto;display:none;font-size:9px;min-width:240px;width:92%;max-width:360px;border:2px solid #2980b9;color:#eee}
+        #waypointsPanel{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:950;background:rgba(26,26,46,0.97);padding:8px 12px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.5);max-height:250px;overflow-y:auto;display:none;font-size:11px;min-width:260px;width:92%;max-width:380px;border:2px solid #2980b9;color:#eee}
         #waypointsPanel.active{display:block}
-        #waypointsPanel .wp-item{display:flex;align-items:center;gap:4px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);flex-wrap:wrap}
-        #waypointsPanel .wp-item .wp-name{font-weight:600;font-size:9px;flex:1;min-width:40px;color:#eee}
-        #waypointsPanel .wp-item .wp-btn{background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#888}
+        #waypointsPanel .wp-item{display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);flex-wrap:wrap}
+        #waypointsPanel .wp-item .wp-name{font-weight:600;font-size:11px;flex:1;min-width:50px;color:#eee}
+        #waypointsPanel .wp-item .wp-btn{background:transparent;border:none;padding:2px 6px;cursor:pointer;font-size:9px;color:#888;min-height:28px}
         #waypointsPanel .wp-item .wp-btn.primary{color:#4CAF50}
         #waypointsPanel .wp-item .wp-btn.danger{color:#e74c3c}
         
-        #sosContainer{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3000;background:rgba(26,26,46,0.98);padding:14px 18px;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.5);display:none;max-width:360px;width:92%;max-height:85vh;overflow-y:auto;border:2px solid #e74c3c;color:#eee}
+        #sosContainer{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3000;background:rgba(26,26,46,0.98);padding:16px 20px;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.5);display:none;max-width:380px;width:92%;max-height:85vh;overflow-y:auto;border:2px solid #e74c3c;color:#eee}
         #sosContainer.active{display:block}
-        #sosContainer input,#sosContainer select,#sosContainer textarea{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:white;padding:5px 7px;border-radius:6px;width:100%;font-size:11px;margin:3px 0}
+        #sosContainer input,#sosContainer select,#sosContainer textarea{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:white;padding:8px 10px;border-radius:6px;width:100%;font-size:13px;margin:4px 0}
         #sosContainer input::placeholder,#sosContainer textarea::placeholder{color:#666}
         #sosContainer select option{color:#333}
+        #sosContainer button{min-height:42px}
         
         #codeModal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center}
         #codeModal.active{display:flex}
-        #codeModal .modal-content{background:#1a1a2e;border-radius:16px;padding:20px;max-width:340px;width:92%;border:2px solid #2980b9;color:#eee;text-align:center}
-        #codeModal .modal-content h3{color:#4CAF50;font-size:16px;margin-bottom:8px}
-        #codeModal .modal-content p{font-size:11px;color:#888;margin-bottom:12px}
-        #codeModal .modal-content input{width:100%;padding:8px 12px;font-size:16px;border-radius:8px;border:2px solid #333;background:rgba(255,255,255,0.05);color:white;text-align:center;letter-spacing:3px;font-family:monospace}
+        #codeModal .modal-content{background:#1a1a2e;border-radius:16px;padding:24px;max-width:360px;width:92%;border:2px solid #2980b9;color:#eee;text-align:center}
+        #codeModal .modal-content h3{color:#4CAF50;font-size:18px;margin-bottom:10px}
+        #codeModal .modal-content p{font-size:13px;color:#888;margin-bottom:14px}
+        #codeModal .modal-content input{width:100%;padding:10px 14px;font-size:18px;border-radius:8px;border:2px solid #333;background:rgba(255,255,255,0.05);color:white;text-align:center;letter-spacing:3px;font-family:monospace}
         #codeModal .modal-content input:focus{outline:none;border-color:#4CAF50}
-        #codeModal .modal-content .btn-group{display:flex;gap:8px;margin-top:12px}
-        #codeModal .modal-content .btn-group button{flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer}
+        #codeModal .modal-content .btn-group{display:flex;gap:10px;margin-top:14px}
+        #codeModal .modal-content .btn-group button{flex:1;padding:10px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;min-height:44px}
         #codeModal .modal-content .btn-group .confirm{background:#4CAF50;color:white}
         #codeModal .modal-content .btn-group .cancel{background:#555;color:white}
-        #codeModal .modal-content .error{color:#e74c3c;font-size:10px;margin-top:6px;display:none}
+        #codeModal .modal-content .error{color:#e74c3c;font-size:12px;margin-top:6px;display:none}
         
-        /* ===== MOBILE FIXES - 3 σειρές κουμπιών ===== */
+        /* ===== MOBILE OPTIMIZATIONS ===== */
         @media(max-width:600px){
-            .header{max-height:105px; padding:2px 3px; gap:1px}
-            .header button,.header select{font-size:9px; padding:4px 5px; min-height:26px; min-width:26px}
-            .header select{max-width:75px; font-size:8px}
-            .extra-area-selector select{max-width:65px; font-size:8px; min-height:26px}
-            .extra-area-selector button{font-size:8px; padding:3px 6px; min-height:26px}
-            /* Απόκρυψη λιγότερο σημαντικών κουμπιών σε mobile */
+            .header{padding:6px 4px; gap:4px}
+            .header button,.header select{
+                font-size:12px; 
+                padding:8px 10px; 
+                min-height:42px; 
+                min-width:44px;
+                border-radius:8px;
+            }
+            .header select{max-width:100px; font-size:11px}
+            .header .badge{font-size:11px; min-height:30px; padding:0 10px}
+            .extra-area-selector select{max-width:85px; font-size:11px; min-height:38px}
+            .extra-area-selector button{font-size:11px; padding:6px 10px; min-height:38px}
+            /* Απόκρυψη λιγότερο σημαντικών κουμπιών σε μικρές οθόνες */
             #clearAllBtn, #reloadMapBtn, #helpBtn {
                 display: none !important;
             }
-            .info-panel{bottom:50px;font-size:12px;min-width:160px;padding:6px 12px}
-            .info-panel .main-info{font-size:15px}
-            .info-panel .main-info .dist{font-size:20px}
-            .info-panel .main-info .time-val{font-size:17px}
-            .info-panel .sub-info{font-size:10px}
-            #waypointsPanel{bottom:100px;min-width:180px;max-height:160px;font-size:8px}
-            .leaflet-control-zoom{margin-top:70px!important}
-            #routeDropdown .dropdown-content{padding:8px 10px}
-            #routeDropdown .route-item{font-size:12px;padding:5px 6px}
-            #routeDropdown .route-item .route-name{font-size:12px}
-            #routeDropdown .route-item .route-name .start-end{font-size:10px}
-            #routeDropdown .dropdown-content h3{font-size:15px}
-            #routeDropdown .letter-header{font-size:13px}
-            .status-badge{top:70px;font-size:6px}
-            .bottom-bar .speed-group button{min-height:24px;min-width:24px;padding:2px 4px;font-size:8px}
-            .bottom-bar .speed-group button .spd-icon{font-size:11px}
-            .bottom-bar .speed-group button .spd-label{font-size:6px}
-            .blog-link{bottom:40px;right:6px;width:28px;height:28px}
-            .blog-link img{width:22px;height:22px}
-            /* Κρύβουμε τα labels ταχύτητας σε μικρές οθόνες για εξοικονόμηση χώρου */
-            .bottom-bar .speed-group button .spd-label{display:none}
+            .info-panel{bottom:55px;font-size:13px;min-width:180px;padding:8px 14px}
+            .info-panel .main-info{font-size:16px}
+            .info-panel .main-info .dist{font-size:22px}
+            .info-panel .main-info .time-val{font-size:19px}
+            .info-panel .sub-info{font-size:11px}
+            #waypointsPanel{bottom:105px;min-width:200px;max-height:170px;font-size:10px}
+            .leaflet-control-zoom{margin-top:10px!important}
+            #routeDropdown .dropdown-content{padding:10px 12px}
+            #routeDropdown .route-item{font-size:13px;padding:8px 6px}
+            #routeDropdown .route-item .route-name{font-size:13px}
+            #routeDropdown .route-item .route-name .start-end{font-size:11px}
+            #routeDropdown .dropdown-content h3{font-size:16px}
+            #routeDropdown .letter-header{font-size:14px}
+            .status-badge{bottom:50px;font-size:7px;padding:2px 8px}
+            .bottom-bar .speed-group button{min-height:32px;min-width:34px;padding:3px 8px;font-size:10px}
+            .bottom-bar .speed-group button .spd-icon{font-size:14px}
+            .bottom-bar .speed-group button .spd-label{font-size:7px}
+            .blog-link{bottom:45px;right:8px;width:34px;height:34px}
+            .blog-link img{width:26px;height:26px}
         }
         @media(max-width:400px){
-            .header{max-height:95px; padding:2px 2px; gap:1px}
-            .header button,.header select{font-size:8px; padding:3px 4px; min-height:24px; min-width:22px}
-            .header select{max-width:55px; font-size:7px}
-            .extra-area-selector select{max-width:50px; font-size:7px; min-height:24px}
-            .extra-area-selector button{font-size:7px; padding:2px 5px; min-height:24px}
-            .info-panel .main-info{font-size:13px}
-            .info-panel .main-info .dist{font-size:17px}
-            .info-panel .main-info .time-val{font-size:15px}
-            #routeDropdown .route-item{font-size:11px;padding:4px 5px}
-            #routeDropdown .route-item .route-name{font-size:11px}
-            #routeDropdown .route-item .route-name .start-end{font-size:9px}
-            .bottom-bar .speed-group button{min-height:20px;min-width:20px;padding:1px 3px;font-size:7px}
-            .bottom-bar .speed-group button .spd-icon{font-size:10px}
-            /* Απόκρυψη και άλλων κουμπιών σε πολύ μικρές οθόνες */
+            .header{padding:4px 3px; gap:3px}
+            .header button,.header select{
+                font-size:11px; 
+                padding:6px 8px; 
+                min-height:38px; 
+                min-width:38px;
+            }
+            .header select{max-width:80px; font-size:10px}
+            .extra-area-selector select{max-width:70px; font-size:10px; min-height:34px}
+            .extra-area-selector button{font-size:10px; padding:4px 8px; min-height:34px}
+            .info-panel .main-info{font-size:14px}
+            .info-panel .main-info .dist{font-size:19px}
+            .info-panel .main-info .time-val{font-size:17px}
+            #routeDropdown .route-item{font-size:12px;padding:6px 5px}
+            #routeDropdown .route-item .route-name{font-size:12px}
+            #routeDropdown .route-item .route-name .start-end{font-size:10px}
+            .bottom-bar .speed-group button{min-height:28px;min-width:30px;padding:2px 6px;font-size:9px}
+            .bottom-bar .speed-group button .spd-icon{font-size:12px}
+            .bottom-bar .speed-group button .spd-label{font-size:6px}
+            /* Κρύβουμε και άλλα κουμπιά σε πολύ μικρές οθόνες */
             #clearCacheBtn, #statusBtn, #cacheBadge {
                 display: none !important;
             }
@@ -248,7 +260,7 @@
         <div class="dropdown-content">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
                 <h3>🗺️ Όλες οι Διαδρομές (<span id="routeListCount">0</span>)</h3>
-                <button id="closeRoutesBtn" style="background:#555;color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;">✕</button>
+                <button id="closeRoutesBtn" style="background:#555;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:14px;">✕</button>
             </div>
             <input type="text" id="routeSearch" class="route-search" placeholder="🔍 Αναζήτηση διαδρομής...">
             <div id="routesList"></div>
@@ -259,26 +271,26 @@
 
     <div id="waypointsPanel">
         <div style="display:flex;justify-content:space-between;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:3px">
-            <span style="font-weight:600;color:#4CAF50;font-size:10px">📍 Σημεία (<span id="waypointCount">0</span>)</span>
-            <button id="closeWaypointsBtn" style="background:#555;color:white;border:none;border-radius:3px;padding:1px 6px;cursor:pointer;font-size:8px;">✕</button>
+            <span style="font-weight:600;color:#4CAF50;font-size:12px">📍 Σημεία (<span id="waypointCount">0</span>)</span>
+            <button id="closeWaypointsBtn" style="background:#555;color:white;border:none;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:11px;min-height:30px;">✕</button>
         </div>
         <ul id="waypointsList" style="list-style:none;padding:0;margin:0"></ul>
     </div>
 
     <div id="sosContainer">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:2px solid #e74c3c;padding-bottom:4px">
-            <span style="font-size:15px;font-weight:700;color:#e74c3c;">🆘 SOS</span>
-            <button id="closeSosBtn" style="background:#555;color:white;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:13px;">✕</button>
+            <span style="font-size:17px;font-weight:700;color:#e74c3c;">🆘 SOS</span>
+            <button id="closeSosBtn" style="background:#555;color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;">✕</button>
         </div>
-        <div style="font-size:10px;margin-bottom:6px;background:rgba(231,76,60,0.15);padding:5px;border-radius:6px;border-left:3px solid #e74c3c;">📍 <span id="sosCoords">Πατήστε στο χάρτη</span></div>
+        <div style="font-size:12px;margin-bottom:6px;background:rgba(231,76,60,0.15);padding:6px;border-radius:6px;border-left:3px solid #e74c3c;">📍 <span id="sosCoords">Πατήστε στο χάρτη</span></div>
         <input type="text" id="sosName" placeholder="Ονοματεπώνυμο">
         <select id="sosType"><option>Χάθηκα</option><option>Χτύπησα</option><option>Πρόβλημα υγείας</option><option>Έκτακτη ανάγκη</option><option>Άλλο</option></select>
         <input type="tel" id="sosPhone" placeholder="Τηλέφωνο">
-        <textarea id="sosHistory" placeholder="Ιστορικό..." style="min-height:35px;"></textarea>
-        <div style="display:flex;gap:4px;margin-top:4px;">
-            <button id="sosSendSms" style="flex:1;padding:6px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#27ae60;color:white;">📱 SMS</button>
-            <button id="sosSendEmail" style="flex:1;padding:6px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#2980b9;color:white;">✉️ Email</button>
-            <button id="sosCall112" style="flex:1;padding:6px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:#e74c3c;color:white;">📞 112</button>
+        <textarea id="sosHistory" placeholder="Ιστορικό..." style="min-height:40px;"></textarea>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+            <button id="sosSendSms" style="flex:1;padding:8px;border-radius:6px;font-size:13px;font-weight:600;border:none;cursor:pointer;background:#27ae60;color:white;min-height:42px;">📱 SMS</button>
+            <button id="sosSendEmail" style="flex:1;padding:8px;border-radius:6px;font-size:13px;font-weight:600;border:none;cursor:pointer;background:#2980b9;color:white;min-height:42px;">✉️ Email</button>
+            <button id="sosCall112" style="flex:1;padding:8px;border-radius:6px;font-size:14px;font-weight:600;border:none;cursor:pointer;background:#e74c3c;color:white;min-height:42px;">📞 112</button>
         </div>
     </div>
 
@@ -297,7 +309,7 @@
 
     <script>
         // ============================================================
-        // ATHOS MAPS - ΣΧΕΔΙΑΣΗ ΔΙΑΔΡΟΜΩΝ (CLEAN)
+        // ATHOS MAPS - ΣΧΕΔΙΑΣΗ ΔΙΑΔΡΟΜΩΝ
         // Κωδικός online: 10101010
         // ============================================================
         
@@ -627,7 +639,7 @@
             document.querySelectorAll('.spd-btn').forEach(btn=>{btn.addEventListener('click',function(e){e.stopPropagation();const s=parseInt(this.dataset.speed);if(s&&SPEED_PRESETS[s]){currentSpeed=s;document.querySelectorAll('.spd-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll(`.spd-btn[data-speed="${s}"]`).forEach(b=>b.classList.add('active'));updateTimeDisplay();updateInfo();showToast(`⏱️ Ταχύτητα: ${SPEED_PRESETS[s].label} (${s} km/h)`,'#4CAF50');}});});
         }
         function updateTimeDisplay(){if(state.lastMainDistance!==null&&state.lastMainDistance>0){document.getElementById('time1').textContent=formatTime(state.lastMainDistance/currentSpeed);}else{document.getElementById('time1').textContent='-';}}
-        function showToast(msg,color='rgba(0,0,0,0.85)'){const t=document.createElement('div');t.style.cssText=`position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:${color};color:white;padding:6px 14px;border-radius:10px;z-index:9999;font-size:11px;text-align:center;max-width:90%;pointer-events:none;font-weight:600`;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+        function showToast(msg,color='rgba(0,0,0,0.85)'){const t=document.createElement('div');t.style.cssText=`position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:${color};color:white;padding:8px 16px;border-radius:10px;z-index:9999;font-size:13px;text-align:center;max-width:90%;pointer-events:none;font-weight:600`;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
         function getColorIcon(color){return L.icon({iconUrl:`https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]});}
         function formatTime(h){if(h===null||isNaN(h)||h<0)return'-';const m=Math.round(h*60),hh=Math.floor(m/60),mm=m%60;if(hh===0&&mm===0)return'<1 λεπτό';if(hh===0)return`${mm} λεπτά`;if(mm===0)return`${hh} ώρα${hh!==1?'ες':''}`;return`${hh} ώρα${hh!==1?'ες':''} ${mm} λεπτά`;}
         function computeDistance(c){if(!c||c.length<2)return 0;let d=0;for(let i=1;i<c.length;i++)d+=L.latLng(c[i-1][1],c[i-1][0]).distanceTo(L.latLng(c[i][1],c[i][0]));return d/1000;}
@@ -661,7 +673,7 @@
 
         function showClickPopup(e){
             const container=document.createElement('div');
-            container.innerHTML=`<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 8px;border-radius:4px;margin:2px;cursor:pointer;font-size:10px;">🚩 Start</button><button id="setEndBtn" style="background:#c0392b;color:white;border:none;padding:4px 8px;border-radius:4px;margin:2px;cursor:pointer;font-size:10px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:4px 8px;border-radius:4px;margin:2px;cursor:pointer;font-size:10px;">📍 Σημείο</button>`;
+            container.innerHTML=`<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:6px 10px;border-radius:4px;margin:2px;cursor:pointer;font-size:12px;min-height:36px;">🚩 Start</button><button id="setEndBtn" style="background:#c0392b;color:white;border:none;padding:6px 10px;border-radius:4px;margin:2px;cursor:pointer;font-size:12px;min-height:36px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:6px 10px;border-radius:4px;margin:2px;cursor:pointer;font-size:12px;min-height:36px;">📍 Σημείο</button>`;
             const popup=L.popup().setLatLng(e.latlng).setContent(container).openOn(state.map);
             setTimeout(()=>{document.getElementById('setStartBtn')?.addEventListener('click',function(){setStartPoint(e.latlng);state.map.closePopup();});document.getElementById('setEndBtn')?.addEventListener('click',function(){setEndPoint(e.latlng);state.map.closePopup();});document.getElementById('addWpBtn')?.addEventListener('click',function(){addWaypoint(e.latlng);state.map.closePopup();});},100);
         }
@@ -670,12 +682,12 @@
         function setEndPoint(ll){if(state.endMarker)state.map.removeLayer(state.endMarker);state.endPoint=ll;state.endName=prompt('Όνομα Προορισμού:','Προορισμός')||'Προορισμός';state.endMarker=L.marker(ll,{icon:getColorIcon('red'),draggable:true}).addTo(state.map);state.endMarker.bindPopup('🏁 '+state.endName);state.endMarker.on('dragend',function(e){state.endPoint=e.target.getLatLng();calculateRoute();});calculateRoute();updateWaypointsPanel();saveLastRouteState();}
         function addWaypoint(ll){const dn=`Σημείο ${state.waypoints.length+1}`,name=prompt('Όνομα:',dn)||dn,note=prompt('Σημείωση (προαιρετικό):','')||'';state.waypoints.push(ll);state.waypointNames.push(name);state.waypointNotes.push(note);const idx=state.waypoints.length-1,m=L.marker(ll,{icon:getColorIcon('blue'),draggable:true}).addTo(state.map);updateWaypointPopup(m,idx);m.on('dragend',function(e){state.waypoints[idx]=e.target.getLatLng();calculateRoute();});state.markers.push(m);calculateRoute();updateWaypointsPanel();saveLastRouteState();if(note)showToast(`📝 Σημείωση: "${note}"`,'#f39c12');}
 
-        function updateWaypointPopup(marker,idx){const name=state.waypointNames[idx]||`Σημείο ${idx+1}`,note=state.waypointNotes[idx]||'',nd=note?`<div style="font-size:8px;color:#f39c12;background:rgba(243,156,18,0.15);padding:1px 4px;border-radius:2px;border-left:2px solid #f39c12;margin-top:1px;">📝 ${note}</div>`:'';marker.setPopupContent(`📍 <strong>${name}</strong><br>${nd}<div style="display:flex;gap:2px;margin-top:3px;flex-wrap:wrap;"><button onclick="renameWaypoint(${idx})" style="background:#2c5f2d;color:white;border:none;padding:1px 4px;border-radius:2px;cursor:pointer;font-size:8px;">✏️</button><button onclick="removeWaypoint(${idx})" style="background:#c0392b;color:white;border:none;padding:1px 4px;border-radius:2px;cursor:pointer;font-size:8px;">✖</button><button onclick="editWaypointNote(${idx})" style="background:#f39c12;color:white;border:none;padding:1px 4px;border-radius:2px;cursor:pointer;font-size:8px;">📝</button></div>`);}
+        function updateWaypointPopup(marker,idx){const name=state.waypointNames[idx]||`Σημείο ${idx+1}`,note=state.waypointNotes[idx]||'',nd=note?`<div style="font-size:10px;color:#f39c12;background:rgba(243,156,18,0.15);padding:2px 6px;border-radius:2px;border-left:2px solid #f39c12;margin-top:2px;">📝 ${note}</div>`:'';marker.setPopupContent(`📍 <strong>${name}</strong><br>${nd}<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;"><button onclick="renameWaypoint(${idx})" style="background:#2c5f2d;color:white;border:none;padding:3px 8px;border-radius:2px;cursor:pointer;font-size:10px;">✏️</button><button onclick="removeWaypoint(${idx})" style="background:#c0392b;color:white;border:none;padding:3px 8px;border-radius:2px;cursor:pointer;font-size:10px;">✖</button><button onclick="editWaypointNote(${idx})" style="background:#f39c12;color:white;border:none;padding:3px 8px;border-radius:2px;cursor:pointer;font-size:10px;">📝</button></div>`);}
         window.renameWaypoint=function(idx){const nn=prompt('Νέο όνομα:',state.waypointNames[idx]);if(nn&&nn.trim()){state.waypointNames[idx]=nn.trim();if(state.markers[idx])updateWaypointPopup(state.markers[idx],idx);updateWaypointsPanel();saveLastRouteState();}};
         window.editWaypointNote=function(idx){const c=state.waypointNotes[idx]||'',nn=prompt('Σημείωση:',c);if(nn!==null){state.waypointNotes[idx]=nn.trim();if(state.markers[idx])updateWaypointPopup(state.markers[idx],idx);updateWaypointsPanel();saveLastRouteState();if(nn.trim())showToast('📝 Αποθηκεύτηκε','#f39c12');}};
         window.removeWaypoint=function(idx){if(!confirm(`Διαγραφή "${state.waypointNames[idx]}";`))return;if(state.markers[idx])state.map.removeLayer(state.markers[idx]);state.waypoints.splice(idx,1);state.waypointNames.splice(idx,1);state.waypointNotes.splice(idx,1);state.markers.splice(idx,1);for(let i=0;i<state.markers.length;i++){if(state.markers[i])updateWaypointPopup(state.markers[i],i);}updateWaypointsPanel();calculateRoute();saveLastRouteState();};
 
-        function updateWaypointsPanel(){const list=document.getElementById('waypointsList'),count=document.getElementById('waypointCount');if(!list)return;let html='',total=0;if(state.startPoint){total++;html+=`<div class="wp-item"><span class="wp-name">🚩 ${state.startName}</span></div>`;}for(let i=0;i<state.waypoints.length;i++){total++;const note=state.waypointNotes[i]||'';html+=`<div class="wp-item"><span class="wp-name">📍 ${state.waypointNames[i]}</span>${note?`<span style="font-size:7px;color:#f39c12;background:rgba(243,156,18,0.15);padding:1px 4px;border-radius:2px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${note}">📝 ${note.substring(0,12)}${note.length>12?'…':''}</span>`:''}<button class="wp-btn" onclick="editWaypointNote(${i})" style="background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#888;">📝</button><button class="wp-btn primary" onclick="renameWaypoint(${i})" style="background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#4CAF50;">✏️</button><button class="wp-btn danger" onclick="removeWaypoint(${i})" style="background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#e74c3c;">✖</button></div>`;}if(state.endPoint){total++;html+=`<div class="wp-item"><span class="wp-name">🏁 ${state.endName}</span></div>`;}list.innerHTML=html;if(count)count.textContent=total;}
+        function updateWaypointsPanel(){const list=document.getElementById('waypointsList'),count=document.getElementById('waypointCount');if(!list)return;let html='',total=0;if(state.startPoint){total++;html+=`<div class="wp-item"><span class="wp-name">🚩 ${state.startName}</span></div>`;}for(let i=0;i<state.waypoints.length;i++){total++;const note=state.waypointNotes[i]||'';html+=`<div class="wp-item"><span class="wp-name">📍 ${state.waypointNames[i]}</span>${note?`<span style="font-size:9px;color:#f39c12;background:rgba(243,156,18,0.15);padding:2px 6px;border-radius:3px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${note}">📝 ${note.substring(0,14)}${note.length>14?'…':''}</span>`:''}<button class="wp-btn" onclick="editWaypointNote(${i})" style="background:transparent;border:none;padding:2px 6px;cursor:pointer;font-size:9px;color:#888;">📝</button><button class="wp-btn primary" onclick="renameWaypoint(${i})" style="background:transparent;border:none;padding:2px 6px;cursor:pointer;font-size:9px;color:#4CAF50;">✏️</button><button class="wp-btn danger" onclick="removeWaypoint(${i})" style="background:transparent;border:none;padding:2px 6px;cursor:pointer;font-size:9px;color:#e74c3c;">✖</button></div>`;}if(state.endPoint){total++;html+=`<div class="wp-item"><span class="wp-name">🏁 ${state.endName}</span></div>`;}list.innerHTML=html;if(count)count.textContent=total;}
 
         function calculateRoute(){
             if(!state.startPoint||!state.endPoint){showToast('❌ Χρειάζονται Start και End σημεία','#e74c3c');return;}
@@ -730,9 +742,9 @@
                         state.locationMarker = L.marker([lat, lng], {
                             icon: L.divIcon({
                                 className: 'location-marker',
-                                html: '<div style="background:#2196F3;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 12px rgba(33,150,243,0.6);"></div>',
-                                iconSize: [16, 16],
-                                iconAnchor: [8, 8]
+                                html: '<div style="background:#2196F3;width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 0 14px rgba(33,150,243,0.6);"></div>',
+                                iconSize: [18, 18],
+                                iconAnchor: [9, 9]
                             })
                         }).addTo(state.map);
                         state.locationMarker.bindPopup('📍 Η θέση σας').openPopup();
