@@ -118,12 +118,17 @@
         #codeModal .modal-content .btn-group .cancel{background:#555;color:white}
         #codeModal .modal-content .error{color:#e74c3c;font-size:10px;margin-top:6px;display:none}
         
+        /* ===== MOBILE FIXES - 3 σειρές κουμπιών ===== */
         @media(max-width:600px){
-            .header{max-height:76px;padding:3px 4px;gap:2px}
-            .header button,.header select{font-size:10px;padding:5px 7px;min-height:30px;min-width:32px}
-            .header select{max-width:85px;font-size:9px}
-            .extra-area-selector select{max-width:75px;font-size:9px;min-height:30px}
-            .extra-area-selector button{font-size:9px;padding:3px 7px;min-height:30px}
+            .header{max-height:105px; padding:2px 3px; gap:1px}
+            .header button,.header select{font-size:9px; padding:4px 5px; min-height:26px; min-width:26px}
+            .header select{max-width:75px; font-size:8px}
+            .extra-area-selector select{max-width:65px; font-size:8px; min-height:26px}
+            .extra-area-selector button{font-size:8px; padding:3px 6px; min-height:26px}
+            /* Απόκρυψη λιγότερο σημαντικών κουμπιών σε mobile */
+            #clearAllBtn, #reloadMapBtn, #helpBtn {
+                display: none !important;
+            }
             .info-panel{bottom:50px;font-size:12px;min-width:160px;padding:6px 12px}
             .info-panel .main-info{font-size:15px}
             .info-panel .main-info .dist{font-size:20px}
@@ -138,26 +143,32 @@
             #routeDropdown .dropdown-content h3{font-size:15px}
             #routeDropdown .letter-header{font-size:13px}
             .status-badge{top:70px;font-size:6px}
-            .bottom-bar .speed-group button{min-height:24px;min-width:26px;padding:2px 5px;font-size:9px}
-            .bottom-bar .speed-group button .spd-icon{font-size:12px}
+            .bottom-bar .speed-group button{min-height:24px;min-width:24px;padding:2px 4px;font-size:8px}
+            .bottom-bar .speed-group button .spd-icon{font-size:11px}
             .bottom-bar .speed-group button .spd-label{font-size:6px}
             .blog-link{bottom:40px;right:6px;width:28px;height:28px}
             .blog-link img{width:22px;height:22px}
+            /* Κρύβουμε τα labels ταχύτητας σε μικρές οθόνες για εξοικονόμηση χώρου */
+            .bottom-bar .speed-group button .spd-label{display:none}
         }
         @media(max-width:400px){
-            .header button,.header select{font-size:9px;padding:4px 5px;min-height:28px;min-width:28px}
-            .header{max-height:70px;gap:2px}
-            .header select{max-width:65px;font-size:8px}
-            .extra-area-selector select{max-width:60px;font-size:8px;min-height:28px}
-            .extra-area-selector button{font-size:8px;padding:3px 5px;min-height:28px}
+            .header{max-height:95px; padding:2px 2px; gap:1px}
+            .header button,.header select{font-size:8px; padding:3px 4px; min-height:24px; min-width:22px}
+            .header select{max-width:55px; font-size:7px}
+            .extra-area-selector select{max-width:50px; font-size:7px; min-height:24px}
+            .extra-area-selector button{font-size:7px; padding:2px 5px; min-height:24px}
             .info-panel .main-info{font-size:13px}
             .info-panel .main-info .dist{font-size:17px}
             .info-panel .main-info .time-val{font-size:15px}
             #routeDropdown .route-item{font-size:11px;padding:4px 5px}
             #routeDropdown .route-item .route-name{font-size:11px}
             #routeDropdown .route-item .route-name .start-end{font-size:9px}
-            .bottom-bar .speed-group button{min-height:22px;min-width:22px;padding:2px 4px;font-size:8px}
-            .bottom-bar .speed-group button .spd-icon{font-size:11px}
+            .bottom-bar .speed-group button{min-height:20px;min-width:20px;padding:1px 3px;font-size:7px}
+            .bottom-bar .speed-group button .spd-icon{font-size:10px}
+            /* Απόκρυψη και άλλων κουμπιών σε πολύ μικρές οθόνες */
+            #clearCacheBtn, #statusBtn, #cacheBadge {
+                display: none !important;
+            }
         }
         @media(min-width:601px){
             .bottom-bar .bottom-label{display:none}
@@ -192,7 +203,7 @@
         
         <button id="navAppBtn" class="nav-app-btn" title="Άνοιγμα εφαρμογής Πλοήγησης"><span class="tooltip">App Πλοήγησης</span>🧭 ΠΛΟΗΓΗΣΗ</button>
         
-        <!-- ΝΕΟ ΚΟΥΜΠΙ ΕΥΡΕΣΗΣ ΘΕΣΗΣ -->
+        <!-- ΚΟΥΜΠΙ ΕΥΡΕΣΗΣ ΘΕΣΗΣ -->
         <button id="locateBtn" class="locate-btn" title="Εύρεση της θέσης μου"><span class="tooltip">Η θέση μου</span>📍</button>
         
         <button id="sosBtn" class="danger" title="SOS έκτακτη ανάγκη"><span class="tooltip">SOS</span>🆘</button>
@@ -715,7 +726,6 @@
                         const lat = pos.coords.latitude;
                         const lng = pos.coords.longitude;
                         state.map.setView([lat, lng], 15);
-                        // Αφαίρεση παλιού marker αν υπάρχει
                         if (state.locationMarker) state.map.removeLayer(state.locationMarker);
                         state.locationMarker = L.marker([lat, lng], {
                             icon: L.divIcon({
