@@ -27,6 +27,7 @@
         .header button.clear-all-btn{background:#6c3483;color:white}
         .header button.waypoints-btn{background:#2980b9;color:white}
         .header button.nav-app-btn{background:#2196F3;color:white;font-size:12px;font-weight:700}
+        .header button.locate-btn{background:#2c3e50;color:white}
         .header button .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:2px 8px;border-radius:4px;font-size:8px;white-space:nowrap;pointer-events:none;z-index:9999;margin-bottom:3px}
         .header button:hover .tooltip,.header button:focus .tooltip{display:block}
         .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:4px 7px;max-width:110px;font-size:10px;border:1px solid rgba(255,255,255,0.08);min-height:34px}
@@ -72,6 +73,8 @@
         
         .leaflet-control-zoom{z-index:800!important;margin-top:72px!important}
         .leaflet-control-zoom a{background:rgba(26,26,46,0.95)!important;color:#eee!important}
+        
+        .location-marker{background:transparent!important;border:none!important}
         
         #routeDropdown{position:fixed;top:72px;left:0;right:0;bottom:0;z-index:1200;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:10px}
         #routeDropdown.active{display:flex}
@@ -188,6 +191,9 @@
         <span class="badge" id="cacheBadge">0</span>
         
         <button id="navAppBtn" class="nav-app-btn" title="Άνοιγμα εφαρμογής Πλοήγησης"><span class="tooltip">App Πλοήγησης</span>🧭 ΠΛΟΗΓΗΣΗ</button>
+        
+        <!-- ΝΕΟ ΚΟΥΜΠΙ ΕΥΡΕΣΗΣ ΘΕΣΗΣ -->
+        <button id="locateBtn" class="locate-btn" title="Εύρεση της θέσης μου"><span class="tooltip">Η θέση μου</span>📍</button>
         
         <button id="sosBtn" class="danger" title="SOS έκτακτη ανάγκη"><span class="tooltip">SOS</span>🆘</button>
         <button id="routesBtn" class="route-btn" title="Όλες οι διαδρομές"><span class="tooltip">Διαδρομές</span>🗺️</button>
@@ -467,7 +473,8 @@
             endPoint:null,endName:'Προορισμός',endMarker:null,
             waypoints:[],waypointNames:[],waypointNotes:[],markers:[],
             routeLines:[],lastMainGeometry:null,lastMainDistance:null,lastRouteName:null,
-            isLoadingRoute:false,routeCalculated:false,hasExtraArea:false
+            isLoadingRoute:false,routeCalculated:false,hasExtraArea:false,
+            locationMarker:null
         };
 
         // ============================================================
@@ -513,7 +520,6 @@
             const cd=CITIES[cityKey];if(!cd&&cityKey!=='my_area'){showToast('❌ Επιλέξτε περιοχή','#e74c3c');return;}
             const al=cd?cd.name:'Η περιοχή μου';
             
-            // Πρώτη φορά: επιτρέπουμε λήψη χωρίς κωδικό
             if(!isOnlineAccessGranted&&!hasDownloadedOnce){
                 isOnlineAccessGranted=true;hasDownloadedOnce=true;
                 showToast('🔄 Λήψη σε εξέλιξη...','#8e44ad');
@@ -697,6 +703,38 @@
             
             if(localStorage.getItem('athos_online_granted')==='true')isOnlineAccessGranted=true;
 
+            // ΚΟΥΜΠΙ ΕΥΡΕΣΗΣ ΘΕΣΗΣ
+            document.getElementById('locateBtn').addEventListener('click', function() {
+                if (!navigator.geolocation) {
+                    showToast('❌ Το πρόγραμμα περιήγησης δεν υποστηρίζει geolocation', '#e74c3c');
+                    return;
+                }
+                showToast('📍 Αναζήτηση θέσης...', '#2980b9');
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        state.map.setView([lat, lng], 15);
+                        // Αφαίρεση παλιού marker αν υπάρχει
+                        if (state.locationMarker) state.map.removeLayer(state.locationMarker);
+                        state.locationMarker = L.marker([lat, lng], {
+                            icon: L.divIcon({
+                                className: 'location-marker',
+                                html: '<div style="background:#2196F3;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 12px rgba(33,150,243,0.6);"></div>',
+                                iconSize: [16, 16],
+                                iconAnchor: [8, 8]
+                            })
+                        }).addTo(state.map);
+                        state.locationMarker.bindPopup('📍 Η θέση σας').openPopup();
+                        showToast('✅ Βρέθηκε η θέση σας', '#4CAF50');
+                    },
+                    function(err) {
+                        showToast('❌ Αδυναμία εύρεσης θέσης: ' + err.message, '#e74c3c');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+                );
+            });
+
             document.getElementById('navAppBtn').addEventListener('click',function(){window.open('https://athos-user.github.io/athos-navigation/','_blank');});
             document.getElementById('downloadExtraBtn').addEventListener('click',function(){const s=document.getElementById('extraAreaSelect'),c=s.value;if(!c){showToast('❌ Επιλέξτε περιοχή','#e74c3c');return;}downloadAthosPlusArea(c);});
             document.getElementById('routesBtn').addEventListener('click',showRouteDropdown);document.getElementById('closeRoutesBtn').addEventListener('click',hideRouteDropdown);document.getElementById('closeRoutesBtn2').addEventListener('click',hideRouteDropdown);
@@ -713,7 +751,7 @@
             document.getElementById('reloadMapBtn').addEventListener('click',function(){state.map.invalidateSize();showToast('🔄 Επαναφόρτωση','#e67e22');});
             document.getElementById('toggleWaypointsBtn').addEventListener('click',function(){document.getElementById('waypointsPanel').classList.toggle('active');if(document.getElementById('waypointsPanel').classList.contains('active'))updateWaypointsPanel();});
             document.getElementById('closeWaypointsBtn').addEventListener('click',function(){document.getElementById('waypointsPanel').classList.remove('active');});
-            document.getElementById('helpBtn').addEventListener('click',function(){alert('🏔️ Athos Maps - Σχεδίαση\n\n✏️ Σχεδίαση: Πατήστε στο χάρτη\n🗺️ 143 διαδρομές\n📥 Offline χάρτες\n📤 Εξαγωγή GPX\n🧭 App Πλοήγησης\n🔐 Κωδικός: 10101010\n\n🔗 agionorosroutes.blogspot.com');});
+            document.getElementById('helpBtn').addEventListener('click',function(){alert('🏔️ Athos Maps - Σχεδίαση\n\n✏️ Σχεδίαση: Πατήστε στο χάρτη\n🗺️ 143 διαδρομές\n📥 Offline χάρτες\n📤 Εξαγωγή GPX\n🧭 App Πλοήγησης\n📍 Εύρεση θέσης\n🔐 Κωδικός: 10101010\n\n🔗 agionorosroutes.blogspot.com');});
             document.getElementById('fileInput').addEventListener('change',function(e){if(e.target.files&&e.target.files[0]){const f=e.target.files[0],r=new FileReader();r.onload=function(ev){try{const d=parseGPX(ev.target.result);if(d.tracks.length>0){const c=d.tracks[0];state.lastMainGeometry=c.map(x=>[x[1],x[0]]);state.lastMainDistance=computeDistance(c.map(x=>[x[1],x[0]]));state.routeCalculated=true;const l=L.polyline(c,{color:'#e74c3c',weight:4,opacity:0.85}).addTo(state.map);state.routeLines.push(l);state.map.fitBounds(l.getBounds(),{padding:[60,60]});updateInfo();saveLastRouteState();showToast('✅ GPX φορτώθηκε','#2c5f2d');}}catch(err){showToast('❌ Σφάλμα: '+err.message,'#e74c3c');}};r.readAsText(f);}this.value='';});
             
             document.getElementById('codeConfirm').addEventListener('click',confirmCode);document.getElementById('codeCancel').addEventListener('click',hideCodeModal);
