@@ -5,182 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Athos Maps - Σχεδίαση Διαδρομών</title>
     <meta name="theme-color" content="#2c5f2d">
-    
-    <!-- MapLibre GL -->
-    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
-    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;overflow:hidden;height:100%;touch-action:pan-x pan-y}
         #map{height:100vh;width:100vw;z-index:1;background:#1a1a2e}
         
-        /* ★★★ Attribution ★★★ */
-        .attribution {
-            position: fixed;
-            bottom: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 800;
-            background: rgba(0,0,0,0.75);
-            color: #888;
-            padding: 4px 14px;
-            border-radius: 10px;
-            font-size: 8px;
-            backdrop-filter: blur(4px);
-            pointer-events: none;
-            text-align: center;
-            max-width: 95%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .attribution a {
-            color: #4CAF50;
-            text-decoration: none;
-            pointer-events: auto;
-        }
-        .attribution a:hover {
-            text-decoration: underline;
-        }
-        
-        /* ★★★ Υπόλοιπα styles (συντομευμένα για να χωράει) ★★★ */
-        /* ... βάλε εδώ όλα τα styles από το προηγούμενο αρχείο ... */
-        
-        .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:4px 6px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d;align-items:center;max-height:none}
-        .header button,.header select{padding:6px 12px;font-size:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:white;cursor:pointer;min-height:38px;transition:all 0.2s;touch-action:manipulation;position:relative;min-width:40px}
+        .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,26,46,0.95);padding:4px 6px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;max-height:78px;overflow:hidden;backdrop-filter:blur(8px);border-bottom:2px solid #2c5f2d;align-items:center}
+        .header button,.header select{padding:6px 10px;font-size:11px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:white;cursor:pointer;min-height:34px;transition:all 0.2s;touch-action:manipulation;position:relative;min-width:36px}
         .header button{background:#2c5f2d;color:white;border:none;font-weight:600}
         .header button:active{transform:scale(0.92)}
         .header button.primary{background:#1a7a3a}
         .header button.danger{background:#c0392b}
+        .header button.warning{background:#e67e22}
+        .header button.active{background:#27ae60;box-shadow:0 0 12px rgba(39,174,96,0.4)}
+        .header button.offline-mode{background:#2980b9}
+        .header button.offline-mode.active{background:#27ae60;box-shadow:0 0 12px rgba(39,174,96,0.4)}
         .header button.route-btn{background:#8e44ad}
         .header button.clear-route-btn{background:#d35400;color:white}
+        .header button.clear-all-btn{background:#6c3483;color:white}
         .header button.waypoints-btn{background:#2980b9;color:white}
-        .header button.nav-app-btn{background:#2196F3;color:white;font-size:13px;font-weight:700}
-        /* ★★★ Κρύψαμε τα offline κουμπιά ★★★ */
-        .header button.offline-mode,
-        .header button#downloadBtn,
-        .header .extra-area-selector,
-        .header button#clearCacheBtn,
-        .header button#statusBtn,
-        .header .badge#cacheBadge {
-            display: none !important;
-        }
-        /* ... υπόλοιπα styles ... */
+        .header button.nav-app-btn{background:#2196F3;color:white;font-size:12px;font-weight:700}
+        .header button .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:2px 8px;border-radius:4px;font-size:8px;white-space:nowrap;pointer-events:none;z-index:9999;margin-bottom:3px}
+        .header button:hover .tooltip,.header button:focus .tooltip{display:block}
+        .header select{background:rgba(255,255,255,0.12);color:#ddd;padding:4px 7px;max-width:110px;font-size:10px;border:1px solid rgba(255,255,255,0.08);min-height:34px}
+        .header select option{color:#333}
+        .header .badge{font-size:9px;background:rgba(255,255,255,0.12);padding:0 7px;border-radius:6px;display:inline-flex;align-items:center;color:#aaa;min-height:20px}
+        .header .badge.has-tiles{background:rgba(39,174,96,0.25);color:#4CAF50}
+        .header .badge.routes-badge{background:rgba(142,68,173,0.25);color:#bb86fc}
         
-        .info-panel{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(26,26,46,0.95);padding:10px 18px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.6);font-size:15px;text-align:center;min-width:240px;max-width:94%;border:1px solid rgba(255,255,255,0.08);cursor:grab;backdrop-filter:blur(8px);color:#eee;user-select:none}
-        .info-panel .main-info{font-size:19px;font-weight:700;color:#4CAF50;letter-spacing:0.5px}
-        .info-panel .main-info .dist{font-size:26px;font-weight:800;color:#4CAF50}
-        .info-panel .main-info .time-val{font-size:22px;font-weight:700;color:#4CAF50}
-        .info-panel .sub-info{font-size:13px;color:#aaa;margin-top:2px}
+        .extra-area-selector{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.05);border-radius:5px;padding:2px 5px}
+        .extra-area-selector select{background:rgba(255,255,255,0.1);color:#ddd;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:4px 7px;font-size:10px;min-height:32px;max-width:105px}
+        .extra-area-selector select option{color:#333}
+        .extra-area-selector button{background:#8e44ad;color:white;border:none;padding:4px 10px;font-size:10px;border-radius:4px;cursor:pointer;min-height:32px}
+        .extra-area-selector button:active{transform:scale(0.92)}
+        
+        .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:950;background:rgba(26,26,46,0.95);padding:3px 8px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;border-top:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(8px);align-items:center;padding-bottom:calc(3px + env(safe-area-inset-bottom))}
+        .bottom-bar .speed-group{display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,0.06);border-radius:5px;padding:2px 5px}
+        .bottom-bar .speed-group button{background:transparent;color:#888;border:none;padding:3px 7px;font-size:10px;cursor:pointer;border-radius:3px;min-height:26px;min-width:30px}
+        .bottom-bar .speed-group button:hover{background:rgba(255,255,255,0.08)}
+        .bottom-bar .speed-group button.active{background:rgba(76,175,80,0.25);color:#4CAF50}
+        .bottom-bar .speed-group button .spd-icon{font-size:14px;display:block;text-align:center}
+        .bottom-bar .speed-group button .spd-label{font-size:7px;display:block;text-align:center;color:#777;margin-top:0px}
+        .bottom-bar .speed-group button.active .spd-label{color:#4CAF50}
+        
+        .blog-link{position:fixed;bottom:44px;right:8px;z-index:850;background:rgba(26,26,46,0.85);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);transition:all 0.2s;text-decoration:none;backdrop-filter:blur(4px)}
+        .blog-link:hover{transform:scale(1.1)}
+        .blog-link img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+        
+        .info-panel{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(26,26,46,0.95);padding:8px 16px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.6);font-size:14px;text-align:center;min-width:220px;max-width:94%;border:1px solid rgba(255,255,255,0.08);cursor:grab;backdrop-filter:blur(8px);color:#eee;user-select:none}
+        .info-panel .main-info{font-size:18px;font-weight:700;color:#4CAF50;letter-spacing:0.5px}
+        .info-panel .main-info .dist{font-size:24px;font-weight:800;color:#4CAF50}
+        .info-panel .main-info .time-val{font-size:20px;font-weight:700;color:#4CAF50}
+        .info-panel .sub-info{font-size:12px;color:#aaa;margin-top:2px}
         .info-panel .sub-info .route-name{color:#bb86fc;font-weight:600}
-        .info-panel .status-line{font-size:11px;color:#4CAF50;background:rgba(76,175,80,0.12);padding:3px 14px;border-radius:6px;display:inline-block;margin-top:5px;font-weight:600}
+        .info-panel .status-line{font-size:10px;color:#4CAF50;background:rgba(76,175,80,0.12);padding:3px 12px;border-radius:6px;display:inline-block;margin-top:4px;font-weight:600}
         
-        .status-badge{position:fixed;top:10px;right:10px;z-index:999;background:rgba(39,174,96,0.85);color:white;padding:4px 10px;border-radius:10px;font-size:8px;font-weight:600;backdrop-filter:blur(4px);pointer-events:none}
-        .maplibregl-ctrl-group { background:rgba(26,26,46,0.95)!important; border-color:#444!important; }
-        .maplibregl-ctrl-group button { background:rgba(26,26,46,0.95)!important; color:#eee!important; }
-        .maplibregl-ctrl-group button:hover { background:#333!important; }
+        #downloadProgress{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(0,0,0,0.92);color:white;padding:6px 14px;border-radius:14px;font-size:10px;display:none;min-width:160px;text-align:center}
+        #downloadProgress .bar{width:100%;height:3px;background:#333;border-radius:2px;margin-top:3px;overflow:hidden}
+        #downloadProgress .bar .fill{height:100%;background:#4CAF50;width:0%;transition:width 0.3s}
         
-        /* ★★★ Mobile ★★★ */
-        @media(max-width:600px){
-            .header{padding:4px 4px; gap:3px}
-            .header button,.header select{font-size:11px;padding:6px 8px;min-height:34px;min-width:34px}
-            .header select{max-width:90px;font-size:10px}
-            .info-panel{bottom:50px;font-size:12px;min-width:160px;padding:6px 12px}
-            .info-panel .main-info{font-size:15px}
-            .info-panel .main-info .dist{font-size:20px}
-            .info-panel .main-info .time-val{font-size:17px}
-            .info-panel .sub-info{font-size:10px}
-            .status-badge{font-size:7px;padding:3px 8px}
-            .attribution{ bottom:80px; font-size:7px; padding:3px 10px; }
-        }
-        @media(max-width:400px){
-            .header button,.header select{font-size:10px;padding:4px 6px;min-height:30px;min-width:30px}
-            .header select{max-width:75px;font-size:9px}
-            .info-panel .main-info{font-size:13px}
-            .info-panel .main-info .dist{font-size:17px}
-            .info-panel .main-info .time-val{font-size:15px}
-        }
-    </style>
-</head>
-<body>
-    <div id="map"></div>
-    
-    <!-- ★★★ ATTRIBUTION ★★★ -->
-    <div class="attribution">
-        © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors · 
-        <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a>
-    </div>
-    
-    <!-- ★★★ HEADER ★★★ -->
-    <div class="header">
-        <button id="navAppBtn" class="nav-app-btn">🧭 ΠΛΟΗΓΗΣΗ</button>
-        <button id="sosBtn" class="danger">🆘 SOS</button>
-        <button id="routesBtn" class="route-btn">🗺️ Διαδρομές</button>
-        <span class="badge routes-badge" id="routesBadge" style="display:inline-flex;">143</span>
-        <button id="clearRouteBtn" class="clear-route-btn">🗑️ Καθαρισμός</button>
-        <button id="clearAllBtn" class="clear-route-btn" style="background:#6c3483;">🧹 Όλα</button>
-        <button id="saveRouteBtn" class="primary">💾 Αποθήκευση</button>
-        <button id="exportGpxBtn">📤 GPX</button>
-        <button id="reloadMapBtn">🔄</button>
-        <button id="toggleWaypointsBtn" class="waypoints-btn">📍 Σημεία</button>
-        <button id="helpBtn" style="background:#9C27B0;">❓</button>
-        <input type="file" id="fileInput" accept=".gpx" style="display:none">
-    </div>
-
-    <!-- ★★★ INFO PANEL ★★★ -->
-    <div class="info-panel" id="routeInfo">
-        <div class="main-info">🥾 <span class="dist" id="dist1">-</span> km · ⏱️ <span class="time-val" id="time1">-</span></div>
-        <div class="sub-info"><span class="route-name" id="routeNameDisplay">-</span></div>
-        <div class="status-line">✏️ Πατήστε στο χάρτη για σημεία</div>
-    </div>
-
-    <div class="status-badge online" id="mapStatus">🌐 OpenFreeMap</div>
-
-    <!-- ★★★ ROUTE DROPDOWN ★★★ -->
-    <div id="routeDropdown">
-        <div class="dropdown-content">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <h3>🗺️ Όλες οι Διαδρομές (<span id="routeListCount">0</span>)</h3>
-                <button id="closeRoutesBtn" style="background:#555;color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;">✕</button>
-            </div>
-            <input type="text" id="routeSearch" class="route-search" placeholder="🔍 Αναζήτηση διαδρομής...">
-            <div id="routesList"></div>
-            <div class="route-count" id="routeStatus">Φόρτωση...</div>
-            <button class="close-routes" id="closeRoutesBtn2">✕ Κλείσιμο</button>
-        </div>
-    </div>
-
-    <!-- ★★★ WAYPOINTS PANEL ★★★ -->
-    <div id="waypointsPanel">
-        <div style="display:flex;justify-content:space-between;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:3px">
-            <span style="font-weight:600;color:#4CAF50;font-size:10px">📍 Σημεία (<span id="waypointCount">0</span>)</span>
-            <button id="closeWaypointsBtn" style="background:#555;color:white;border:none;border-radius:3px;padding:1px 6px;cursor:pointer;font-size:8px;">✕</button>
-        </div>
-        <ul id="waypointsList" style="list-style:none;padding:0;margin:0"></ul>
-    </div>
-
-    <!-- ★★★ SOS ★★★ -->
-    <div id="sosContainer">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:2px solid #e74c3c;padding-bottom:4px">
-            <span style="font-size:15px;font-weight:700;color:#e74c3c;">🆘 SOS</span>
-            <button id="closeSosBtn" style="background:#555;color:white;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:13px;">✕</button>
-        </div>
-        <div style="font-size:10px;margin-bottom:6px;background:rgba(231,76,60,0.15);padding:5px;border-radius:6px;border-left:3px solid #e74c3c;">📍 <span id="sosCoords">Πατήστε στο χάρτη</span></div>
-        <input type="text" id="sosName" placeholder="Ονοματεπώνυμο">
-        <select id="sosType"><option>Χάθηκα</option><option>Χτύπησα</option><option>Πρόβλημα υγείας</option><option>Έκτακτη ανάγκη</option><option>Άλλο</option></select>
-        <input type="tel" id="sosPhone" placeholder="Τηλέφωνο">
-        <textarea id="sosHistory" placeholder="Ιστορικό..." style="min-height:35px;"></textarea>
-        <div style="display:flex;gap:4px;margin-top:4px;">
-            <button id="sosSendSms" style="flex:1;padding:6px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#27ae60;color:white;">📱 SMS</button>
-            <button id="sosSendEmail" style="flex:1;padding:6px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#2980b9;color:white;">✉️ Email</button>
-            <button id="sosCall112" style="flex:1;padding:6px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:#e74c3c;color:white;">📞 112</button>
-        </div>
-    </div>
-
-    <style>
-        /* ★★★ Πρόσθετα styles για το dropdown ★★★ */
+        .status-badge{position:fixed;top:72px;right:4px;z-index:999;background:rgba(0,0,0,0.85);color:white;padding:2px 6px;border-radius:8px;font-size:7px;font-weight:600;backdrop-filter:blur(4px);pointer-events:none}
+        .status-badge.online{background:rgba(39,174,96,0.85)}
+        .status-badge.offline{background:rgba(41,128,185,0.85)}
+        
+        .leaflet-control-zoom{z-index:800!important;margin-top:72px!important}
+        .leaflet-control-zoom a{background:rgba(26,26,46,0.95)!important;color:#eee!important}
+        
         #routeDropdown{position:fixed;top:72px;left:0;right:0;bottom:0;z-index:1200;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:10px}
         #routeDropdown.active{display:flex}
         #routeDropdown .dropdown-content{background:rgba(26,26,46,0.98);border-radius:14px;padding:12px 14px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;border:2px solid #8e44ad;color:#eee}
@@ -203,664 +95,630 @@
         #waypointsPanel .wp-item .wp-btn{background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#888}
         #waypointsPanel .wp-item .wp-btn.primary{color:#4CAF50}
         #waypointsPanel .wp-item .wp-btn.danger{color:#e74c3c}
+        
+        #sosContainer{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3000;background:rgba(26,26,46,0.98);padding:14px 18px;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.5);display:none;max-width:360px;width:92%;max-height:85vh;overflow-y:auto;border:2px solid #e74c3c;color:#eee}
+        #sosContainer.active{display:block}
+        #sosContainer input,#sosContainer select,#sosContainer textarea{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:white;padding:5px 7px;border-radius:6px;width:100%;font-size:11px;margin:3px 0}
+        #sosContainer input::placeholder,#sosContainer textarea::placeholder{color:#666}
+        #sosContainer select option{color:#333}
+        
+        #codeModal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center}
+        #codeModal.active{display:flex}
+        #codeModal .modal-content{background:#1a1a2e;border-radius:16px;padding:20px;max-width:340px;width:92%;border:2px solid #2980b9;color:#eee;text-align:center}
+        #codeModal .modal-content h3{color:#4CAF50;font-size:16px;margin-bottom:8px}
+        #codeModal .modal-content p{font-size:11px;color:#888;margin-bottom:12px}
+        #codeModal .modal-content input{width:100%;padding:8px 12px;font-size:16px;border-radius:8px;border:2px solid #333;background:rgba(255,255,255,0.05);color:white;text-align:center;letter-spacing:3px;font-family:monospace}
+        #codeModal .modal-content input:focus{outline:none;border-color:#4CAF50}
+        #codeModal .modal-content .btn-group{display:flex;gap:8px;margin-top:12px}
+        #codeModal .modal-content .btn-group button{flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer}
+        #codeModal .modal-content .btn-group .confirm{background:#4CAF50;color:white}
+        #codeModal .modal-content .btn-group .cancel{background:#555;color:white}
+        #codeModal .modal-content .error{color:#e74c3c;font-size:10px;margin-top:6px;display:none}
+        
+        @media(max-width:600px){
+            .header{max-height:76px;padding:3px 4px;gap:2px}
+            .header button,.header select{font-size:10px;padding:5px 7px;min-height:30px;min-width:32px}
+            .header select{max-width:85px;font-size:9px}
+            .extra-area-selector select{max-width:75px;font-size:9px;min-height:30px}
+            .extra-area-selector button{font-size:9px;padding:3px 7px;min-height:30px}
+            .info-panel{bottom:50px;font-size:12px;min-width:160px;padding:6px 12px}
+            .info-panel .main-info{font-size:15px}
+            .info-panel .main-info .dist{font-size:20px}
+            .info-panel .main-info .time-val{font-size:17px}
+            .info-panel .sub-info{font-size:10px}
+            #waypointsPanel{bottom:100px;min-width:180px;max-height:160px;font-size:8px}
+            .leaflet-control-zoom{margin-top:70px!important}
+            #routeDropdown .dropdown-content{padding:8px 10px}
+            #routeDropdown .route-item{font-size:12px;padding:5px 6px}
+            #routeDropdown .route-item .route-name{font-size:12px}
+            #routeDropdown .route-item .route-name .start-end{font-size:10px}
+            #routeDropdown .dropdown-content h3{font-size:15px}
+            #routeDropdown .letter-header{font-size:13px}
+            .status-badge{top:70px;font-size:6px}
+            .bottom-bar .speed-group button{min-height:24px;min-width:26px;padding:2px 5px;font-size:9px}
+            .bottom-bar .speed-group button .spd-icon{font-size:12px}
+            .bottom-bar .speed-group button .spd-label{font-size:6px}
+            .blog-link{bottom:40px;right:6px;width:28px;height:28px}
+            .blog-link img{width:22px;height:22px}
+        }
+        @media(max-width:400px){
+            .header button,.header select{font-size:9px;padding:4px 5px;min-height:28px;min-width:28px}
+            .header{max-height:70px;gap:2px}
+            .header select{max-width:65px;font-size:8px}
+            .extra-area-selector select{max-width:60px;font-size:8px;min-height:28px}
+            .extra-area-selector button{font-size:8px;padding:3px 5px;min-height:28px}
+            .info-panel .main-info{font-size:13px}
+            .info-panel .main-info .dist{font-size:17px}
+            .info-panel .main-info .time-val{font-size:15px}
+            #routeDropdown .route-item{font-size:11px;padding:4px 5px}
+            #routeDropdown .route-item .route-name{font-size:11px}
+            #routeDropdown .route-item .route-name .start-end{font-size:9px}
+            .bottom-bar .speed-group button{min-height:22px;min-width:22px;padding:2px 4px;font-size:8px}
+            .bottom-bar .speed-group button .spd-icon{font-size:11px}
+        }
+        @media(min-width:601px){
+            .bottom-bar .bottom-label{display:none}
+        }
     </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <a href="https://agionorosroutes.blogspot.com/" target="_blank" class="blog-link" title="Athos Maps Blog">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23bb86fc' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E" alt="Blog" loading="lazy">
+    </a>
+    
+    <div class="header">
+        <button id="toggleOfflineBtn" class="offline-mode" title="Εναλλαγή Offline/Online"><span class="tooltip">Offline/Online</span>📥</button>
+        <button id="downloadBtn" class="primary" title="Λήψη offline χάρτη"><span class="tooltip">Λήψη</span>⬇️</button>
+        
+        <div class="extra-area-selector">
+            <select id="extraAreaSelect">
+                <option value="athos">🏔️ Άγιο Όρος</option>
+                <option value="patras">🏙️ Πάτρα</option>
+                <option value="athens">🏛️ Αθήνα</option>
+                <option value="thessaloniki">🌊 Θεσ/νίκη</option>
+                <option value="my_area">📍 Εδώ</option>
+            </select>
+            <button id="downloadExtraBtn" title="Λήψη επιλεγμένης περιοχής">📥</button>
+        </div>
+        
+        <button id="clearCacheBtn" class="danger" title="Καθαρισμός cache"><span class="tooltip">Cache</span>🗑️</button>
+        <button id="statusBtn" style="background:#2c3e50" title="Κατάσταση cache"><span class="tooltip">Κατάσταση</span>📊</button>
+        <span class="badge" id="cacheBadge">0</span>
+        
+        <button id="navAppBtn" class="nav-app-btn" title="Άνοιγμα εφαρμογής Πλοήγησης"><span class="tooltip">App Πλοήγησης</span>🧭 ΠΛΟΗΓΗΣΗ</button>
+        
+        <button id="sosBtn" class="danger" title="SOS έκτακτη ανάγκη"><span class="tooltip">SOS</span>🆘</button>
+        <button id="routesBtn" class="route-btn" title="Όλες οι διαδρομές"><span class="tooltip">Διαδρομές</span>🗺️</button>
+        <span class="badge routes-badge" id="routesBadge">143</span>
+        
+        <button id="clearRouteBtn" class="clear-route-btn" title="Καθαρισμός διαδρομής"><span class="tooltip">Καθαρισμός</span>🗑️</button>
+        <button id="clearAllBtn" class="clear-all-btn" title="Καθαρισμός όλων"><span class="tooltip">Καθαρισμός όλων</span>🧹</button>
+        
+        <button id="saveRouteBtn" class="primary" title="Αποθήκευση διαδρομής"><span class="tooltip">Αποθήκευση</span>💾</button>
+        <button id="exportGpxBtn" title="Εξαγωγή GPX"><span class="tooltip">GPX</span>📤</button>
+        <button id="reloadMapBtn" title="Επαναφόρτωση χάρτη"><span class="tooltip">Επαναφόρτωση</span>🔄</button>
+        <button id="toggleWaypointsBtn" class="waypoints-btn" title="Σημεία διαδρομής"><span class="tooltip">Σημεία</span>📍</button>
+        <button id="helpBtn" title="Βοήθεια"><span class="tooltip">Βοήθεια</span>❓</button>
+        
+        <input type="file" id="fileInput" accept=".gpx" style="display:none">
+    </div>
+
+    <div class="bottom-bar" id="bottomBar">
+        <span class="bottom-label">⏱️</span>
+        <div class="speed-group" title="Ταχύτητα πεζοπορίας">
+            <button class="spd-btn" data-speed="3" title="Αργή (3 km/h)"><span class="spd-icon">🐢</span><span class="spd-label">Αργή</span></button>
+            <button class="spd-btn active" data-speed="4" title="Μέτρια (4 km/h)"><span class="spd-icon">🚶</span><span class="spd-label">Μέτρια</span></button>
+            <button class="spd-btn" data-speed="5" title="Γρήγορη (5 km/h)"><span class="spd-icon">🏃</span><span class="spd-label">Γρήγορη</span></button>
+        </div>
+    </div>
+
+    <div class="status-badge online" id="mapStatus">🌐 Online</div>
+
+    <div id="downloadProgress">
+        <span id="progressText">Λήψη...</span>
+        <div class="bar"><div class="fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="info-panel" id="routeInfo">
+        <div class="main-info">🥾 <span class="dist" id="dist1">-</span> km · ⏱️ <span class="time-val" id="time1">-</span></div>
+        <div class="sub-info"><span class="route-name" id="routeNameDisplay">-</span></div>
+        <div class="status-line">✏️ Πατήστε στο χάρτη για σημεία</div>
+    </div>
+
+    <div id="routeDropdown">
+        <div class="dropdown-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <h3>🗺️ Όλες οι Διαδρομές (<span id="routeListCount">0</span>)</h3>
+                <button id="closeRoutesBtn" style="background:#555;color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;">✕</button>
+            </div>
+            <input type="text" id="routeSearch" class="route-search" placeholder="🔍 Αναζήτηση διαδρομής...">
+            <div id="routesList"></div>
+            <div class="route-count" id="routeStatus">Φόρτωση...</div>
+            <button class="close-routes" id="closeRoutesBtn2">✕ Κλείσιμο</button>
+        </div>
+    </div>
+
+    <div id="waypointsPanel">
+        <div style="display:flex;justify-content:space-between;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:3px">
+            <span style="font-weight:600;color:#4CAF50;font-size:10px">📍 Σημεία (<span id="waypointCount">0</span>)</span>
+            <button id="closeWaypointsBtn" style="background:#555;color:white;border:none;border-radius:3px;padding:1px 6px;cursor:pointer;font-size:8px;">✕</button>
+        </div>
+        <ul id="waypointsList" style="list-style:none;padding:0;margin:0"></ul>
+    </div>
+
+    <div id="sosContainer">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:2px solid #e74c3c;padding-bottom:4px">
+            <span style="font-size:15px;font-weight:700;color:#e74c3c;">🆘 SOS</span>
+            <button id="closeSosBtn" style="background:#555;color:white;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:13px;">✕</button>
+        </div>
+        <div style="font-size:10px;margin-bottom:6px;background:rgba(231,76,60,0.15);padding:5px;border-radius:6px;border-left:3px solid #e74c3c;">📍 <span id="sosCoords">Πατήστε στο χάρτη</span></div>
+        <input type="text" id="sosName" placeholder="Ονοματεπώνυμο">
+        <select id="sosType"><option>Χάθηκα</option><option>Χτύπησα</option><option>Πρόβλημα υγείας</option><option>Έκτακτη ανάγκη</option><option>Άλλο</option></select>
+        <input type="tel" id="sosPhone" placeholder="Τηλέφωνο">
+        <textarea id="sosHistory" placeholder="Ιστορικό..." style="min-height:35px;"></textarea>
+        <div style="display:flex;gap:4px;margin-top:4px;">
+            <button id="sosSendSms" style="flex:1;padding:6px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#27ae60;color:white;">📱 SMS</button>
+            <button id="sosSendEmail" style="flex:1;padding:6px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#2980b9;color:white;">✉️ Email</button>
+            <button id="sosCall112" style="flex:1;padding:6px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:#e74c3c;color:white;">📞 112</button>
+        </div>
+    </div>
+
+    <div id="codeModal">
+        <div class="modal-content">
+            <h3>🔐 Online Πρόσβαση</h3>
+            <p>Εισαγάγετε τον κωδικό για online λειτουργία</p>
+            <input type="password" id="codeInput" placeholder="••••••••" maxlength="20" autocomplete="off">
+            <div class="error" id="codeError">❌ Λάθος κωδικός</div>
+            <div class="btn-group">
+                <button class="cancel" id="codeCancel">✕ Ακύρωση</button>
+                <button class="confirm" id="codeConfirm">✅ Σύνδεση</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // ============================================================
-        // ATHOS MAPS - OpenFreeMap + Attribution
+        // ATHOS MAPS - ΣΧΕΔΙΑΣΗ ΔΙΑΔΡΟΜΩΝ (CLEAN)
+        // Κωδικός online: 10101010
         // ============================================================
         
-        // ★★★ ΟΛΕΣ ΟΙ ΔΙΑΔΡΟΜΕΣ ★★★
+        const ACCESS_CODE = '10101010';
+        let isOnlineAccessGranted = false;
+        let hasDownloadedOnce = false;
+        
+        const SPEED_PRESETS = {'3':{label:'Αργή',icon:'🐢',value:3},'4':{label:'Μέτρια',icon:'🚶',value:4},'5':{label:'Γρήγορη',icon:'🏃',value:5}};
+        let currentSpeed = 4;
+
+        const CITIES = {
+            'athos':{name:'Άγιο Όρος',lat:40.16,lng:24.32,radius:20},
+            'patras':{name:'Πάτρα',lat:38.2466,lng:21.7346,radius:15},
+            'athens':{name:'Αθήνα',lat:37.9838,lng:23.7275,radius:20},
+            'thessaloniki':{name:'Θεσσαλονίκη',lat:40.6401,lng:22.9444,radius:15},
+            'my_area':{name:'Η περιοχή μου',lat:0,lng:0,radius:15}
+        };
+
         const ROUTES = [
             {"name":"Αρσανάς → Ζωγράφου","dist":3,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Zografou%20Zografou.gpx"},
             {"name":"Αρσανάς Αγ. Άννας → Αγ. Άννα","dist":2,"time":"0:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Agia%20%20Anna.gpx"},
-            // ... πρόσθεσε όλες τις διαδρομές εδώ (ίδιες με το αρχικό)
+            {"name":"Αρσανάς Καρακάλλου → Αρσανάς Μορφονούς","dist":5.7,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Karakallou%20Arsanas%20Morfonous.gpx"},
+            {"name":"Αρσανάς Καρακάλλου → Ιβήρων","dist":5.1,"time":"1:40","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Karakalou%20Iviron.gpx"},
+            {"name":"Αρσανάς Καρακάλλου → Καρακάλλου 1","dist":1.3,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Karakalou%201.gpx"},
+            {"name":"Αρσανάς Καρακάλλου → Καρακάλλου 2","dist":3,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Karakalou%202.gpx"},
+            {"name":"Αρσανάς Καυσοκαλύβια → Καυσοκαλύβια","dist":0.8,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Kaysokalivia%20Kyriako.gpx"},
+            {"name":"Αρσανάς Κωνσταμονίτου → Κωνσταμονίτου","dist":2.5,"time":"0:55","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Konstamonitou.gpx"},
+            {"name":"Αρσανάς Μορφονούς → Λακκοσκήτη","dist":4.4,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Morfonou%20Lakoskiti.gpx"},
+            {"name":"Αρσανάς Μορφονούς → Μεγίστης Λαύρας","dist":10,"time":"4:45","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Morfonous%20Megistis%20Lavras.gpx"},
+            {"name":"Αρσανάς Παύλου → Παύλου","dist":1.2,"time":"0:20","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Paulou.gpx"},
+            {"name":"Αρσανάς Φιλοθέου → Φιλοθέου","dist":2.6,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/ArsanasFylotheou.gpx"},
+            {"name":"Αρσανάς Χιλανδαρίου → Εσφιγμένου","dist":2.8,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Chilandariou%20Esfigmenou.gpx"},
+            {"name":"Αρσανάς Χιλανδαρίου → Χιλανδαρίου","dist":2.5,"time":"0:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/ArsanasXilandari.gpx"},
+            {"name":"Αρσανας Σιμωνόπετρας → Σιμωνόπετρα","dist":1.5,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Arsanas%20Simonopetra.gpx"},
+            {"name":"Άγ. Βασίλειος → Ερημητήριο Αγ. Ιωσήφ","dist":1,"time":"0:20","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ag%20Basileios%20Erimitirio%20Ag%20Iosif.gpx"},
+            {"name":"Άγ. Βασίλειος → Κατουνάκια-Καρούλια","dist":3,"time":"1:45","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/AgBasileios%20Arsanas%20Karoulia.gpx"},
+            {"name":"Άγ. Βασίλειος → Μικρή Αγ. Άννα","dist":2.3,"time":"1:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ag%20Basileios%20Mikri%20Ag%20Anna.gpx"},
+            {"name":"Άγ. Βασίλειος → Πρ. Ηλία Εκκλησάκι","dist":1,"time":"0:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ag%20Basileios%20Profitis%20Hlias.gpx"},
+            {"name":"Άγ. Βασίλειος → Σταυρό","dist":1,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ag%20Basileios%20Stavros.gpx"},
+            {"name":"Άγ. Νείλος → Αρσανά Αγ. Νείλου","dist":1.5,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/AgNeilosArsanas.gpx"},
+            {"name":"Άγ. Νείλος → Καυσοκαλύβια","dist":2.5,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/AgNeilos%20Kafsokalivia.gpx"},
+            {"name":"Άγ. Νείλος → Μεγίστης Λαύρας","dist":6,"time":"2:30","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/AgNeilos%20Megistis%20Lavras.gpx"},
+            {"name":"Άγ. Νείλος → Προδρόμου Ρουμανική","dist":4,"time":"1:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/AgNeilos%20Roumaniki.gpx"},
+            {"name":"Άγ. Νείλος → Σπήλαιο Αγ. Νείλου","dist":0.5,"time":"0:15","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/AgNeilosSpilaio.gpx"},
+            {"name":"Βατοπαιδίου → Εσφιγμένου","dist":10,"time":"3:20","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Batopaidiou%2BEsfigmenou.gpx"},
+            {"name":"Βατοπαιδίου → Ζωγράφου","dist":6.5,"time":"2:30","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Batopaidiou%20Zografou.gpx"},
+            {"name":"Βατοπαιδίου → Καρυές","dist":10,"time":"3:30","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Bato%20Karyes.gpx"},
+            {"name":"Βατοπαιδίου → Σκήτη Αγ. Δημητρίου","dist":3,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/BatopedioyAgDimitriow.gpx"},
+            {"name":"Γιοβάντσα → Χιλανδαρίου","dist":10,"time":"3:20","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Giovantsa%2BChilandar.gpx"},
+            {"name":"Γρηγορίου → Διονυσίου","dist":3,"time":"1:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Grigoriou%20Dionisiou.gpx"},
+            {"name":"Γρηγορίου → Σιμωνόπετρα","dist":2.7,"time":"1:05","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Grigoriou%20Simonopetra.gpx"},
+            {"name":"Δάφνη → Καρυές","dist":8.2,"time":"3:50","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Dafni%20Karies.gpx"},
+            {"name":"Δάφνη → Ξηροποτάμου","dist":2.5,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Dafni%20Ksiropotamou.gpx"},
+            {"name":"Δάφνη → Παντελεήμονος Ρωσικό","dist":5,"time":"1:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Dafni%20Panteleimonos.gpx"},
+            {"name":"Δάφνη → Σιμωνόπετρα","dist":8,"time":"3:20","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Dafni%20Simonopetra.gpx"},
+            {"name":"Διονυσίου → Γρηγορίου","dist":3,"time":"1:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/DionysiouGrigoriou.gpx"},
+            {"name":"Διονυσίου → Παύλου","dist":2.8,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/DionysiouPaulou.gpx"},
+            {"name":"Δοχειαρίου → Αρσανάς Ζωγράφου","dist":3,"time":"0:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Dochiariou%20Arsanas%20Zografou.gpx"},
+            {"name":"Δοχειαρίου → Κωνσταμονίτου 1","dist":5,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Dochiariou%20Konstamonitou%201.gpx"},
+            {"name":"Δοχειαρίου → Κωνσταμονίτου 2","dist":6,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Dochiariou%20Konstamonitou%202.gpx"},
+            {"name":"Δοχειαρίου → Ξενοφώντος","dist":1.3,"time":"0:20","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Dochiariou%20Xenofontos.gpx"},
+            {"name":"Εσφιγμένου → Βατοπαιδίου","dist":10,"time":"3:20","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Esfigmenou%20Batopaidiou.gpx"},
+            {"name":"Εσφιγμένου → Χιλανδαρίου","dist":3,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Esfigmenou%20Chilandariou.gpx"},
+            {"name":"Ζωγράφου → Βατοπαιδίου","dist":6.5,"time":"2:15","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Zografou%20Batopaidiou.gpx"},
+            {"name":"Ζωγράφου → Εσφιγμένου","dist":8,"time":"2:45","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Zografou%20Esfigmenou.gpx"},
+            {"name":"Ζωγράφου → Κάθισμα Αγ. Γεωργίου","dist":0.9,"time":"0:12","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Zografou%20Kathisma%20Ag%20Georgiou.gpx"},
+            {"name":"Ζωγράφου → Κωνσταμονίτου","dist":4,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Zografou%20Konstamonitou.gpx"},
+            {"name":"Ζωγράφου → Σπήλαιο Οσίου Κοσμά","dist":2,"time":"0:35","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Zografou%20Spilaio.gpx"},
+            {"name":"Ζωγράφου → Χιλανδαρίου","dist":7.5,"time":"2:30","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Zografou%20Chilandar.gpx"},
+            {"name":"Ιβήρων → Καλιάγρα","dist":1.5,"time":"0:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/IvironKaliarga.gpx"},
+            {"name":"Ιβήρων → Καλύβα Αναστάσεως","dist":3.8,"time":"1:10","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/ivironKaliviAnastaseos.gpx"},
+            {"name":"Ιβήρων → Καρυές","dist":5,"time":"2:15","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Iviron%2BKaryes.gpx"},
+            {"name":"Ιβήρων → Κελί Τιμίου Σταυρού","dist":4.3,"time":"1:15","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/IvironPapaTyxon.gpx"},
+            {"name":"Ιβήρων → Μυλοπόταμος","dist":2.5,"time":"0:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/viron%20Mylopotamos.gpx"},
+            {"name":"Ιβήρων → Σκήτη Προδρόμου Ιβηρική","dist":1.5,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ibiron%20Prodromou.gpx"},
+            {"name":"Ιβήρων → Σταυρονικήτα 1","dist":3.2,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Iviron%2BStavronikita%2B1.gpx"},
+            {"name":"Ιβήρων → Σταυρονικήτα 2","dist":5.8,"time":"1:45","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Stavronikita%20Ivirov%202.gpx"},
+            {"name":"Ιβήρων → Φιλοθέου 1","dist":5.5,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Iviron%20Filotheou%201.gpx"},
+            {"name":"Ιβήρων → Φιλοθέου 2","dist":6,"time":"2:15","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Iviron%2BFilotheou%2B2.gpx"},
+            {"name":"Καρακάλλου → Προβάτα","dist":2.3,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/KarakalouProvata.gpx"},
+            {"name":"Καρακάλλου → Φιλοθέου","dist":2.2,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Filotheou%20Karakalou%201.gpx"},
+            {"name":"Καρούλια → Αγ. Βασίλειο","dist":3,"time":"2:20","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/AgBasileios%20Arsanas%20Karoulia.gpx"},
+            {"name":"Καρούλια → Κατουνάκια-Σταυρός","dist":3,"time":"2:25","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karoulia%20Stauros.gpx"},
+            {"name":"Καρούλια → Μικρή Αγ. Άννα","dist":2,"time":"1:20","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Katounakia%20Mikri%20Agianna.gpx"},
+            {"name":"Καρυές → Άξιον Εστί","dist":1.5,"time":"0:20","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Aksion%20Esti%202.gpx"},
+            {"name":"Καρυές → Βατοπαιδίου","dist":10,"time":"3:15","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Batopediou.gpx"},
+            {"name":"Καρυές → Ιβήρων","dist":5,"time":"1:35","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Iviron.gpx"},
+            {"name":"Καρυές → Καλύβα Αναστάσεως","dist":2.5,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Pater%20Efthimios.gpx"},
+            {"name":"Καρυές → Κελί Τιμίου Σταυρού","dist":3.5,"time":"0:55","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Papa%20Tychon.gpx"},
+            {"name":"Καρυές → Μαρουδά","dist":2,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Marouda.gpx"},
+            {"name":"Καρυές → Μπουραζέρη","dist":1.3,"time":"0:20","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Mpourazeri.gpx"},
+            {"name":"Καρυές → Παναγούδα","dist":2,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karies%20Panagouda.gpx"},
+            {"name":"Καρυές → Σιμωνόπετρα","dist":12,"time":"4:30","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Simonopetra.gpx"},
+            {"name":"Καρυές → Σκήτη Παντελεήμονος","dist":1.6,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Skiti%20Panteleimonos.gpx"},
+            {"name":"Καρυές → Σκήτη Πρ. Ηλία","dist":5,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Profiti%20Hlia.gpx"},
+            {"name":"Καρυές → Σταυρονικήτα","dist":4.3,"time":"1:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Stavronikita.gpx"},
+            {"name":"Καρυές → Φιλοθέου","dist":9.8,"time":"3:20","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Karyes%20Fylotheou.gpx"},
+            {"name":"Κατουνάκια → Αγ. Βασίλειο","dist":2,"time":"1:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Katounakia%20AgBasileios.gpx"},
+            {"name":"Κατουνάκια → Καρούλια Αρσανάς","dist":0.9,"time":"0:20","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Katounakia%20Arsanas.gpx"},
+            {"name":"Κατουνάκια → Μικρή Αγ. Άννα","dist":1,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Katounakia%20Mikri%20Agianna.gpx"},
+            {"name":"Κατουνάκια → Σταυρό","dist":2,"time":"1:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Katounakia%20Stavros.gpx"},
+            {"name":"Καυσοκαλύβια → Αγ. Νείλος","dist":2.5,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Kausokalivia%20Ag%20Neilos.gpx"},
+            {"name":"Καυσοκαλύβια → Κερασιά","dist":3.5,"time":"2:15","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Kausokalivia%20Kerasia.gpx"},
+            {"name":"Καυσοκαλύβια → Σπήλαιο Αγ. Νήφωνος","dist":2,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Kausokalivia%20Arxontariki%20Spilaio.gpx"},
+            {"name":"Κερασιά → Καυσοκαλύβια","dist":3.5,"time":"1:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Kerasia%20Kafsokalyvia.gpx"},
+            {"name":"Κερασιά → Σταυρός","dist":1,"time":"0:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Kerasia%20Stavros.gpx"},
+            {"name":"Κουτλουμουσίου → Σκήτη Παντελεήμονος","dist":1.3,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/koutloumousiou%20Skiti.gpx"},
+            {"name":"Κωνσταμονίτου → Δοχειαρίου","dist":6,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Konstamonitou%20Doxeiariou.gpx"},
+            {"name":"Κωνσταμονίτου → Εκκλησάκι Ανάληψης","dist":1.5,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Konstamonitou%20Naos%20Analipsis.gpx"},
+            {"name":"Κωνσταμονίτου → Ζωγράφου","dist":4,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Konstamonitou%20Zografou.gpx"},
+            {"name":"Μεγίστης Λαύρας → Αγ. Νείλος","dist":6,"time":"2:45","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Megistis%20Agios%20Neilos.gpx"},
+            {"name":"Μεγίστης Λαύρας → Αρσανάς","dist":1.6,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/BatopedioyAgDimitriow.gpx"},
+            {"name":"Μεγίστης Λαύρας → Αρσανάς Μορφονούς","dist":10,"time":"4:45","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Megistis%20Lavras%20Morfonou.gpx"},
+            {"name":"Μεγίστης Λαύρας → Σκήτη Αγ. Άννας","dist":12.5,"time":"5:30","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Megistis%20Ag.%20Anna.gpx"},
+            {"name":"Μεγίστης Λαύρας → Σκήτη Τιμίου Προδρόμου Ρουμανική 1","dist":4.5,"time":"1:45","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Megistis%20Roumaniki%201.gpx"},
+            {"name":"Μεγίστης Λαύρας → Σκήτη Τιμίου Προδρόμου Ρουμανική 2","dist":4.5,"time":"0:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Megistis%20Roumaniki%202%20(2).gpx"},
+            {"name":"Μικρή Αγ. Άννα → Αγ. Άννα","dist":1.5,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Mikri%20Agianna%20Agianna.gpx"},
+            {"name":"Μικρή Αγ. Άννα → Καρούλια Αρσανά","dist":2,"time":"0:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Mikri%20Ag%20Anna%20Arsanas%20Karoulia.gpx"},
+            {"name":"Μικρή Αγ. Άννα → Κατουνάκια","dist":1,"time":"0:15","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Katounakia%20Mikri%20Agianna.gpx"},
+            {"name":"Νέα Σκήτη → Παύλου κάτω","dist":2.5,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Nea%20Skiti%20Ag%20Payloy%20kato%20diadromi.gpx"},
+            {"name":"Νέα Σκήτη → Σκήτη Αγ. Άννας","dist":2,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Nea%20Skiti%20Agia%20Anna.gpx"},
+            {"name":"Ξενοφώντος → Δοχειαρίου","dist":1.3,"time":"0:20","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Xenofontos%20Doxeiariou.gpx"},
+            {"name":"Ξενοφώντος → Παντελεήμονος Ρωσικό","dist":4,"time":"0:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Xenofontos%20Panteleimonos.gpx"},
+            {"name":"Ξενοφώντος → Σκήτη Ευαγγελισμού","dist":3,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Xenofontos%20Skiti%20Evagelismou.gpx"},
+            {"name":"Ξηροποτάμου → Δάφνη","dist":2.5,"time":"0:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ksyropotamou%20Dafni.gpx"},
+            {"name":"Ξηροποτάμου → Παντελεήμονος Ρωσικό","dist":2.8,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/KsyropotamouRosiko.gpx"},
+            {"name":"Ουρανούπολη → Σύνορα Αγίου Όρους","dist":2.5,"time":"0:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ouranoupoli%20Sinora%20Agiou%20Orous.gpx"},
+            {"name":"Παντελεήμονος Ρωσικό → Δάφνη","dist":5,"time":"1:50","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Panteleimonos%20Dafni.gpx"},
+            {"name":"Παντελεήμονος Ρωσικό → Ξενοφώντος","dist":4,"time":"0:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Panteleimonos%20Xenofontos.gpx"},
+            {"name":"Παντοκράτορος → Βατοπαιδίου 1","dist":10,"time":"3:30","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Pantokratoros%20Batopaidiou%201.gpx"},
+            {"name":"Παντοκράτορος → Βατοπαιδίου 2","dist":10.5,"time":"4:00","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/PantokratorosBatopaidiou2.gpx"},
+            {"name":"Παντοκράτορος → Βατοπαιδίου 3","dist":9.5,"time":"3:30","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Pantokratoros%20Batopaidiou%203.gpx"},
+            {"name":"Παντοκράτορος → Καλύβα Αναστάσεως","dist":3.5,"time":"1:10","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/pantokratorosKalybaAnastaseos.gpx"},
+            {"name":"Παντοκράτορος → Καρυές","dist":5.6,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Pantokratoros%20Karyes.gpx"},
+            {"name":"Παντοκράτορος → Σκήτη Προφήτη Ηλία","dist":2,"time":"0:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Pantokratoros%20Skiti%20Pr%20Hlia.gpx"},
+            {"name":"Παντοκράτορος → Σταυρονικήτα","dist":2.9,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Pantokratoros%20Stavronikita.gpx"},
+            {"name":"Παύλου → Διονυσίου","dist":2.8,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Pavlou%20Dionisiou.gpx"},
+            {"name":"Παύλου → Νέα Σκήτη κάτω","dist":2.4,"time":"0:35","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Pavlou%20Nea%20Skiti%20Kato%20diadromi.gpx"},
+            {"name":"Παύλου → Σκήτη Αγ. Άννας πάνω","dist":3.5,"time":"1:15","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Pavloy%20Skiti%20Ag%20Annas%20Pano%20diadromi.gpx"},
+            {"name":"Παύλου → Τάφος Οσίου Ιωσήφ Ησυχαστή","dist":2,"time":"0:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Pavlou%20Tafo%20Osiou%20Josef.gpx"},
+            {"name":"Προδρόμου Ρουμανική → Αρσανά Ρουμανική","dist":2,"time":"0:20","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Roumaniki%20Arsanas.gpx"},
+            {"name":"Προδρόμου Ρουμανική → Βίγλα Κελί Αγ. Μηνά","dist":1,"time":"0:10","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Roymaniki%20Vigla%20Ag%20Minas.gpx"},
+            {"name":"Προδρόμου Ρουμανική → Μεγίστης Λαύρας 2","dist":4.3,"time":"0:55","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Roumaniki%20%20Megistis%202.gpx"},
+            {"name":"Προδρόμου Ρουμανική → Μεγίστης Λαύρας 3","dist":4.5,"time":"1:45","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Roumaniki%20Ag.%20Triada%20Megistis.gpx"},
+            {"name":"Προδρόμου Ρουμανική → Σπήλαιο Αγ. Αθανασίου","dist":0.8,"time":"0:10","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Roumaniki%20Spilaio%20Ag%20Athanasiou.gpx"},
+            {"name":"Σιμωνόπετρα → Γρηγορίου","dist":2.7,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Simonopetra%20Grigoriou.gpx"},
+            {"name":"Σιμωνόπετρα → Δάφνη","dist":8,"time":"3:10","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Simonopetra%20Dafni.gpx"},
+            {"name":"Σιμωνόπετρα → Καρυές","dist":12,"time":"4:30","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Simonopetra%20Karyes.gpx"},
+            {"name":"Σκήτη Αγ. Άννας → Ερημητήριο Οσίου Ιωσήφ","dist":1.3,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Agianna%20Erimitirio%20Josef.gpx"},
+            {"name":"Σκήτη Αγ. Άννας → Κορυφή Άθωνα","dist":7,"time":"3:30","difficulty":"hard","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ag%20Anna%20Korifi%20Athona.gpx"},
+            {"name":"Σκήτη Αγ. Άννας → Μικρή Αγ. Άννα","dist":1.5,"time":"0:25","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Agia%20Anna%20Mikri%20Ag%20Anna.gpx"},
+            {"name":"Σκήτη Αγ. Άννας → Νέα Σκήτη","dist":2.5,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Agia%20Anna%20Nea%20Skiti.gpx"},
+            {"name":"Σκήτη Αγ. Άννας → Παύλου κάτω","dist":3.5,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ag%20Anna%20Paulou%20Kato%20diadromi.gpx"},
+            {"name":"Σκήτη Αγ. Άννας → Παύλου πάνω","dist":3.5,"time":"1:30","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Ag%20Anna%20Paulou%20pano%20diadromi.gpx"},
+            {"name":"Σκήτη Προφήτη Ηλία → Βογορόδιτσα","dist":3,"time":"1:15","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Skiti%20Pr%20Hlia%20Bogorontitsa.gpx"},
+            {"name":"Σκήτη Προφήτη Ηλία → Καλύβα Αναστάσεως","dist":2.5,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Skiti%20Pr%20Hlia%20Kaliva%20Anastaseos%20Pater%20Efthimios.gpx"},
+            {"name":"Σκήτη Προφήτη Ηλία → Παντοκράτορος","dist":2,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Skiti%20Pr%20Hlia%20Pantokratoros.gpx"},
+            {"name":"Σταυρονικήτα → Ιβήρων 1","dist":3.2,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Stavronikita%20Ivirov%201.gpx"},
+            {"name":"Σταυρονικήτα → Ιβήρων 2","dist":5.8,"time":"1:45","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Stavronikita%20Ivirov%202.gpx"},
+            {"name":"Σταυρονικήτα → Καλύβα Αναστάσεως","dist":3.2,"time":"1:00","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Stavronikita%20Kalivi%20Anastaseos.gpx"},
+            {"name":"Σταυρονικήτα → Καρυές","dist":4.3,"time":"1:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Stavronikita%20Karyes.gpx"},
+            {"name":"Σταυρονικήτα → Κελί Τιμίου Σταυρού","dist":3,"time":"0:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Stavronikita%20Papa%20Tychon.gpx"},
+            {"name":"Σταυρός → Καρούλια","dist":3,"time":"1:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Stavros%20Karoulia.gpx"},
+            {"name":"Φιλοθέου → Ασκητήριο Αγ. Διονυσίου","dist":1.5,"time":"0:30","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Fylotheou%20Askitirio%20Ag%20Dionysiou.gpx"},
+            {"name":"Φιλοθέου → Ιβήρων 1","dist":5.5,"time":"1:40","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Fylotheoy%20Iviron%201.gpx"},
+            {"name":"Φιλοθέου → Ιβήρων 2","dist":6,"time":"2:00","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/FylotheoyIviron2.gpx"},
+            {"name":"Φιλοθέου → Καρακάλλου 1","dist":2.2,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Filotheou%20Karakalou%201.gpx"},
+            {"name":"Φιλοθέου → Καρακάλλου 2","dist":3,"time":"0:50","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Filotheou%20Karakalou%202.gpx"},
+            {"name":"Φιλοθέου → Κελί Αγ. Ονουφρίου","dist":2,"time":"0:45","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Fylotheou%20Keli%20Onoufriou.gpx"},
+            {"name":"Χιλανδαρίου → Εσφιγμένου","dist":3,"time":"0:40","difficulty":"easy","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Chilandar%2BEsfigmenou%20(1).gpx"},
+            {"name":"Χιλανδαρίου → Ζωγράφου","dist":7.5,"time":"2:30","difficulty":"medium","url":"https://raw.githubusercontent.com/athos-user/gpx-files/refs/heads/main/Chilandar%2BZografou.gpx"}
         ];
-        
+
         const CONFIG = {
-            ATHOS_CENTER:[40.16,24.32]
+            ATHOS_BOUNDS:{southWest:[39.98,23.90],northEast:[40.45,24.55]},
+            ZOOM_LEVELS:[8,9,10,11,12,13,14,15,16,17],
+            DB_NAME:'AthosDesignDB',DB_VERSION:1,BATCH_SIZE:8,MAX_ZOOM:17,DEFAULT_RADIUS:15,ATHOS_CENTER:[40.16,24.32]
         };
 
         const state = {
-            map:null,
+            map:null,tileLayer:null,offlineLayer:null,
+            isOfflineMode:false,isDownloading:false,cacheCount:0,db:null,
             startPoint:null,startName:'Αφετηρία',startMarker:null,
             endPoint:null,endName:'Προορισμός',endMarker:null,
             waypoints:[],waypointNames:[],waypointNotes:[],markers:[],
             routeLines:[],lastMainGeometry:null,lastMainDistance:null,lastRouteName:null,
-            routeCalculated:false
+            isLoadingRoute:false,routeCalculated:false,hasExtraArea:false
         };
 
         // ============================================================
-        // ★★★ MAPLIBRE MARKER ★★★
+        // INDEXEDDB
         // ============================================================
-        function createMapLibreMarker(color, label) {
-            const el = document.createElement('div');
-            el.style.cssText = `
-                width: 30px; height: 30px;
-                background: ${color};
-                border-radius: 50%;
-                border: 3px solid white;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 14px;
-                color: white;
-                font-weight: bold;
-                cursor: pointer;
-            `;
-            el.textContent = label || '';
-            return el;
+        function openDB(){return new Promise((r,j)=>{if(state.db){r(state.db);return;}const q=indexedDB.open(CONFIG.DB_NAME,CONFIG.DB_VERSION);q.onupgradeneeded=(e)=>{const d=e.target.result;if(!d.objectStoreNames.contains('tiles')){const s=d.createObjectStore('tiles',{keyPath:'key'});s.createIndex('zoom','zoom');}};q.onsuccess=(e)=>{state.db=e.target.result;r(state.db);};q.onerror=(e)=>j(e.target.error);});}
+        function getTileFromDB(k){return openDB().then(d=>new Promise((r,j)=>{const t=d.transaction(['tiles'],'readonly');const q=t.objectStore('tiles').get(k);q.onsuccess=()=>r(q.result?q.result.data:null);q.onerror=()=>j(q.error);}));}
+        function putTileInDB(k,d,z){return openDB().then(db=>new Promise((r,j)=>{const t=db.transaction(['tiles'],'readwrite');const q=t.objectStore('tiles').put({key:k,data:d,zoom:z,timestamp:Date.now()});q.onsuccess=()=>r();q.onerror=()=>j(q.error);}));}
+        async function getTileCountFromDB(){try{const d=await openDB();const t=d.transaction(['tiles'],'readonly');return new Promise(r=>{const q=t.objectStore('tiles').count();q.onsuccess=()=>r(q.result);});}catch(e){return 0;}}
+        function clearTilesDB(){return openDB().then(d=>new Promise((r,j)=>{const t=d.transaction(['tiles'],'readwrite');t.objectStore('tiles').clear();t.oncomplete=()=>r();t.onerror=()=>j(t.error);}));}
+        function getFallbackTileUrl(){return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAACZJREFUeJztwTEBAAAAwqD1T20ND6AAAAAAAAAAAAAAAAAAAAAA4NcAQAAB//8AAQJZVGAAAAAASUVORK5CYII=';}
+
+        function createOfflineTileLayer(){
+            const l=L.tileLayer('',{maxZoom:CONFIG.MAX_ZOOM,minZoom:3,errorTileUrl:getFallbackTileUrl(),keepBuffer:4});
+            l.createTile=function(c,done){
+                const t=document.createElement('img'),u=`https://tile.openstreetmap.org/${c.z}/${c.x}/${c.y}.png`,k=`osm_${c.z}_${c.x}_${c.y}`;
+                getTileFromDB(k).then(data=>{
+                    if(data){t.src=data;t.onerror=()=>{t.src=getFallbackTileUrl();};done(null,t);}
+                    else if(navigator.onLine&&isOnlineAccessGranted){t.src=u;t.onload=()=>{fetch(u).then(r=>r.blob()).then(b=>{const rd=new FileReader();rd.onload=function(e){putTileInDB(k,e.target.result,c.z).catch(()=>{});};rd.readAsDataURL(b);}).catch(()=>{});done(null,t);};t.onerror=()=>{t.src=getFallbackTileUrl();done(null,t);};}
+                    else{t.src=getFallbackTileUrl();done(null,t);}
+                }).catch(()=>{t.src=getFallbackTileUrl();done(null,t);});
+                return t;
+            };
+            return l;
         }
 
-        // ============================================================
-        // ★★★ INIT MAP (OpenFreeMap) ★★★
-        // ============================================================
-        function initMap() {
-            state.map = new maplibregl.Map({
-                container: 'map',
-                style: 'https://tiles.openfreemap.org/styles/liberty',
-                center: [CONFIG.ATHOS_CENTER[1], CONFIG.ATHOS_CENTER[0]],
-                zoom: 11
-            });
-            state.map.addControl(new maplibregl.NavigationControl());
+        function getBoundsAroundPoint(la,ln,r){const d=r/111,dl=r/(111*Math.cos(la*Math.PI/180));return{southWest:[la-d,ln-dl],northEast:[la+d,ln+dl]};}
+        function getTilesForBounds(b,z){const t=[],p=Math.pow(2,z);for(let x=Math.floor((b.southWest[1]+180)/360*p);x<=Math.floor((b.northEast[1]+180)/360*p);x++)for(let y=Math.floor((1-Math.log(Math.tan(b.southWest[0]*Math.PI/180)+1/Math.cos(b.southWest[0]*Math.PI/180))/Math.PI)/2*p);y<=Math.floor((1-Math.log(Math.tan(b.northEast[0]*Math.PI/180)+1/Math.cos(b.northEast[0]*Math.PI/180))/Math.PI)/2*p);y++)t.push({x,y});return t;}
+        
+        async function downloadArea(bounds,label,pt,pf,tt){
+            const zl=CONFIG.ZOOM_LEVELS;let loaded=0;const exist=new Set(),tm=new Map();let tat=0;
+            for(const z of zl){const tiles=getTilesForBounds(bounds,z);tat+=tiles.length;tm.set(z,tiles);}
+            for(const[z,tiles]of tm){for(const tl of tiles){const k=`osm_${z}_${tl.x}_${tl.y}`;if(await getTileFromDB(k)){exist.add(k);loaded++;}}}
+            const td=tat-exist.size;if(td===0){if(pt)pt.textContent=`✅ ${label}: Όλα υπάρχουν!`;return;}
+            if(pt)pt.textContent=`${label}: Λήψη ${td} tiles...`;
+            for(const[z,tiles]of tm){let b=[];for(const tl of tiles){const k=`osm_${z}_${tl.x}_${tl.y}`;if(exist.has(k))continue;b.push({z,x:tl.x,y:tl.y,key:k});if(b.length>=CONFIG.BATCH_SIZE){await downloadTileBatch(b,pt,pf,loaded,tt,exist);loaded+=b.length;b=[];}}if(b.length>0){await downloadTileBatch(b,pt,pf,loaded,tt,exist);loaded+=b.length;}}
+        }
+        async function downloadTileBatch(b,pt,pf,loaded,tt,exist){await Promise.allSettled(b.map(async({z,x,y,key})=>{try{if(await getTileFromDB(key))return;const r=await fetch(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`);if(!r.ok)return;const bl=await r.blob(),rd=new FileReader();return new Promise(rs=>{rd.onload=async function(e){await putTileInDB(key,e.target.result,z);exist.add(key);rs();};rd.readAsDataURL(bl);});}catch(e){}}));if(pf&&tt){const ct=await getTileCountFromDB();pf.style.width=Math.min(100,Math.round((ct/tt)*100))+'%';if(pt)pt.textContent=`Λήψη... ${Math.round((ct/tt)*100)}% (${ct}/${tt})`;}}
+        async function getTotalTilesForBounds(b){let t=0;for(const z of CONFIG.ZOOM_LEVELS)t+=getTilesForBounds(b,z).length;return t;}
+
+        async function downloadAthosPlusArea(cityKey){
+            if(state.isDownloading){showToast('⏳ Ήδη σε εξέλιξη...','#f39c12');return;}
+            const cd=CITIES[cityKey];if(!cd&&cityKey!=='my_area'){showToast('❌ Επιλέξτε περιοχή','#e74c3c');return;}
+            const al=cd?cd.name:'Η περιοχή μου';
             
-            state.map.on('click', function(e) {
-                showClickPopup({latlng: {lat: e.lngLat.lat, lng: e.lngLat.lng}});
-            });
-            
-            document.getElementById('mapStatus').textContent = '🌐 OpenFreeMap';
-            makeDraggable(document.getElementById('routeInfo'));
-        }
-
-        // ============================================================
-        // ★★★ MARKERS ★★★
-        // ============================================================
-        function createMarker(ll, color, label) {
-            const el = createMapLibreMarker(color, label);
-            return new maplibregl.Marker({ element: el })
-                .setLngLat([ll.lng, ll.lat])
-                .addTo(state.map);
-        }
-
-        function setStartPoint(ll) {
-            if (state.startMarker) { state.startMarker.remove(); state.startMarker = null; }
-            state.startPoint = ll;
-            state.startName = prompt('Όνομα Αφετηρίας:', 'Αφετηρία') || 'Αφετηρία';
-            state.startMarker = createMarker(ll, '#2c5f2d', 'S');
-            calculateRoute();
-            updateWaypointsPanel();
-            saveLastRouteState();
-        }
-
-        function setEndPoint(ll) {
-            if (state.endMarker) { state.endMarker.remove(); state.endMarker = null; }
-            state.endPoint = ll;
-            state.endName = prompt('Όνομα Προορισμού:', 'Προορισμός') || 'Προορισμός';
-            state.endMarker = createMarker(ll, '#c0392b', 'E');
-            calculateRoute();
-            updateWaypointsPanel();
-            saveLastRouteState();
-        }
-
-        function addWaypoint(ll) {
-            const dn = `Σημείο ${state.waypoints.length + 1}`;
-            const name = prompt('Όνομα:', dn) || dn;
-            const note = prompt('Σημείωση:', '') || '';
-            state.waypoints.push(ll);
-            state.waypointNames.push(name);
-            state.waypointNotes.push(note);
-            const idx = state.waypoints.length - 1;
-            const marker = createMarker(ll, '#2980b9', (idx + 1).toString());
-            state.markers.push(marker);
-            calculateRoute();
-            updateWaypointsPanel();
-            saveLastRouteState();
-            if (note) showToast('📝 Σημείωση: "' + note + '"', '#f39c12');
-        }
-
-        function removeWaypoint(idx) {
-            if (!confirm('Διαγραφή "' + state.waypointNames[idx] + '";')) return;
-            if (state.markers[idx]) { state.markers[idx].remove(); }
-            state.waypoints.splice(idx, 1);
-            state.waypointNames.splice(idx, 1);
-            state.waypointNotes.splice(idx, 1);
-            state.markers.splice(idx, 1);
-            state.markers.forEach((m, i) => {
-                const el = m.getElement();
-                if (el) el.textContent = (i + 1).toString();
-            });
-            updateWaypointsPanel();
-            calculateRoute();
-            saveLastRouteState();
-        }
-
-        window.removeWaypoint = removeWaypoint;
-        window.renameWaypoint = function(idx) {
-            const nn = prompt('Νέο όνομα:', state.waypointNames[idx]);
-            if (nn && nn.trim()) {
-                state.waypointNames[idx] = nn.trim();
-                updateWaypointsPanel();
-                saveLastRouteState();
+            // Πρώτη φορά: επιτρέπουμε λήψη χωρίς κωδικό
+            if(!isOnlineAccessGranted&&!hasDownloadedOnce){
+                isOnlineAccessGranted=true;hasDownloadedOnce=true;
+                showToast('🔄 Λήψη σε εξέλιξη...','#8e44ad');
             }
-        };
-        window.editWaypointNote = function(idx) {
-            const c = state.waypointNotes[idx] || '';
-            const nn = prompt('Σημείωση:', c);
-            if (nn !== null) {
-                state.waypointNotes[idx] = nn.trim();
-                updateWaypointsPanel();
-                saveLastRouteState();
-                if (nn.trim()) showToast('📝 Αποθηκεύτηκε', '#f39c12');
-            }
-        };
-
-        // ============================================================
-        // ★★★ ROUTE DRAWING (GeoJSON) ★★★
-        // ============================================================
-        function drawRouteOnMap(coords) {
-            const routeCoords = coords.map(c => [c[1], c[0]]);
+            if(!isOnlineAccessGranted){showCodeModal();return;}
             
-            state.routeLines.forEach(id => {
-                if (state.map.getLayer(id)) state.map.removeLayer(id);
-                if (state.map.getSource(id)) state.map.removeSource(id);
-            });
-            state.routeLines = [];
-            
-            const sourceId = 'route-' + Date.now();
-            state.map.addSource(sourceId, {
-                type: 'geojson',
-                data: {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                        type: 'LineString',
-                        coordinates: routeCoords
-                    }
+            state.isDownloading=true;const btn=document.getElementById('downloadBtn');btn.textContent='⏳';btn.className='warning';
+            const pd=document.getElementById('downloadProgress'),pf=document.getElementById('progressFill'),pt=document.getElementById('progressText');pd.style.display='block';
+            try{
+                let bounds,tt=0;
+                if(cityKey==='my_area'){
+                    if(!state.lastMainGeometry){showToast('📍 Σχεδιάστε μια διαδρομή πρώτα','#FF9800');pd.style.display='none';state.isDownloading=false;btn.textContent='⬇️';btn.className='primary';return;}
+                    const mid=Math.floor(state.lastMainGeometry.length/2);
+                    bounds=getBoundsAroundPoint(state.lastMainGeometry[mid][1],state.lastMainGeometry[mid][0],CONFIG.DEFAULT_RADIUS);
+                }else{
+                    const athosB=CONFIG.ATHOS_BOUNDS;tt+=await getTotalTilesForBounds(athosB);
+                    const cityB=getBoundsAroundPoint(cd.lat,cd.lng,cd.radius);tt+=await getTotalTilesForBounds(cityB);
+                    pt.textContent=`Λήψη Άγιο Όρος + ${al} (${tt} tiles)...`;
+                    await downloadArea(athosB,'Άγιο Όρος',pt,pf,tt);bounds=cityB;
                 }
-            });
-            state.map.addLayer({
-                id: sourceId,
-                type: 'line',
-                source: sourceId,
-                paint: {
-                    'line-color': '#e74c3c',
-                    'line-width': 4,
-                    'line-opacity': 0.9
-                }
-            });
-            state.routeLines.push(sourceId);
+                if(!tt)tt=await getTotalTilesForBounds(bounds);
+                await downloadArea(bounds,al,pt,pf,tt);
+                const fc=await getTileCountFromDB();pt.textContent=`✅ Ολοκληρώθηκε! ${fc} tiles`;
+                setTimeout(()=>pd.style.display='none',3000);showToast(`✅ Λήψη ολοκληρώθηκε!`,'#2c5f2d');
+                state.hasExtraArea=true;updateCacheInfo();enableOfflineModeKeepPosition();
+            }catch(e){showToast(`❌ Σφάλμα: ${e.message}`,'#e74c3c');pd.style.display='none';}
+            state.isDownloading=false;btn.textContent='⬇️';btn.className='primary';
+        }
+
+        async function enableOfflineModeKeepPosition(){
+            const c=await getTileCountFromDB();if(c===0){showToast('❌ Δεν υπάρχουν offline tiles','#e74c3c');return false;}
+            if(state.tileLayer&&state.map.hasLayer(state.tileLayer))state.map.removeLayer(state.tileLayer);
+            if(state.offlineLayer&&state.map.hasLayer(state.offlineLayer))state.map.removeLayer(state.offlineLayer);
+            state.offlineLayer=createOfflineTileLayer();state.map.addLayer(state.offlineLayer);state.isOfflineMode=true;
+            document.getElementById('mapStatus').textContent=`📥 Offline (${c})`;document.getElementById('mapStatus').className='status-badge offline';
+            document.getElementById('toggleOfflineBtn').textContent='📥✓';document.getElementById('toggleOfflineBtn').className='offline-mode active';
+            showToast(`📥 Offline mode - ${c} tiles`,'#2980b9');return true;
+        }
+        async function enableOfflineMode(){
+            const c=await getTileCountFromDB();if(c===0){showToast('❌ Δεν υπάρχουν offline tiles','#e74c3c');return false;}
+            if(state.tileLayer&&state.map.hasLayer(state.tileLayer))state.map.removeLayer(state.tileLayer);
+            if(state.offlineLayer&&state.map.hasLayer(state.offlineLayer))state.map.removeLayer(state.offlineLayer);
+            state.offlineLayer=createOfflineTileLayer();state.map.addLayer(state.offlineLayer);state.isOfflineMode=true;
+            document.getElementById('mapStatus').textContent=`📥 Offline (${c})`;document.getElementById('mapStatus').className='status-badge offline';
+            document.getElementById('toggleOfflineBtn').textContent='📥✓';document.getElementById('toggleOfflineBtn').className='offline-mode active';
+            state.map.setMinZoom(3);showToast(`📥 Offline mode - ${c} tiles`,'#2980b9');return true;
+        }
+        function disableOfflineMode(){
+            if(state.offlineLayer&&state.map.hasLayer(state.offlineLayer)){state.map.removeLayer(state.offlineLayer);state.offlineLayer=null;}
+            state.map.setMinZoom(3);
+            if(!state.tileLayer){state.tileLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,crossOrigin:true});}
+            if(!state.map.hasLayer(state.tileLayer))state.map.addLayer(state.tileLayer);
+            state.isOfflineMode=false;document.getElementById('mapStatus').textContent='🌐 Online';document.getElementById('mapStatus').className='status-badge online';
+            document.getElementById('toggleOfflineBtn').textContent='📥';document.getElementById('toggleOfflineBtn').className='offline-mode';
+            showToast('🌐 Online mode','#2c5f2d');
+        }
+        async function updateCacheInfo(){const c=await getTileCountFromDB();state.cacheCount=c;const b=document.getElementById('cacheBadge');b.textContent=c>0?c:'0';b.className=c>0?'badge has-tiles':'badge';return{c};}
+
+        // ============================================================
+        // CODE MODAL
+        // ============================================================
+        function showCodeModal(){document.getElementById('codeModal').classList.add('active');document.getElementById('codeInput').value='';document.getElementById('codeError').style.display='none';setTimeout(()=>document.getElementById('codeInput').focus(),200);}
+        function hideCodeModal(){document.getElementById('codeModal').classList.remove('active');}
+        function confirmCode(){const i=document.getElementById('codeInput');if(i.value.trim()===ACCESS_CODE){isOnlineAccessGranted=true;localStorage.setItem('athos_online_granted','true');hideCodeModal();showToast('✅ Online πρόσβαση ενεργοποιήθηκε','#4CAF50');if(state.map)state.map.invalidateSize();}else{document.getElementById('codeError').style.display='block';i.value='';i.placeholder='Λάθος κωδικός!';setTimeout(()=>{i.placeholder='••••••••';},1500);}}
+
+        // ============================================================
+        // ROUTES
+        // ============================================================
+        function loadRouteFromGitHub(url,name){
+            if(!isOnlineAccessGranted){showCodeModal();return;}
+            if(state.isLoadingRoute){showToast('⏳ Φόρτωση σε εξέλιξη...','#f39c12');return;}
+            state.isLoadingRoute=true;showToast(`⏳ Φόρτωση: ${name}...`,'#8e44ad');
+            fetch(url,{headers:{'Accept':'application/gpx+xml,application/xml,text/xml,*/*'}}).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.text();}).then(text=>{
+                if(!text.includes('<gpx'))throw new Error('Δεν είναι GPX');const data=parseGPX(text);if(data.tracks.length===0)throw new Error('Δεν βρέθηκαν διαδρομές');
+                state.routeLines.forEach(l=>state.map.removeLayer(l));state.routeLines=[];
+                let td=0;const ac=[];data.tracks.forEach(coords=>{if(coords.length<2)return;const line=L.polyline(coords,{color:'#e74c3c',weight:4,opacity:0.9,smoothFactor:1}).addTo(state.map);state.routeLines.push(line);const d=computeDistance(coords.map(c=>[c[1],c[0]]));td+=d;coords.forEach(c=>ac.push(c));});
+                if(ac.length>1){state.lastMainGeometry=ac.map(c=>[c[1],c[0]]);state.lastMainDistance=td;state.lastRouteName=name;state.routeCalculated=true;document.getElementById('dist1').textContent=td.toFixed(2);updateTimeDisplay();document.getElementById('routeNameDisplay').textContent=name;state.map.fitBounds(L.latLngBounds(ac),{padding:[50,50]});updateInfo();saveLastRouteState();showToast(`✅ Φορτώθηκε: ${name} (${td.toFixed(1)}km)`,'#2c5f2d');}
+                state.isLoadingRoute=false;
+            }).catch(err=>{showToast(`❌ Σφάλμα: ${err.message}`,'#e74c3c');state.isLoadingRoute=false;});
+        }
+
+        function parseGPX(x){const p=new DOMParser(),xml=p.parseFromString(x,'text/xml');if(xml.querySelector('parsererror'))throw new Error('Μη έγκυρο GPX');const r={tracks:[],waypoints:[]};xml.querySelectorAll('trk trkseg').forEach(s=>{const c=[];s.querySelectorAll('trkpt').forEach(pt=>{const la=parseFloat(pt.getAttribute('lat')),lo=parseFloat(pt.getAttribute('lon'));if(!isNaN(la)&&!isNaN(lo))c.push([la,lo]);});if(c.length>1)r.tracks.push(c);});return r;}
+        function showRouteDropdown(){document.getElementById('routeDropdown').classList.add('active');renderRoutesList('');}
+        function hideRouteDropdown(){document.getElementById('routeDropdown').classList.remove('active');}
+        function renderRoutesList(filter){
+            const list=document.getElementById('routesList'),count=document.getElementById('routeListCount');
+            let f=ROUTES;if(filter&&filter.trim()){const ff=filter.toLowerCase().trim();f=ROUTES.filter(r=>r.name.toLowerCase().includes(ff)||(r.start||'').toLowerCase().includes(ff)||(r.end||'').toLowerCase().includes(ff));}
+            count.textContent=f.length;if(f.length===0){list.innerHTML='<div style="color:#888;padding:10px;text-align:center;">📭 Δεν βρέθηκαν</div>';return;}
+            let html='',cl='';f.forEach(r=>{const fl=r.name.charAt(0).toUpperCase();if(fl!==cl){cl=fl;html+=`<div class="letter-header">${cl}</div>`;}html+=`<div class="route-item" data-url="${r.url}" data-name="${r.name}"><div class="route-name">${r.name}<div class="start-end">${r.dist||'?'}km | ${r.time||'?'} | ${r.difficulty==='easy'?'🟢':r.difficulty==='medium'?'🟠':'🔴'}</div></div><button class="load-route-btn" data-url="${r.url}" data-name="${r.name}">📂</button></div>`;});
+            list.innerHTML=html;list.querySelectorAll('.load-route-btn').forEach(btn=>{btn.addEventListener('click',function(e){e.stopPropagation();loadRouteFromGitHub(this.dataset.url,this.dataset.name);hideRouteDropdown();});});
+        }
+
+        function setupSpeedGroup(){
+            document.querySelectorAll('.spd-btn').forEach(btn=>{btn.addEventListener('click',function(e){e.stopPropagation();const s=parseInt(this.dataset.speed);if(s&&SPEED_PRESETS[s]){currentSpeed=s;document.querySelectorAll('.spd-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll(`.spd-btn[data-speed="${s}"]`).forEach(b=>b.classList.add('active'));updateTimeDisplay();updateInfo();showToast(`⏱️ Ταχύτητα: ${SPEED_PRESETS[s].label} (${s} km/h)`,'#4CAF50');}});});
+        }
+        function updateTimeDisplay(){if(state.lastMainDistance!==null&&state.lastMainDistance>0){document.getElementById('time1').textContent=formatTime(state.lastMainDistance/currentSpeed);}else{document.getElementById('time1').textContent='-';}}
+        function showToast(msg,color='rgba(0,0,0,0.85)'){const t=document.createElement('div');t.style.cssText=`position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:${color};color:white;padding:6px 14px;border-radius:10px;z-index:9999;font-size:11px;text-align:center;max-width:90%;pointer-events:none;font-weight:600`;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+        function getColorIcon(color){return L.icon({iconUrl:`https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]});}
+        function formatTime(h){if(h===null||isNaN(h)||h<0)return'-';const m=Math.round(h*60),hh=Math.floor(m/60),mm=m%60;if(hh===0&&mm===0)return'<1 λεπτό';if(hh===0)return`${mm} λεπτά`;if(mm===0)return`${hh} ώρα${hh!==1?'ες':''}`;return`${hh} ώρα${hh!==1?'ες':''} ${mm} λεπτά`;}
+        function computeDistance(c){if(!c||c.length<2)return 0;let d=0;for(let i=1;i<c.length;i++)d+=L.latLng(c[i-1][1],c[i-1][0]).distanceTo(L.latLng(c[i][1],c[i][0]));return d/1000;}
+        function clearAll(){if(!confirm('🧹 Διαγραφή όλων (διαδρομές, σημεία, offline tiles);'))return;clearTilesDB().then(()=>{if(state.isOfflineMode)disableOfflineMode();updateCacheInfo();});clearRouteOnlyInternal();showToast('🧹 Καθαρίστηκαν όλα','#6c3483');}
+        function clearRouteOnly(){if(!confirm('🗑️ Διαγραφή μόνο της τρέχουσας διαδρομής;'))return;clearRouteOnlyInternal();showToast('🗑️ Διαδρομή καθαρίστηκε','#d35400');}
+        function clearRouteOnlyInternal(){
+            if(state.startMarker){state.map.removeLayer(state.startMarker);state.startMarker=null;}
+            if(state.endMarker){state.map.removeLayer(state.endMarker);state.endMarker=null;}
+            state.markers.forEach(m=>state.map.removeLayer(m));state.markers=[];state.waypoints=[];state.waypointNames=[];state.waypointNotes=[];
+            state.routeLines.forEach(l=>state.map.removeLayer(l));state.routeLines=[];
+            state.startPoint=null;state.endPoint=null;state.lastMainDistance=null;state.lastMainGeometry=null;state.lastRouteName=null;state.routeCalculated=false;
+            document.getElementById('dist1').textContent='-';document.getElementById('time1').textContent='-';document.getElementById('routeNameDisplay').textContent='-';
+            updateWaypointsPanel();localStorage.removeItem('athos_last_route');
+        }
+
+        function initMap(){
+            state.tileLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,crossOrigin:true});
+            state.map=L.map('map',{center:CONFIG.ATHOS_CENTER,zoom:11,zoomControl:true,layers:[state.tileLayer],minZoom:3,maxZoom:19});
+            state.map.on('click',function(e){showClickPopup(e);});
+            setTimeout(async()=>{const c=await getTileCountFromDB();if(c>100){if(confirm(`📥 Βρέθηκαν ${c} offline tiles. Χρήση offline;`))enableOfflineMode();}updateCacheInfo();},1000);
+            makeDraggable(document.getElementById('routeInfo'));makeDraggable(document.getElementById('waypointsPanel'));
+        }
+
+        function makeDraggable(el){
+            if(!el)return;let isDragging=false,startX=0,startY=0,offsetX=0,offsetY=0;
+            function onStart(e){if(e.target.closest('button,input,select'))return;const touch=e.touches?e.touches[0]:e;isDragging=true;startX=touch.clientX;startY=touch.clientY;const rect=el.getBoundingClientRect();offsetX=startX-rect.left;offsetY=startY-rect.top;el.style.position='fixed';el.style.left=rect.left+'px';el.style.top=rect.top+'px';el.style.bottom='auto';el.style.right='auto';el.style.transform='none';el.style.cursor='grabbing';el.style.zIndex='9999';e.preventDefault();}
+            function onMove(e){if(!isDragging)return;const touch=e.touches?e.touches[0]:e;let left=touch.clientX-offsetX,top=touch.clientY-offsetY;const rect=el.getBoundingClientRect();left=Math.max(10,Math.min(window.innerWidth-rect.width-10,left));top=Math.max(10,Math.min(window.innerHeight-rect.height-10,top));el.style.left=left+'px';el.style.top=top+'px';e.preventDefault();}
+            function onEnd(e){if(!isDragging)return;isDragging=false;el.style.cursor='';el.style.zIndex='';e.preventDefault();}
+            el.addEventListener('mousedown',onStart);document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onEnd);el.addEventListener('touchstart',onStart,{passive:false});document.addEventListener('touchmove',onMove,{passive:false});document.addEventListener('touchend',onEnd,{passive:false});
+        }
+
+        function showClickPopup(e){
+            const container=document.createElement('div');
+            container.innerHTML=`<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:4px 8px;border-radius:4px;margin:2px;cursor:pointer;font-size:10px;">🚩 Start</button><button id="setEndBtn" style="background:#c0392b;color:white;border:none;padding:4px 8px;border-radius:4px;margin:2px;cursor:pointer;font-size:10px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:4px 8px;border-radius:4px;margin:2px;cursor:pointer;font-size:10px;">📍 Σημείο</button>`;
+            const popup=L.popup().setLatLng(e.latlng).setContent(container).openOn(state.map);
+            setTimeout(()=>{document.getElementById('setStartBtn')?.addEventListener('click',function(){setStartPoint(e.latlng);state.map.closePopup();});document.getElementById('setEndBtn')?.addEventListener('click',function(){setEndPoint(e.latlng);state.map.closePopup();});document.getElementById('addWpBtn')?.addEventListener('click',function(){addWaypoint(e.latlng);state.map.closePopup();});},100);
+        }
+
+        function setStartPoint(ll){if(state.startMarker)state.map.removeLayer(state.startMarker);state.startPoint=ll;state.startName=prompt('Όνομα Αφετηρίας:','Αφετηρία')||'Αφετηρία';state.startMarker=L.marker(ll,{icon:getColorIcon('green'),draggable:true}).addTo(state.map);state.startMarker.bindPopup('🚩 '+state.startName);state.startMarker.on('dragend',function(e){state.startPoint=e.target.getLatLng();calculateRoute();});calculateRoute();updateWaypointsPanel();saveLastRouteState();}
+        function setEndPoint(ll){if(state.endMarker)state.map.removeLayer(state.endMarker);state.endPoint=ll;state.endName=prompt('Όνομα Προορισμού:','Προορισμός')||'Προορισμός';state.endMarker=L.marker(ll,{icon:getColorIcon('red'),draggable:true}).addTo(state.map);state.endMarker.bindPopup('🏁 '+state.endName);state.endMarker.on('dragend',function(e){state.endPoint=e.target.getLatLng();calculateRoute();});calculateRoute();updateWaypointsPanel();saveLastRouteState();}
+        function addWaypoint(ll){const dn=`Σημείο ${state.waypoints.length+1}`,name=prompt('Όνομα:',dn)||dn,note=prompt('Σημείωση (προαιρετικό):','')||'';state.waypoints.push(ll);state.waypointNames.push(name);state.waypointNotes.push(note);const idx=state.waypoints.length-1,m=L.marker(ll,{icon:getColorIcon('blue'),draggable:true}).addTo(state.map);updateWaypointPopup(m,idx);m.on('dragend',function(e){state.waypoints[idx]=e.target.getLatLng();calculateRoute();});state.markers.push(m);calculateRoute();updateWaypointsPanel();saveLastRouteState();if(note)showToast(`📝 Σημείωση: "${note}"`,'#f39c12');}
+
+        function updateWaypointPopup(marker,idx){const name=state.waypointNames[idx]||`Σημείο ${idx+1}`,note=state.waypointNotes[idx]||'',nd=note?`<div style="font-size:8px;color:#f39c12;background:rgba(243,156,18,0.15);padding:1px 4px;border-radius:2px;border-left:2px solid #f39c12;margin-top:1px;">📝 ${note}</div>`:'';marker.setPopupContent(`📍 <strong>${name}</strong><br>${nd}<div style="display:flex;gap:2px;margin-top:3px;flex-wrap:wrap;"><button onclick="renameWaypoint(${idx})" style="background:#2c5f2d;color:white;border:none;padding:1px 4px;border-radius:2px;cursor:pointer;font-size:8px;">✏️</button><button onclick="removeWaypoint(${idx})" style="background:#c0392b;color:white;border:none;padding:1px 4px;border-radius:2px;cursor:pointer;font-size:8px;">✖</button><button onclick="editWaypointNote(${idx})" style="background:#f39c12;color:white;border:none;padding:1px 4px;border-radius:2px;cursor:pointer;font-size:8px;">📝</button></div>`);}
+        window.renameWaypoint=function(idx){const nn=prompt('Νέο όνομα:',state.waypointNames[idx]);if(nn&&nn.trim()){state.waypointNames[idx]=nn.trim();if(state.markers[idx])updateWaypointPopup(state.markers[idx],idx);updateWaypointsPanel();saveLastRouteState();}};
+        window.editWaypointNote=function(idx){const c=state.waypointNotes[idx]||'',nn=prompt('Σημείωση:',c);if(nn!==null){state.waypointNotes[idx]=nn.trim();if(state.markers[idx])updateWaypointPopup(state.markers[idx],idx);updateWaypointsPanel();saveLastRouteState();if(nn.trim())showToast('📝 Αποθηκεύτηκε','#f39c12');}};
+        window.removeWaypoint=function(idx){if(!confirm(`Διαγραφή "${state.waypointNames[idx]}";`))return;if(state.markers[idx])state.map.removeLayer(state.markers[idx]);state.waypoints.splice(idx,1);state.waypointNames.splice(idx,1);state.waypointNotes.splice(idx,1);state.markers.splice(idx,1);for(let i=0;i<state.markers.length;i++){if(state.markers[i])updateWaypointPopup(state.markers[i],i);}updateWaypointsPanel();calculateRoute();saveLastRouteState();};
+
+        function updateWaypointsPanel(){const list=document.getElementById('waypointsList'),count=document.getElementById('waypointCount');if(!list)return;let html='',total=0;if(state.startPoint){total++;html+=`<div class="wp-item"><span class="wp-name">🚩 ${state.startName}</span></div>`;}for(let i=0;i<state.waypoints.length;i++){total++;const note=state.waypointNotes[i]||'';html+=`<div class="wp-item"><span class="wp-name">📍 ${state.waypointNames[i]}</span>${note?`<span style="font-size:7px;color:#f39c12;background:rgba(243,156,18,0.15);padding:1px 4px;border-radius:2px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${note}">📝 ${note.substring(0,12)}${note.length>12?'…':''}</span>`:''}<button class="wp-btn" onclick="editWaypointNote(${i})" style="background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#888;">📝</button><button class="wp-btn primary" onclick="renameWaypoint(${i})" style="background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#4CAF50;">✏️</button><button class="wp-btn danger" onclick="removeWaypoint(${i})" style="background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#e74c3c;">✖</button></div>`;}if(state.endPoint){total++;html+=`<div class="wp-item"><span class="wp-name">🏁 ${state.endName}</span></div>`;}list.innerHTML=html;if(count)count.textContent=total;}
+
+        function calculateRoute(){
+            if(!state.startPoint||!state.endPoint){showToast('❌ Χρειάζονται Start και End σημεία','#e74c3c');return;}
+            if(!isOnlineAccessGranted){showCodeModal();return;}
+            const allPoints=[state.startPoint,...state.waypoints,state.endPoint];state.routeLines.forEach(l=>state.map.removeLayer(l));state.routeLines=[];showToast('⏳ Υπολογισμός διαδρομής...','#2980b9');
+            try{const coords=allPoints.map(p=>[p.lng,p.lat]);fetch('https://api.openrouteservice.org/v2/directions/foot-hiking',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'5b3ce3597851110001cf6248e2dc8c0afb9f4b0b9e0b8f3c9d3e4f5a6b7c8d9e'},body:JSON.stringify({coordinates:coords,preference:'recommended',units:'km',geometry:true,geometry_format:'geojson',elevation:true})}).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json();}).then(data=>{if(data.features&&data.features[0]){const g=data.features[0].geometry.coordinates;state.lastMainGeometry=g;state.lastMainDistance=(data.features[0].properties?.summary?.distance||0)/1000;state.routeCalculated=true;const ll=g.map(c=>[c[1],c[0]]),line=L.polyline(ll,{color:'#e74c3c',weight:4,opacity:0.85}).addTo(state.map);state.routeLines.push(line);state.map.fitBounds(line.getBounds(),{padding:[60,60]});updateInfo();saveLastRouteState();showToast(`✅ Διαδρομή: ${state.lastMainDistance.toFixed(2)} km`,'#e74c3c');}else{showToast('❌ Δεν βρέθηκε διαδρομή','#e74c3c');}}).catch(err=>{console.error('Routing error:',err);calculateRouteGraphHopper(allPoints);});}catch(e){console.error('Route error:',e);calculateRouteGraphHopper(allPoints);}
+        }
+        function calculateRouteGraphHopper(allPoints){try{let url='https://graphhopper.com/api/1/route?key=5fece833-cd75-4373-a6ba-a4137d3f5132&profile=foot&points_encoded=false&calc_points=true&elevation=true';allPoints.forEach(p=>{url+='&point='+p.lat+','+p.lng;});fetch(url).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json();}).then(data=>{if(data.paths&&data.paths[0]){const g=data.paths[0].points.coordinates;state.lastMainGeometry=g;state.lastMainDistance=data.paths[0].distance/1000;state.routeCalculated=true;const ll=g.map(c=>[c[1],c[0]]),line=L.polyline(ll,{color:'#e74c3c',weight:4,opacity:0.85}).addTo(state.map);state.routeLines.push(line);state.map.fitBounds(line.getBounds(),{padding:[60,60]});updateInfo();saveLastRouteState();showToast(`✅ Διαδρομή: ${state.lastMainDistance.toFixed(2)} km`,'#e74c3c');}else{showToast('❌ Αποτυχία υπολογισμού','#e74c3c');}}).catch(err=>{showToast('❌ Αποτυχία υπολογισμού','#e74c3c');});}catch(e){showToast('❌ Αποτυχία υπολογισμού','#e74c3c');}}
+        function updateInfo(){if(state.lastMainDistance!==null&&state.lastMainDistance>0){document.getElementById('dist1').textContent=state.lastMainDistance.toFixed(2);updateTimeDisplay();}else{document.getElementById('dist1').textContent='-';document.getElementById('time1').textContent='-';}}
+
+        function performGpxExport(){
+            if(!state.lastMainGeometry){showToast('❌ Δεν υπάρχει διαδρομή','#e74c3c');return;}
+            if(!isOnlineAccessGranted){showCodeModal();return;}
+            const name=prompt('Όνομα αρχείου:','athos_route')||'athos_route';
+            let gpx='<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Athos Maps">\n  <trk>\n    <name>'+name+'</name>\n    <trkseg>\n';
+            for(const c of state.lastMainGeometry){gpx+=`      <trkpt lat="${c[1]}" lon="${c[0]}"></trkpt>\n`;}
+            gpx+='    </trkseg>\n  </trk>\n</gpx>';
+            const blob=new Blob([gpx],{type:'application/gpx+xml'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name+'.gpx';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showToast('✅ GPX εξήχθη','#1a7a3a');
+        }
+
+        function saveLastRouteState(){try{const data={geometry:state.lastMainGeometry,distance:state.lastMainDistance,startName:state.startName,endName:state.endName,startPoint:state.startPoint,endPoint:state.endPoint,waypoints:state.waypoints.map((p,i)=>({lat:p.lat,lng:p.lng,name:state.waypointNames[i]||'Σημείο',note:state.waypointNotes[i]||''})),routeName:state.lastRouteName,routeCalculated:state.routeCalculated};localStorage.setItem('athos_last_route',JSON.stringify(data));}catch(e){}}
+        function loadLastRouteState(){try{const raw=localStorage.getItem('athos_last_route');if(!raw)return;const data=JSON.parse(raw);if(!data.geometry)return;state.lastMainGeometry=data.geometry;state.lastMainDistance=data.distance||computeDistance(data.geometry);state.startName=data.startName||'Αφετηρία';state.endName=data.endName||'Προορισμός';state.lastRouteName=data.routeName||null;state.routeCalculated=data.routeCalculated||true;if(state.lastRouteName)document.getElementById('routeNameDisplay').textContent=state.lastRouteName;if(data.startPoint){state.startPoint=data.startPoint;state.startMarker=L.marker([data.startPoint.lat,data.startPoint.lng],{icon:getColorIcon('green'),draggable:true}).addTo(state.map);state.startMarker.bindPopup('🚩 '+state.startName);state.startMarker.on('dragend',function(e){state.startPoint=e.target.getLatLng();calculateRoute();});}if(data.endPoint){state.endPoint=data.endPoint;state.endMarker=L.marker([data.endPoint.lat,data.endPoint.lng],{icon:getColorIcon('red'),draggable:true}).addTo(state.map);state.endMarker.bindPopup('🏁 '+state.endName);state.endMarker.on('dragend',function(e){state.endPoint=e.target.getLatLng();calculateRoute();});}if(data.waypoints&&data.waypoints.length>0){state.waypoints=[];state.waypointNames=[];state.waypointNotes=[];state.markers=[];for(let i=0;i<data.waypoints.length;i++){const w=data.waypoints[i];state.waypoints.push(L.latLng(w.lat,w.lng));state.waypointNames.push(w.name||'Σημείο');state.waypointNotes.push(w.note||'');const m=L.marker([w.lat,w.lng],{icon:getColorIcon('blue'),draggable:true}).addTo(state.map);updateWaypointPopup(m,i);m.on('dragend',function(e){state.waypoints[i]=e.target.getLatLng();calculateRoute();});state.markers.push(m);}updateWaypointsPanel();}const ll=data.geometry.map(c=>[c[1],c[0]]),line=L.polyline(ll,{color:'#e74c3c',weight:4,opacity:0.85}).addTo(state.map);state.routeLines.push(line);state.map.fitBounds(line.getBounds(),{padding:[60,60]});updateInfo();}catch(e){}}
+
+        function openSosDialog(){document.getElementById('sosContainer').classList.add('active');document.getElementById('sosCoords').textContent='Πατήστε στο χάρτη';}
+        function closeSosDialog(){document.getElementById('sosContainer').classList.remove('active');}
+        function genSosMsg(){return`🆘 SOS - Athos Maps\n👤 ${document.getElementById('sosName').value||'Ανώνυμος'}\n🆘 ${document.getElementById('sosType').value}\n📱 ${document.getElementById('sosPhone').value||'-'}\n📍 ${document.getElementById('sosCoords').textContent}\n📝 ${document.getElementById('sosHistory').value||'-'}`;}
+        function sendSosSms(){const m=genSosMsg();if(/Android|iPhone/i.test(navigator.userAgent))window.location.href='sms:6988321619?body='+encodeURIComponent(m);else navigator.clipboard.writeText(m).then(()=>showToast('✅ Αντιγράφηκε','#27ae60'));closeSosDialog();}
+        function sendSosEmail(){window.location.href='mailto:athosmaps@gmail.com?subject=🆘 SOS Athos Maps&body='+encodeURIComponent(genSosMsg());closeSosDialog();}
+        function call112(){if(confirm('📞 Κλήση 112;'))window.location.href='tel:112';closeSosDialog();}
+
+        // ============================================================
+        // EVENT LISTENERS
+        // ============================================================
+        document.addEventListener('DOMContentLoaded',function(){
+            setupSpeedGroup();openDB().then(()=>console.log('💾 IndexedDB ready')).catch(e=>console.warn('DB error:',e));initMap();loadLastRouteState();
             
-            const bounds = new maplibregl.LngLatBounds();
-            routeCoords.forEach(c => bounds.extend(c));
-            state.map.fitBounds(bounds, { padding: 50 });
-        }
+            if(localStorage.getItem('athos_online_granted')==='true')isOnlineAccessGranted=true;
 
-        // ============================================================
-        // ★★★ CALCULATE ROUTE ★★★
-        // ============================================================
-        function calculateRoute() {
-            if (!state.startPoint || !state.endPoint) {
-                showToast('❌ Χρειάζονται Start και End σημεία', '#e74c3c');
-                return;
-            }
-            const allPoints = [state.startPoint, ...state.waypoints, state.endPoint];
-            showToast('⏳ Υπολογισμός διαδρομής...', '#2980b9');
+            document.getElementById('navAppBtn').addEventListener('click',function(){window.open('https://athos-user.github.io/athos-navigation/','_blank');});
+            document.getElementById('downloadExtraBtn').addEventListener('click',function(){const s=document.getElementById('extraAreaSelect'),c=s.value;if(!c){showToast('❌ Επιλέξτε περιοχή','#e74c3c');return;}downloadAthosPlusArea(c);});
+            document.getElementById('routesBtn').addEventListener('click',showRouteDropdown);document.getElementById('closeRoutesBtn').addEventListener('click',hideRouteDropdown);document.getElementById('closeRoutesBtn2').addEventListener('click',hideRouteDropdown);
+            document.getElementById('routeSearch').addEventListener('input',function(e){renderRoutesList(e.target.value);});
+            document.getElementById('toggleOfflineBtn').addEventListener('click',async function(){if(state.isOfflineMode){disableOfflineMode();}else{const c=await getTileCountFromDB();if(c===0){showToast('❌ Δεν υπάρχουν offline tiles','#e74c3c');if(confirm('Λήψη τώρα;'))downloadAthosPlusArea('athos');return;}enableOfflineMode();}});
+            document.getElementById('downloadBtn').addEventListener('click',function(){downloadAthosPlusArea('athos');});
+            document.getElementById('clearCacheBtn').addEventListener('click',async function(){if(!confirm('🗑️ Διαγραφή όλων των offline tiles;'))return;await clearTilesDB();if(state.isOfflineMode)disableOfflineMode();updateCacheInfo();showToast('🗑️ Cache καθαρίστηκε','#c0392b');});
+            document.getElementById('statusBtn').addEventListener('click',async function(){const i=await updateCacheInfo();alert(`📊 Κατάσταση Cache\n\n📦 Tiles: ${i.count}\n📥 Λειτουργία: ${state.isOfflineMode?'OFFLINE':'ONLINE'}\n🔐 Online: ${isOnlineAccessGranted?'✅ Ενεργό':'❌ Κλείδωμα'}`);});
+            document.getElementById('sosBtn').addEventListener('click',openSosDialog);document.getElementById('closeSosBtn').addEventListener('click',closeSosDialog);
+            document.getElementById('sosSendSms').addEventListener('click',sendSosSms);document.getElementById('sosSendEmail').addEventListener('click',sendSosEmail);document.getElementById('sosCall112').addEventListener('click',call112);
+            document.getElementById('clearRouteBtn').addEventListener('click',clearRouteOnly);document.getElementById('clearAllBtn').addEventListener('click',clearAll);
+            document.getElementById('saveRouteBtn').addEventListener('click',function(){if(state.lastMainGeometry){saveLastRouteState();showToast('💾 Αποθηκεύτηκε','#2ecc71');}else{showToast('❌ Δεν υπάρχει διαδρομή','#e74c3c');}});
+            document.getElementById('exportGpxBtn').addEventListener('click',performGpxExport);
+            document.getElementById('reloadMapBtn').addEventListener('click',function(){state.map.invalidateSize();showToast('🔄 Επαναφόρτωση','#e67e22');});
+            document.getElementById('toggleWaypointsBtn').addEventListener('click',function(){document.getElementById('waypointsPanel').classList.toggle('active');if(document.getElementById('waypointsPanel').classList.contains('active'))updateWaypointsPanel();});
+            document.getElementById('closeWaypointsBtn').addEventListener('click',function(){document.getElementById('waypointsPanel').classList.remove('active');});
+            document.getElementById('helpBtn').addEventListener('click',function(){alert('🏔️ Athos Maps - Σχεδίαση\n\n✏️ Σχεδίαση: Πατήστε στο χάρτη\n🗺️ 143 διαδρομές\n📥 Offline χάρτες\n📤 Εξαγωγή GPX\n🧭 App Πλοήγησης\n🔐 Κωδικός: 10101010\n\n🔗 agionorosroutes.blogspot.com');});
+            document.getElementById('fileInput').addEventListener('change',function(e){if(e.target.files&&e.target.files[0]){const f=e.target.files[0],r=new FileReader();r.onload=function(ev){try{const d=parseGPX(ev.target.result);if(d.tracks.length>0){const c=d.tracks[0];state.lastMainGeometry=c.map(x=>[x[1],x[0]]);state.lastMainDistance=computeDistance(c.map(x=>[x[1],x[0]]));state.routeCalculated=true;const l=L.polyline(c,{color:'#e74c3c',weight:4,opacity:0.85}).addTo(state.map);state.routeLines.push(l);state.map.fitBounds(l.getBounds(),{padding:[60,60]});updateInfo();saveLastRouteState();showToast('✅ GPX φορτώθηκε','#2c5f2d');}}catch(err){showToast('❌ Σφάλμα: '+err.message,'#e74c3c');}};r.readAsText(f);}this.value='';});
             
-            try {
-                let url = 'https://graphhopper.com/api/1/route?key=5fece833-cd75-4373-a6ba-a4137d3f5132&profile=foot&points_encoded=false&calc_points=true&elevation=true';
-                allPoints.forEach(p => { url += '&point=' + p.lat + ',' + p.lng; });
-                fetch(url)
-                    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-                    .then(data => {
-                        if (data.paths && data.paths[0]) {
-                            const g = data.paths[0].points.coordinates;
-                            state.lastMainGeometry = g.map(c => [c[1], c[0]]);
-                            state.lastMainDistance = data.paths[0].distance / 1000;
-                            state.routeCalculated = true;
-                            drawRouteOnMap(state.lastMainGeometry);
-                            updateInfo();
-                            saveLastRouteState();
-                            showToast('✅ Διαδρομή: ' + state.lastMainDistance.toFixed(2) + ' km', '#e74c3c');
-                        } else {
-                            showToast('❌ Αποτυχία υπολογισμού', '#e74c3c');
-                        }
-                    })
-                    .catch(() => showToast('❌ Αποτυχία υπολογισμού', '#e74c3c'));
-            } catch (e) {
-                showToast('❌ Αποτυχία υπολογισμού', '#e74c3c');
-            }
-        }
-
-        // ============================================================
-        // ★★★ ΒΟΗΘΗΤΙΚΕΣ ★★★
-        // ============================================================
-        function showToast(msg, color) {
-            const t = document.createElement('div');
-            t.style.cssText = 'position:fixed;bottom:160px;left:50%;transform:translateX(-50%);background:' + color + ';color:white;padding:8px 16px;border-radius:10px;z-index:9999;font-size:13px;text-align:center;max-width:90%;pointer-events:none;font-weight:600';
-            t.textContent = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 2500);
-        }
-
-        function updateInfo() {
-            if (state.lastMainDistance !== null && state.lastMainDistance > 0) {
-                document.getElementById('dist1').textContent = state.lastMainDistance.toFixed(2);
-                // Υπολογισμός χρόνου (4 km/h)
-                const hours = state.lastMainDistance / 4;
-                const mins = Math.round(hours * 60);
-                document.getElementById('time1').textContent = mins > 60 ? Math.floor(mins/60) + ' ώρα' + (Math.floor(mins/60)>1?'ες':'') + ' ' + (mins%60) + ' λεπτά' : mins + ' λεπτά';
-            } else {
-                document.getElementById('dist1').textContent = '-';
-                document.getElementById('time1').textContent = '-';
-            }
-        }
-
-        function saveLastRouteState() {
-            try {
-                const data = {
-                    geometry: state.lastMainGeometry,
-                    distance: state.lastMainDistance,
-                    startName: state.startName,
-                    endName: state.endName,
-                    startPoint: state.startPoint,
-                    endPoint: state.endPoint,
-                    waypoints: state.waypoints.map((p, i) => ({
-                        lat: p.lat, lng: p.lng,
-                        name: state.waypointNames[i] || 'Σημείο',
-                        note: state.waypointNotes[i] || ''
-                    })),
-                    routeCalculated: state.routeCalculated
-                };
-                localStorage.setItem('athos_last_route', JSON.stringify(data));
-            } catch(e) {}
-        }
-
-        function loadLastRouteState() {
-            try {
-                const raw = localStorage.getItem('athos_last_route');
-                if (!raw) return;
-                const data = JSON.parse(raw);
-                if (!data.geometry) return;
-                state.lastMainGeometry = data.geometry;
-                state.lastMainDistance = data.distance || 0;
-                state.startName = data.startName || 'Αφετηρία';
-                state.endName = data.endName || 'Προορισμός';
-                state.routeCalculated = data.routeCalculated || true;
-                
-                if (data.startPoint) {
-                    state.startPoint = data.startPoint;
-                    state.startMarker = createMarker(data.startPoint, '#2c5f2d', 'S');
-                }
-                if (data.endPoint) {
-                    state.endPoint = data.endPoint;
-                    state.endMarker = createMarker(data.endPoint, '#c0392b', 'E');
-                }
-                if (data.waypoints && data.waypoints.length > 0) {
-                    state.waypoints = [];
-                    state.waypointNames = [];
-                    state.waypointNotes = [];
-                    state.markers = [];
-                    data.waypoints.forEach((w, i) => {
-                        const ll = {lat: w.lat, lng: w.lng};
-                        state.waypoints.push(ll);
-                        state.waypointNames.push(w.name || 'Σημείο');
-                        state.waypointNotes.push(w.note || '');
-                        const m = createMarker(ll, '#2980b9', (i + 1).toString());
-                        state.markers.push(m);
-                    });
-                    updateWaypointsPanel();
-                }
-                drawRouteOnMap(data.geometry);
-                updateInfo();
-            } catch(e) {}
-        }
-
-        function updateWaypointsPanel() {
-            const list = document.getElementById('waypointsList');
-            const count = document.getElementById('waypointCount');
-            if (!list) return;
-            let html = '', total = 0;
-            if (state.startPoint) {
-                total++;
-                html += '<div class="wp-item"><span class="wp-name">🚩 ' + state.startName + '</span></div>';
-            }
-            for (let i = 0; i < state.waypoints.length; i++) {
-                total++;
-                const note = state.waypointNotes[i] || '';
-                html += '<div class="wp-item"><span class="wp-name">📍 ' + state.waypointNames[i] + '</span>' +
-                    (note ? '<span style="font-size:7px;color:#f39c12;background:rgba(243,156,18,0.15);padding:1px 4px;border-radius:2px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + note + '">📝 ' + note.substring(0,12) + (note.length>12?'…':'') + '</span>' : '') +
-                    '<button class="wp-btn" onclick="editWaypointNote(' + i + ')" style="background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#888;">📝</button>' +
-                    '<button class="wp-btn primary" onclick="renameWaypoint(' + i + ')" style="background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#4CAF50;">✏️</button>' +
-                    '<button class="wp-btn danger" onclick="removeWaypoint(' + i + ')" style="background:transparent;border:none;padding:1px 4px;cursor:pointer;font-size:7px;color:#e74c3c;">✖</button></div>';
-            }
-            if (state.endPoint) {
-                total++;
-                html += '<div class="wp-item"><span class="wp-name">🏁 ' + state.endName + '</span></div>';
-            }
-            list.innerHTML = html;
-            if (count) count.textContent = total;
-        }
-
-        function showClickPopup(e) {
-            const container = document.createElement('div');
-            container.innerHTML = '<button id="setStartBtn" style="background:#2c5f2d;color:white;border:none;padding:6px 10px;border-radius:4px;margin:2px;cursor:pointer;font-size:12px;">🚩 Start</button><button id="setEndBtn" style="background:#c0392b;color:white;border:none;padding:6px 10px;border-radius:4px;margin:2px;cursor:pointer;font-size:12px;">🏁 End</button><button id="addWpBtn" style="background:#2980b9;color:white;border:none;padding:6px 10px;border-radius:4px;margin:2px;cursor:pointer;font-size:12px;">📍 Σημείο</button>';
-            const popup = new maplibregl.Popup()
-                .setLngLat([e.latlng.lng, e.latlng.lat])
-                .setDOMContent(container)
-                .addTo(state.map);
-            
-            setTimeout(() => {
-                document.getElementById('setStartBtn')?.addEventListener('click', function() {
-                    setStartPoint(e.latlng);
-                    popup.remove();
-                });
-                document.getElementById('setEndBtn')?.addEventListener('click', function() {
-                    setEndPoint(e.latlng);
-                    popup.remove();
-                });
-                document.getElementById('addWpBtn')?.addEventListener('click', function() {
-                    addWaypoint(e.latlng);
-                    popup.remove();
-                });
-            }, 100);
-        }
-
-        function makeDraggable(el) {
-            if (!el) return;
-            let isDragging = false, startX = 0, startY = 0, offsetX = 0, offsetY = 0;
-            function onStart(e) {
-                if (e.target.closest('button,input,select')) return;
-                const touch = e.touches ? e.touches[0] : e;
-                isDragging = true;
-                startX = touch.clientX;
-                startY = touch.clientY;
-                const rect = el.getBoundingClientRect();
-                offsetX = startX - rect.left;
-                offsetY = startY - rect.top;
-                el.style.position = 'fixed';
-                el.style.left = rect.left + 'px';
-                el.style.top = rect.top + 'px';
-                el.style.bottom = 'auto';
-                el.style.right = 'auto';
-                el.style.transform = 'none';
-                el.style.cursor = 'grabbing';
-                el.style.zIndex = '9999';
-                e.preventDefault();
-            }
-            function onMove(e) {
-                if (!isDragging) return;
-                const touch = e.touches ? e.touches[0] : e;
-                let left = touch.clientX - offsetX, top = touch.clientY - offsetY;
-                const rect = el.getBoundingClientRect();
-                left = Math.max(10, Math.min(window.innerWidth - rect.width - 10, left));
-                top = Math.max(10, Math.min(window.innerHeight - rect.height - 10, top));
-                el.style.left = left + 'px';
-                el.style.top = top + 'px';
-                e.preventDefault();
-            }
-            function onEnd(e) {
-                if (!isDragging) return;
-                isDragging = false;
-                el.style.cursor = '';
-                el.style.zIndex = '';
-                e.preventDefault();
-            }
-            el.addEventListener('mousedown', onStart);
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onEnd);
-            el.addEventListener('touchstart', onStart, {passive: false});
-            document.addEventListener('touchmove', onMove, {passive: false});
-            document.addEventListener('touchend', onEnd, {passive: false});
-        }
-
-        // ============================================================
-        // ★★★ ROUTES LIST ★★★
-        // ============================================================
-        function showRouteDropdown() {
-            document.getElementById('routeDropdown').classList.add('active');
-            renderRoutesList('');
-        }
-
-        function hideRouteDropdown() {
-            document.getElementById('routeDropdown').classList.remove('active');
-        }
-
-        function renderRoutesList(filter) {
-            const list = document.getElementById('routesList');
-            const count = document.getElementById('routeListCount');
-            let f = ROUTES;
-            if (filter && filter.trim()) {
-                const ff = filter.toLowerCase().trim();
-                f = ROUTES.filter(r => r.name.toLowerCase().includes(ff));
-            }
-            count.textContent = f.length;
-            if (f.length === 0) {
-                list.innerHTML = '<div style="color:#888;padding:10px;text-align:center;">📭 Δεν βρέθηκαν</div>';
-                return;
-            }
-            let html = '', cl = '';
-            f.forEach(r => {
-                const fl = r.name.charAt(0).toUpperCase();
-                if (fl !== cl) { cl = fl; html += '<div class="letter-header">' + cl + '</div>'; }
-                html += '<div class="route-item" data-url="' + r.url + '" data-name="' + r.name + '"><div class="route-name">' + r.name + '<div class="start-end">' + (r.dist||'?') + 'km | ' + (r.time||'?') + ' | ' + (r.difficulty==='easy'?'🟢':r.difficulty==='medium'?'🟠':'🔴') + '</div></div><button class="load-route-btn" data-url="' + r.url + '" data-name="' + r.name + '">📂</button></div>';
-            });
-            list.innerHTML = html;
-            list.querySelectorAll('.load-route-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    loadRouteFromGitHub(this.dataset.url, this.dataset.name);
-                    hideRouteDropdown();
-                });
-            });
-        }
-
-        function loadRouteFromGitHub(url, name) {
-            showToast('⏳ Φόρτωση: ' + name + '...', '#8e44ad');
-            fetch(url, { headers: { 'Accept': 'application/gpx+xml,application/xml,text/xml,*/*' } })
-                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-                .then(text => {
-                    if (!text.includes('<gpx')) throw new Error('Δεν είναι GPX');
-                    const data = parseGPX(text);
-                    if (data.tracks.length === 0) throw new Error('Δεν βρέθηκαν διαδρομές');
-                    let td = 0; const ac = [];
-                    data.tracks.forEach(coords => {
-                        if (coords.length < 2) return;
-                        const d = computeDistance(coords.map(c => [c[1], c[0]]));
-                        td += d;
-                        coords.forEach(c => ac.push(c));
-                    });
-                    if (ac.length > 1) {
-                        state.lastMainGeometry = ac.map(c => [c[1], c[0]]);
-                        state.lastMainDistance = td;
-                        state.lastRouteName = name;
-                        state.routeCalculated = true;
-                        drawRouteOnMap(ac);
-                        updateInfo();
-                        saveLastRouteState();
-                        showToast('✅ Φορτώθηκε: ' + name + ' (' + td.toFixed(1) + 'km)', '#2c5f2d');
-                    }
-                })
-                .catch(err => showToast('❌ Σφάλμα: ' + err.message, '#e74c3c'));
-        }
-
-        function parseGPX(x) {
-            const p = new DOMParser();
-            const xml = p.parseFromString(x, 'text/xml');
-            if (xml.querySelector('parsererror')) throw new Error('Μη έγκυρο GPX');
-            const r = { tracks: [] };
-            xml.querySelectorAll('trk trkseg').forEach(s => {
-                const c = [];
-                s.querySelectorAll('trkpt').forEach(pt => {
-                    const la = parseFloat(pt.getAttribute('lat'));
-                    const lo = parseFloat(pt.getAttribute('lon'));
-                    if (!isNaN(la) && !isNaN(lo)) c.push([la, lo]);
-                });
-                if (c.length > 1) r.tracks.push(c);
-            });
-            return r;
-        }
-
-        function computeDistance(c) {
-            let d = 0;
-            for (let i = 1; i < c.length; i++) {
-                d += L.latLng(c[i-1][1], c[i-1][0]).distanceTo(L.latLng(c[i][1], c[i][0]));
-            }
-            return d / 1000;
-        }
-
-        function clearRouteOnly() {
-            if (!confirm('🗑️ Διαγραφή μόνο της τρέχουσας διαδρομής;')) return;
-            if (state.startMarker) { state.startMarker.remove(); state.startMarker = null; }
-            if (state.endMarker) { state.endMarker.remove(); state.endMarker = null; }
-            state.markers.forEach(m => m.remove());
-            state.markers = [];
-            state.waypoints = [];
-            state.waypointNames = [];
-            state.waypointNotes = [];
-            state.routeLines.forEach(id => {
-                if (state.map.getLayer(id)) state.map.removeLayer(id);
-                if (state.map.getSource(id)) state.map.removeSource(id);
-            });
-            state.routeLines = [];
-            state.startPoint = null;
-            state.endPoint = null;
-            state.lastMainDistance = null;
-            state.lastMainGeometry = null;
-            state.routeCalculated = false;
-            document.getElementById('dist1').textContent = '-';
-            document.getElementById('time1').textContent = '-';
-            document.getElementById('routeNameDisplay').textContent = '-';
-            updateWaypointsPanel();
-            localStorage.removeItem('athos_last_route');
-            showToast('🗑️ Διαδρομή καθαρίστηκε', '#d35400');
-        }
-
-        function clearAll() {
-            if (!confirm('🧹 Διαγραφή όλων (διαδρομές, σημεία);')) return;
-            clearRouteOnly();
-            showToast('🧹 Καθαρίστηκαν όλα', '#6c3483');
-        }
-
-        // ============================================================
-        // ★★★ SOS ★★★
-        // ============================================================
-        function openSosDialog() {
-            document.getElementById('sosContainer').classList.add('active');
-            document.getElementById('sosCoords').textContent = 'Πατήστε στο χάρτη';
-        }
-        function closeSosDialog() {
-            document.getElementById('sosContainer').classList.remove('active');
-        }
-        function genSosMsg() {
-            return '🆘 SOS - Athos Maps\n👤 ' + (document.getElementById('sosName').value || 'Ανώνυμος') + '\n🆘 ' + document.getElementById('sosType').value + '\n📱 ' + (document.getElementById('sosPhone').value || '-') + '\n📍 ' + document.getElementById('sosCoords').textContent + '\n📝 ' + (document.getElementById('sosHistory').value || '-');
-        }
-        function sendSosSms() {
-            const m = genSosMsg();
-            if (/Android|iPhone/i.test(navigator.userAgent)) window.location.href = 'sms:6988321619?body=' + encodeURIComponent(m);
-            else navigator.clipboard.writeText(m).then(() => showToast('✅ Αντιγράφηκε', '#27ae60'));
-            closeSosDialog();
-        }
-        function sendSosEmail() {
-            window.location.href = 'mailto:athosmaps@gmail.com?subject=🆘 SOS Athos Maps&body=' + encodeURIComponent(genSosMsg());
-            closeSosDialog();
-        }
-        function call112() {
-            if (confirm('📞 Κλήση 112;')) window.location.href = 'tel:112';
-            closeSosDialog();
-        }
-
-        function performGpxExport() {
-            if (!state.lastMainGeometry) { showToast('❌ Δεν υπάρχει διαδρομή', '#e74c3c'); return; }
-            const name = prompt('Όνομα αρχείου:', 'athos_route') || 'athos_route';
-            let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Athos Maps">\n  <trk>\n    <name>' + name + '</name>\n    <trkseg>\n';
-            for (const c of state.lastMainGeometry) {
-                gpx += '      <trkpt lat="' + c[1] + '" lon="' + c[0] + '"></trkpt>\n';
-            }
-            gpx += '    </trkseg>\n  </trk>\n</gpx>';
-            const blob = new Blob([gpx], { type: 'application/gpx+xml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = name + '.gpx';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast('✅ GPX εξήχθη', '#1a7a3a');
-        }
-
-        // ============================================================
-        // ★★★ DOM READY ★★★
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            initMap();
-            loadLastRouteState();
-            
-            document.getElementById('navAppBtn').addEventListener('click', function() {
-                window.open('https://athos-user.github.io/athos-navigation/', '_blank');
-            });
-            document.getElementById('routesBtn').addEventListener('click', showRouteDropdown);
-            document.getElementById('closeRoutesBtn').addEventListener('click', hideRouteDropdown);
-            document.getElementById('closeRoutesBtn2').addEventListener('click', hideRouteDropdown);
-            document.getElementById('routeSearch').addEventListener('input', function(e) {
-                renderRoutesList(e.target.value);
-            });
-            document.getElementById('sosBtn').addEventListener('click', openSosDialog);
-            document.getElementById('closeSosBtn').addEventListener('click', closeSosDialog);
-            document.getElementById('sosSendSms').addEventListener('click', sendSosSms);
-            document.getElementById('sosSendEmail').addEventListener('click', sendSosEmail);
-            document.getElementById('sosCall112').addEventListener('click', call112);
-            document.getElementById('clearRouteBtn').addEventListener('click', clearRouteOnly);
-            document.getElementById('clearAllBtn').addEventListener('click', clearAll);
-            document.getElementById('saveRouteBtn').addEventListener('click', function() {
-                if (state.lastMainGeometry) {
-                    saveLastRouteState();
-                    showToast('💾 Αποθηκεύτηκε', '#2ecc71');
-                } else {
-                    showToast('❌ Δεν υπάρχει διαδρομή', '#e74c3c');
-                }
-            });
-            document.getElementById('exportGpxBtn').addEventListener('click', performGpxExport);
-            document.getElementById('reloadMapBtn').addEventListener('click', function() {
-                state.map.resize();
-                showToast('🔄 Επαναφόρτωση', '#e67e22');
-            });
-            document.getElementById('toggleWaypointsBtn').addEventListener('click', function() {
-                document.getElementById('waypointsPanel').classList.toggle('active');
-                if (document.getElementById('waypointsPanel').classList.contains('active')) updateWaypointsPanel();
-            });
-            document.getElementById('closeWaypointsBtn').addEventListener('click', function() {
-                document.getElementById('waypointsPanel').classList.remove('active');
-            });
-            document.getElementById('helpBtn').addEventListener('click', function() {
-                alert('🏔️ Athos Maps - Σχεδίαση (OpenFreeMap)\n\n✏️ Σχεδίαση: Πατήστε στο χάρτη\n🗺️ 143 διαδρομές\n📤 Εξαγωγή GPX\n🧭 App Πλοήγησης\n🌐 Εντελώς ΔΩΡΕΑΝ!\n\n🔗 agionorosroutes.blogspot.com');
-            });
-            document.getElementById('fileInput').addEventListener('change', function(e) {
-                if (e.target.files && e.target.files[0]) {
-                    const f = e.target.files[0];
-                    const r = new FileReader();
-                    r.onload = function(ev) {
-                        try {
-                            const d = parseGPX(ev.target.result);
-                            if (d.tracks.length > 0) {
-                                const c = d.tracks[0];
-                                state.lastMainGeometry = c.map(x => [x[1], x[0]]);
-                                state.lastMainDistance = computeDistance(c.map(x => [x[1], x[0]]));
-                                state.routeCalculated = true;
-                                drawRouteOnMap(c);
-                                updateInfo();
-                                saveLastRouteState();
-                                showToast('✅ GPX φορτώθηκε', '#2c5f2d');
-                            }
-                        } catch (err) {
-                            showToast('❌ Σφάλμα: ' + err.message, '#e74c3c');
-                        }
-                    };
-                    r.readAsText(f);
-                }
-                this.value = '';
-            });
+            document.getElementById('codeConfirm').addEventListener('click',confirmCode);document.getElementById('codeCancel').addEventListener('click',hideCodeModal);
+            document.getElementById('codeInput').addEventListener('keypress',function(e){if(e.key==='Enter')confirmCode();});
+            document.getElementById('codeModal').addEventListener('click',function(e){if(e.target===this)hideCodeModal();});
         });
     </script>
 </body>
